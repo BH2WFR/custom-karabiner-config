@@ -111,7 +111,7 @@
                         ]
                     },
                     {
-                        "description": "[Global]: Caps->Fn",
+                        "description": "[Global]: Caps -> Special Layer",
                         "manipulators": [
                             {
                                 "conditions": [
@@ -127,61 +127,16 @@
                                     "key_code": "caps_lock",
                                     "modifiers": { "optional": ["any"] }
                                 },
-                                "parameters": {
-                                    "basic.to_if_alone_timeout_milliseconds": 250,
-                                    "basic.to_if_held_down_threshold_milliseconds": 500
-                                },
+                                "parameters": { "basic.to_if_alone_timeout_milliseconds": 250 },
                                 "to": [
-                                    {
-                                        "set_variable": {
-                                            "name": "caps_longpress",
-                                            "value": 0
-                                        }
-                                    },
-                                    {
-                                        "set_variable": {
-                                            "name": "caps_used_as_modifier",
-                                            "value": 0
-                                        }
-                                    },
                                     {
                                         "set_variable": {
                                             "name": "caps_layer",
                                             "value": 1
                                         }
-                                    },
-                                    { "sticky_modifier": { "fn": "on" } }
+                                    }
                                 ],
                                 "to_after_key_up": [
-                                    {
-                                        "conditions": [
-                                            {
-                                                "name": "caps_longpress",
-                                                "type": "variable_if",
-                                                "value": 1
-                                            },
-                                            {
-                                                "name": "caps_used_as_modifier",
-                                                "type": "variable_unless",
-                                                "value": 1
-                                            }
-                                        ],
-                                        "hold_down_milliseconds": 200,
-                                        "key_code": "caps_lock"
-                                    },
-                                    { "sticky_modifier": { "fn": "off" } },
-                                    {
-                                        "set_variable": {
-                                            "name": "caps_longpress",
-                                            "value": 0
-                                        }
-                                    },
-                                    {
-                                        "set_variable": {
-                                            "name": "caps_used_as_modifier",
-                                            "value": 0
-                                        }
-                                    },
                                     {
                                         "set_variable": {
                                             "name": "caps_layer",
@@ -193,32 +148,6 @@
                                     {
                                         "hold_down_milliseconds": 200,
                                         "key_code": "caps_lock"
-                                    }
-                                ],
-                                "to_if_held_down": [
-                                    {
-                                        "set_variable": {
-                                            "name": "caps_longpress",
-                                            "value": 1
-                                        }
-                                    }
-                                ],
-                                "to_if_other_key_pressed": [
-                                    {
-                                        "other_keys": [
-                                            {
-                                                "any": "key_code",
-                                                "modifiers": { "optional": ["any"] }
-                                            }
-                                        ],
-                                        "to": [
-                                            {
-                                                "set_variable": {
-                                                    "name": "caps_used_as_modifier",
-                                                    "value": 1
-                                                }
-                                            }
-                                        ]
                                     }
                                 ],
                                 "type": "basic"
@@ -579,7 +508,7 @@
                         ]
                     },
                     {
-                        "description": "[Global]: Fn+Space -> insert a full-width space",
+                        "description": "[Global]: Caps+Space -> insert a full-width space",
                         "manipulators": [
                             {
                                 "conditions": [
@@ -589,17 +518,98 @@
                                         ],
                                         "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
                                         "type": "frontmost_application_unless"
+                                    },
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
                                     }
                                 ],
                                 "from": {
                                     "key_code": "spacebar",
-                                    "modifiers": {
-                                        "mandatory": ["fn"],
-                                        "optional": ["any"]
-                                    }
+                                    "modifiers": { "optional": ["any"] }
                                 },
                                 "to": [],
                                 "to_after_key_up": [{ "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/insert_unicode_symbol.py '__'" }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Caps+Backspace -> Delete first character of previous two-character word",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "delete_or_backspace",
+                                    "modifiers": { "optional": ["any"] }
+                                },
+                                "to": [
+                                    { "key_code": "left_arrow" },
+                                    { "key_code": "delete_or_backspace" },
+                                    { "key_code": "right_arrow" }
+                                ],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Caps+Semicolon -> Insert semicolon at end of line",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "semicolon",
+                                    "modifiers": { "optional": ["any"] }
+                                },
+                                "to": [
+                                    {
+                                        "key_code": "right_arrow",
+                                        "modifiers": ["command"]
+                                    },
+                                    { "key_code": "semicolon" }
+                                ],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Caps+Quote -> Insert colon at end of line",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "quote",
+                                    "modifiers": { "optional": ["any"] }
+                                },
+                                "to": [
+                                    {
+                                        "key_code": "right_arrow",
+                                        "modifiers": ["command"]
+                                    },
+                                    {
+                                        "key_code": "semicolon",
+                                        "modifiers": ["shift"]
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -674,7 +684,7 @@
                         ]
                     },
                     {
-                        "description": "Fn+V -> Paste as Plain Text",
+                        "description": "Caps+V -> Paste as Plain Text",
                         "manipulators": [
                             {
                                 "conditions": [
@@ -686,15 +696,7 @@
                                 ],
                                 "from": {
                                     "key_code": "v",
-                                    "modifiers": { "optional": ["fn"] }
-                                },
-                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/paste_without_format.py" }],
-                                "type": "basic"
-                            },
-                            {
-                                "from": {
-                                    "key_code": "v",
-                                    "modifiers": { "mandatory": ["fn"] }
+                                    "modifiers": { "optional": ["any"] }
                                 },
                                 "to": [{ "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/paste_without_format.py" }],
                                 "type": "basic"
@@ -702,7 +704,7 @@
                         ]
                     },
                     {
-                        "description": "Fn+B -> Advanced Paste",
+                        "description": "Caps+B -> Advanced Paste",
                         "manipulators": [
                             {
                                 "conditions": [
@@ -714,15 +716,7 @@
                                 ],
                                 "from": {
                                     "key_code": "b",
-                                    "modifiers": { "optional": ["fn"] }
-                                },
-                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/paste_without_format.py --crop" }],
-                                "type": "basic"
-                            },
-                            {
-                                "from": {
-                                    "key_code": "b",
-                                    "modifiers": { "mandatory": ["fn"] }
+                                    "modifiers": { "optional": ["any"] }
                                 },
                                 "to": [{ "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/paste_without_format.py --crop" }],
                                 "type": "basic"
@@ -730,7 +724,7 @@
                         ]
                     },
                     {
-                        "description": "Fn+C -> Copy",
+                        "description": "Caps+C -> Copy",
                         "manipulators": [
                             {
                                 "conditions": [
@@ -745,17 +739,6 @@
                                     "modifiers": { "optional": ["any"] }
                                 },
                                 "to": [{ "shell_command": "/bin/sleep 0.1; /usr/bin/osascript -e 'tell application \"System Events\" to key code 8 using {command down}'" }],
-                                "type": "basic"
-                            },
-                            {
-                                "from": {
-                                    "key_code": "c",
-                                    "modifiers": {
-                                        "mandatory": ["fn"],
-                                        "optional": ["any"]
-                                    }
-                                },
-                                "to": [{ "shell_command": "/bin/sleep 0.05; /usr/bin/osascript -e 'tell application \"System Events\" to key code 8 using {command down}'" }],
                                 "type": "basic"
                             }
                         ]
@@ -833,7 +816,7 @@
                         ]
                     },
                     {
-                        "description": "[Rime]: Fn+Period -> Toggle Punct Mode",
+                        "description": "[Rime]: Caps+Period -> Toggle Punct Mode",
                         "manipulators": [
                             {
                                 "conditions": [
@@ -845,20 +828,7 @@
                                 ],
                                 "from": {
                                     "key_code": "period",
-                                    "modifiers": { "optional": ["fn"] }
-                                },
-                                "to": [
-                                    {
-                                        "key_code": "f19",
-                                        "modifiers": ["control"]
-                                    }
-                                ],
-                                "type": "basic"
-                            },
-                            {
-                                "from": {
-                                    "key_code": "period",
-                                    "modifiers": { "mandatory": ["fn"] }
+                                    "modifiers": { "optional": ["any"] }
                                 },
                                 "to": [
                                     {
@@ -912,7 +882,7 @@
                         ]
                     },
                     {
-                        "description": "[Anki]: Fn+G -> fg_gn",
+                        "description": "[Anki]: Caps+G -> fg_gn",
                         "manipulators": [
                             {
                                 "conditions": [
@@ -921,11 +891,16 @@
                                             "^net\\.ankiweb\\.launcher$"
                                         ],
                                         "type": "frontmost_application_if"
+                                    },
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
                                     }
                                 ],
                                 "from": {
                                     "key_code": "g",
-                                    "modifiers": { "mandatory": ["fn"] }
+                                    "modifiers": { "optional": ["any"] }
                                 },
                                 "to": [
                                     {
@@ -938,7 +913,7 @@
                         ]
                     },
                     {
-                        "description": "[Anki]: Fn+F -> fg_rd",
+                        "description": "[Anki]: Caps+F -> fg_rd",
                         "manipulators": [
                             {
                                 "conditions": [
@@ -947,11 +922,16 @@
                                             "^net\\.ankiweb\\.launcher$"
                                         ],
                                         "type": "frontmost_application_if"
+                                    },
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
                                     }
                                 ],
                                 "from": {
                                     "key_code": "f",
-                                    "modifiers": { "mandatory": ["fn"] }
+                                    "modifiers": { "optional": ["any"] }
                                 },
                                 "to": [{ "key_code": "f13" }],
                                 "type": "basic"
@@ -959,7 +939,7 @@
                         ]
                     },
                     {
-                        "description": "[Anki]: Fn+D -> sz_large",
+                        "description": "[Anki]: Caps+D -> sz_large",
                         "manipulators": [
                             {
                                 "conditions": [
@@ -968,11 +948,16 @@
                                             "^net\\.ankiweb\\.launcher$"
                                         ],
                                         "type": "frontmost_application_if"
+                                    },
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
                                     }
                                 ],
                                 "from": {
                                     "key_code": "d",
-                                    "modifiers": { "mandatory": ["fn"] }
+                                    "modifiers": { "optional": ["any"] }
                                 },
                                 "to": [
                                     {
@@ -985,7 +970,7 @@
                         ]
                     },
                     {
-                        "description": "[Anki]: Fn+Q -> clear",
+                        "description": "[Anki]: Caps+Q -> clear",
                         "manipulators": [
                             {
                                 "conditions": [
@@ -994,11 +979,16 @@
                                             "^net\\.ankiweb\\.launcher$"
                                         ],
                                         "type": "frontmost_application_if"
+                                    },
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
                                     }
                                 ],
                                 "from": {
                                     "key_code": "q",
-                                    "modifiers": { "mandatory": ["fn"] }
+                                    "modifiers": { "optional": ["any"] }
                                 },
                                 "to": [
                                     {
