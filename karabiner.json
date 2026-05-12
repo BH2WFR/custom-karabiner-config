@@ -1,0 +1,1037 @@
+{
+    "global": { "enable_notification_window": false },
+    "profiles": [
+        {
+            "name": "Default profile",
+            "simple_modifications": [
+                {
+                    "from": { "key_code": "f1" },
+                    "to": [{ "key_code": "f13" }]
+                }
+            ],
+            "virtual_hid_keyboard": { "keyboard_type_v2": "ansi" }
+        },
+        {
+            "devices": [
+                {
+                    "identifiers": { "is_keyboard": true },
+                    "simple_modifications": [
+                        {
+                            "from": { "apple_vendor_top_case_key_code": "keyboard_fn" },
+                            "to": [{ "key_code": "left_control" }]
+                        },
+                        {
+                            "from": { "key_code": "caps_lock" },
+                            "to": [{ "key_code": "f1" }]
+                        },
+                        {
+                            "from": { "key_code": "left_command" },
+                            "to": [{ "key_code": "left_option" }]
+                        },
+                        {
+                            "from": { "key_code": "left_control" },
+                            "to": [{ "apple_vendor_top_case_key_code": "keyboard_fn" }]
+                        },
+                        {
+                            "from": { "key_code": "left_option" },
+                            "to": [{ "key_code": "left_command" }]
+                        },
+                        {
+                            "from": { "key_code": "right_command" },
+                            "to": [{ "key_code": "right_option" }]
+                        },
+                        {
+                            "from": { "key_code": "right_option" },
+                            "to": [{ "key_code": "right_control" }]
+                        }
+                    ]
+                }
+            ],
+            "name": "Default-RDP",
+            "virtual_hid_keyboard": { "keyboard_type_v2": "ansi" }
+        },
+        {
+            "devices": [
+                {
+                    "identifiers": { "is_keyboard": true },
+                    "simple_modifications": [
+                        {
+                            "from": { "apple_vendor_top_case_key_code": "keyboard_fn" },
+                            "to": [{ "key_code": "left_command" }]
+                        },
+                        {
+                            "from": { "key_code": "left_command" },
+                            "to": [{ "key_code": "left_control" }]
+                        },
+                        {
+                            "from": { "key_code": "left_control" },
+                            "to": [{ "apple_vendor_top_case_key_code": "keyboard_fn" }]
+                        },
+                        {
+                            "from": { "key_code": "left_option" },
+                            "to": [{ "key_code": "left_option" }]
+                        },
+                        {
+                            "from": { "key_code": "right_command" },
+                            "to": [{ "key_code": "right_option" }]
+                        },
+                        {
+                            "from": { "key_code": "right_option" },
+                            "to": [{ "key_code": "right_command" }]
+                        }
+                    ]
+                }
+            ],
+            "name": "Default-Swap",
+            "virtual_hid_keyboard": { "keyboard_type_v2": "ansi" }
+        },
+        {
+            "complex_modifications": {
+                "rules": [
+                    {
+                        "description": "[RDP]: Caps->F1",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^com\\.microsoft\\.rdc\\.macos$"
+                                        ],
+                                        "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
+                                        "type": "frontmost_application_if"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "caps_lock",
+                                    "modifiers": { "optional": ["any"] }
+                                },
+                                "to": [{ "key_code": "f1" }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "[Global]: Caps->Fn",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^com\\.microsoft\\.rdc\\.macos$"
+                                        ],
+                                        "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "caps_lock",
+                                    "modifiers": { "optional": ["any"] }
+                                },
+                                "parameters": {
+                                    "basic.to_if_alone_timeout_milliseconds": 250,
+                                    "basic.to_if_held_down_threshold_milliseconds": 500
+                                },
+                                "to": [
+                                    {
+                                        "set_variable": {
+                                            "name": "caps_longpress",
+                                            "value": 0
+                                        }
+                                    },
+                                    {
+                                        "set_variable": {
+                                            "name": "caps_used_as_modifier",
+                                            "value": 0
+                                        }
+                                    },
+                                    {
+                                        "set_variable": {
+                                            "name": "caps_layer",
+                                            "value": 1
+                                        }
+                                    },
+                                    { "sticky_modifier": { "fn": "on" } }
+                                ],
+                                "to_after_key_up": [
+                                    {
+                                        "conditions": [
+                                            {
+                                                "name": "caps_longpress",
+                                                "type": "variable_if",
+                                                "value": 1
+                                            },
+                                            {
+                                                "name": "caps_used_as_modifier",
+                                                "type": "variable_unless",
+                                                "value": 1
+                                            }
+                                        ],
+                                        "hold_down_milliseconds": 200,
+                                        "key_code": "caps_lock"
+                                    },
+                                    { "sticky_modifier": { "fn": "off" } },
+                                    {
+                                        "set_variable": {
+                                            "name": "caps_longpress",
+                                            "value": 0
+                                        }
+                                    },
+                                    {
+                                        "set_variable": {
+                                            "name": "caps_used_as_modifier",
+                                            "value": 0
+                                        }
+                                    },
+                                    {
+                                        "set_variable": {
+                                            "name": "caps_layer",
+                                            "value": 0
+                                        }
+                                    }
+                                ],
+                                "to_if_alone": [
+                                    {
+                                        "hold_down_milliseconds": 200,
+                                        "key_code": "caps_lock"
+                                    }
+                                ],
+                                "to_if_held_down": [
+                                    {
+                                        "set_variable": {
+                                            "name": "caps_longpress",
+                                            "value": 1
+                                        }
+                                    }
+                                ],
+                                "to_if_other_key_pressed": [
+                                    {
+                                        "other_keys": [
+                                            {
+                                                "any": "key_code",
+                                                "modifiers": { "optional": ["any"] }
+                                            }
+                                        ],
+                                        "to": [
+                                            {
+                                                "set_variable": {
+                                                    "name": "caps_used_as_modifier",
+                                                    "value": 1
+                                                }
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "[BuiltinKbd]: LCtrl->Fn",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "identifiers": [{ "is_built_in_keyboard": true }],
+                                        "type": "device_if"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "left_control",
+                                    "modifiers": { "optional": ["any"] }
+                                },
+                                "to": [{ "apple_vendor_top_case_key_code": "keyboard_fn" }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "[ExtKbd][Global]: LCtrl->LCom",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "identifiers": [{ "is_built_in_keyboard": true }],
+                                        "type": "device_unless"
+                                    },
+                                    {
+                                        "bundle_identifiers": [
+                                            "^com\\.microsoft\\.rdc\\.macos$"
+                                        ],
+                                        "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "left_control",
+                                    "modifiers": { "optional": ["any"] }
+                                },
+                                "to": [{ "key_code": "left_command" }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "[BuiltinKbd][Global]: Fn->LCmd",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^com\\.microsoft\\.rdc\\.macos$"
+                                        ],
+                                        "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
+                                "from": {
+                                    "apple_vendor_top_case_key_code": "keyboard_fn",
+                                    "modifiers": { "optional": ["any"] }
+                                },
+                                "to": [{ "key_code": "left_command" }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "[BuiltinKbd][RDP]: Fn->LCtrl",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^com\\.microsoft\\.rdc\\.macos$"
+                                        ],
+                                        "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
+                                        "type": "frontmost_application_if"
+                                    }
+                                ],
+                                "from": {
+                                    "apple_vendor_top_case_key_code": "keyboard_fn",
+                                    "modifiers": { "optional": ["any"] }
+                                },
+                                "to": [{ "key_code": "left_control" }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "[RDP]: LOpt->LCmd",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^com\\.microsoft\\.rdc\\.macos$"
+                                        ],
+                                        "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
+                                        "type": "frontmost_application_if"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "left_option",
+                                    "modifiers": { "optional": ["any"] }
+                                },
+                                "to": [{ "key_code": "left_command" }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "[Global]: LOpt->LCtrl",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^com\\.microsoft\\.rdc\\.macos$"
+                                        ],
+                                        "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "left_option",
+                                    "modifiers": { "optional": ["any"] }
+                                },
+                                "to": [{ "key_code": "left_control" }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "[RDP]: LCmd->LOpt",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^com\\.microsoft\\.rdc\\.macos$"
+                                        ],
+                                        "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
+                                        "type": "frontmost_application_if"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "left_command",
+                                    "modifiers": { "optional": ["any"] }
+                                },
+                                "to": [{ "key_code": "left_option" }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "[Global]: LCmd->LOpt",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^com\\.microsoft\\.rdc\\.macos$"
+                                        ],
+                                        "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "left_command",
+                                    "modifiers": { "optional": ["any"] }
+                                },
+                                "to": [{ "key_code": "left_option" }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "[Global]: RCmd->ROpt",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^com\\.microsoft\\.rdc\\.macos$"
+                                        ],
+                                        "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "right_command",
+                                    "modifiers": { "optional": ["any"] }
+                                },
+                                "to": [{ "key_code": "right_option" }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "[RDP]: RCmd->ROpt",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^com\\.microsoft\\.rdc\\.macos$"
+                                        ],
+                                        "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
+                                        "type": "frontmost_application_if"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "right_command",
+                                    "modifiers": { "optional": ["any"] }
+                                },
+                                "to": [{ "key_code": "right_option" }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "[Global]: ROpt->RCmd",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^com\\.microsoft\\.rdc\\.macos$"
+                                        ],
+                                        "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "right_option",
+                                    "modifiers": { "optional": ["any"] }
+                                },
+                                "to": [{ "key_code": "right_command" }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "[RDP]: ROpt->RCtrl",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^com\\.microsoft\\.rdc\\.macos$"
+                                        ],
+                                        "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
+                                        "type": "frontmost_application_if"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "right_option",
+                                    "modifiers": { "optional": ["any"] }
+                                },
+                                "to": [{ "key_code": "right_control" }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "[Lecoo][Global]: RCtrl->RCmd",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^com\\.microsoft\\.rdc\\.macos$"
+                                        ],
+                                        "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
+                                        "type": "frontmost_application_unless"
+                                    },
+                                    {
+                                        "identifiers": [
+                                            {
+                                                "is_keyboard": true,
+                                                "product_id": 33398,
+                                                "vendor_id": 9306
+                                            }
+                                        ],
+                                        "type": "device_if"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "right_control",
+                                    "modifiers": { "optional": ["any"] }
+                                },
+                                "to": [{ "key_code": "right_command" }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "[Lecoo][Global]: App->Fn",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^com\\.microsoft\\.rdc\\.macos$"
+                                        ],
+                                        "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
+                                        "type": "frontmost_application_unless"
+                                    },
+                                    {
+                                        "identifiers": [
+                                            {
+                                                "is_keyboard": true,
+                                                "product_id": 33398,
+                                                "vendor_id": 9306
+                                            }
+                                        ],
+                                        "type": "device_if"
+                                    }
+                                ],
+                                "from": { "key_code": "application" },
+                                "to": [{ "apple_vendor_top_case_key_code": "keyboard_fn" }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "[Cherry Studio]: Cmd+Return -> Ctrl+Return",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^com\\.kangfenmao\\.CherryStudio$"
+                                        ],
+                                        "file_paths": ["^\\/Applications\\/Cherry Studio\\.app\\/Contents\\/MacOS\\/Cherry Studio$"],
+                                        "type": "frontmost_application_if"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "return_or_enter",
+                                    "modifiers": { "mandatory": ["command"] }
+                                },
+                                "to": [
+                                    {
+                                        "key_code": "return_or_enter",
+                                        "modifiers": ["control"]
+                                    }
+                                ],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "[Global]: Fn+Space -> insert a full-width space",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^com\\.microsoft\\.rdc\\.macos$"
+                                        ],
+                                        "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "spacebar",
+                                    "modifiers": {
+                                        "mandatory": ["fn"],
+                                        "optional": ["any"]
+                                    }
+                                },
+                                "to": [],
+                                "to_after_key_up": [{ "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/insert_unicode_symbol.py '__'" }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "[Global]: Opt+Space <-> Cmd+Space <-> Ctrl+Space",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^com\\.microsoft\\.rdc\\.macos$"
+                                        ],
+                                        "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "spacebar",
+                                    "modifiers": { "mandatory": ["option"] }
+                                },
+                                "to": [
+                                    {
+                                        "key_code": "spacebar",
+                                        "modifiers": ["command"]
+                                    }
+                                ],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^com\\.microsoft\\.rdc\\.macos$"
+                                        ],
+                                        "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "spacebar",
+                                    "modifiers": {
+                                        "mandatory": ["control"],
+                                        "optional": ["any"]
+                                    }
+                                },
+                                "to": [{ "key_code": "spacebar" }],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^com\\.microsoft\\.rdc\\.macos$"
+                                        ],
+                                        "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "spacebar",
+                                    "modifiers": { "mandatory": ["command"] }
+                                },
+                                "to": [
+                                    {
+                                        "key_code": "spacebar",
+                                        "modifiers": ["control"]
+                                    }
+                                ],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Fn+V -> Paste as Plain Text",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "v",
+                                    "modifiers": { "optional": ["fn"] }
+                                },
+                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/paste_without_format.py" }],
+                                "type": "basic"
+                            },
+                            {
+                                "from": {
+                                    "key_code": "v",
+                                    "modifiers": { "mandatory": ["fn"] }
+                                },
+                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/paste_without_format.py" }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Fn+B -> Advanced Paste",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "b",
+                                    "modifiers": { "optional": ["fn"] }
+                                },
+                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/paste_without_format.py --crop" }],
+                                "type": "basic"
+                            },
+                            {
+                                "from": {
+                                    "key_code": "b",
+                                    "modifiers": { "mandatory": ["fn"] }
+                                },
+                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/paste_without_format.py --crop" }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Fn+C -> Copy",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "c",
+                                    "modifiers": { "optional": ["any"] }
+                                },
+                                "to": [{ "shell_command": "/bin/sleep 0.1; /usr/bin/osascript -e 'tell application \"System Events\" to key code 8 using {command down}'" }],
+                                "type": "basic"
+                            },
+                            {
+                                "from": {
+                                    "key_code": "c",
+                                    "modifiers": {
+                                        "mandatory": ["fn"],
+                                        "optional": ["any"]
+                                    }
+                                },
+                                "to": [{ "shell_command": "/bin/sleep 0.05; /usr/bin/osascript -e 'tell application \"System Events\" to key code 8 using {command down}'" }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "[Finder]: XButton1 -> Back",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^com\\.apple\\.finder$"
+                                        ],
+                                        "type": "frontmost_application_if"
+                                    }
+                                ],
+                                "from": { "pointing_button": "button4" },
+                                "to": [
+                                    {
+                                        "key_code": "open_bracket",
+                                        "modifiers": ["command"]
+                                    }
+                                ],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "[Finder]: Shift+XButton1 -> Up",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^com\\.apple\\.finder$"
+                                        ],
+                                        "type": "frontmost_application_if"
+                                    }
+                                ],
+                                "from": {
+                                    "modifiers": { "mandatory": ["shift"] },
+                                    "pointing_button": "button4"
+                                },
+                                "to": [
+                                    {
+                                        "key_code": "up_arrow",
+                                        "modifiers": ["command"]
+                                    }
+                                ],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "[Finder]: XButton2 -> Front",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^com\\.apple\\.finder$"
+                                        ],
+                                        "type": "frontmost_application_if"
+                                    }
+                                ],
+                                "from": { "pointing_button": "button5" },
+                                "to": [
+                                    {
+                                        "key_code": "close_bracket",
+                                        "modifiers": ["command"]
+                                    }
+                                ],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "[Rime]: Fn+Period -> Toggle Punct Mode",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "period",
+                                    "modifiers": { "optional": ["fn"] }
+                                },
+                                "to": [
+                                    {
+                                        "key_code": "f19",
+                                        "modifiers": ["control"]
+                                    }
+                                ],
+                                "type": "basic"
+                            },
+                            {
+                                "from": {
+                                    "key_code": "period",
+                                    "modifiers": { "mandatory": ["fn"] }
+                                },
+                                "to": [
+                                    {
+                                        "key_code": "f19",
+                                        "modifiers": ["control"]
+                                    }
+                                ],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "[Anki]: XButton2 -> Red",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^net\\.ankiweb\\.launcher$"
+                                        ],
+                                        "type": "frontmost_application_if"
+                                    }
+                                ],
+                                "from": { "pointing_button": "button5" },
+                                "to": [{ "key_code": "f13" }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "[Anki]: XButton1 -> Clear Style",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^net\\.ankiweb\\.launcher$"
+                                        ],
+                                        "type": "frontmost_application_if"
+                                    }
+                                ],
+                                "from": { "pointing_button": "button4" },
+                                "to": [
+                                    {
+                                        "key_code": "r",
+                                        "modifiers": ["command"]
+                                    }
+                                ],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "[Anki]: Fn+G -> fg_gn",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^net\\.ankiweb\\.launcher$"
+                                        ],
+                                        "type": "frontmost_application_if"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "g",
+                                    "modifiers": { "mandatory": ["fn"] }
+                                },
+                                "to": [
+                                    {
+                                        "key_code": "f13",
+                                        "modifiers": ["command"]
+                                    }
+                                ],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "[Anki]: Fn+F -> fg_rd",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^net\\.ankiweb\\.launcher$"
+                                        ],
+                                        "type": "frontmost_application_if"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "f",
+                                    "modifiers": { "mandatory": ["fn"] }
+                                },
+                                "to": [{ "key_code": "f13" }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "[Anki]: Fn+D -> sz_large",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^net\\.ankiweb\\.launcher$"
+                                        ],
+                                        "type": "frontmost_application_if"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "d",
+                                    "modifiers": { "mandatory": ["fn"] }
+                                },
+                                "to": [
+                                    {
+                                        "key_code": "f13",
+                                        "modifiers": ["command", "control"]
+                                    }
+                                ],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "[Anki]: Fn+Q -> clear",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^net\\.ankiweb\\.launcher$"
+                                        ],
+                                        "type": "frontmost_application_if"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "q",
+                                    "modifiers": { "mandatory": ["fn"] }
+                                },
+                                "to": [
+                                    {
+                                        "key_code": "r",
+                                        "modifiers": ["command"]
+                                    }
+                                ],
+                                "type": "basic"
+                            }
+                        ]
+                    }
+                ]
+            },
+            "devices": [
+                {
+                    "identifiers": {
+                        "is_keyboard": true,
+                        "is_pointing_device": true,
+                        "product_id": 53775,
+                        "vendor_id": 13869
+                    },
+                    "ignore": false
+                }
+            ],
+            "name": "123",
+            "selected": true,
+            "simple_modifications": [
+                {
+                    "from": { "key_code": "f5" },
+                    "to": [{ "key_code": "f19" }]
+                }
+            ],
+            "virtual_hid_keyboard": { "keyboard_type_v2": "ansi" }
+        }
+    ]
+}
