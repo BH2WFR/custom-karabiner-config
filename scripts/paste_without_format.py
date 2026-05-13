@@ -1,13 +1,55 @@
 #!/usr/bin/env python3
 import argparse
 import html
+import plistlib
 import re
 import subprocess
 import sys
 import time
 
 
-#* 高级粘贴功能，摘抄自 windows 版的 AHK-SysUtil 项目
+FILENAMES_CLIPBOARD_SCRIPT = r"""
+import json
+import plistlib
+from AppKit import NSPasteboard
+
+def valid_paths(value):
+    if value is None or isinstance(value, (str, bytes)):
+        return []
+    try:
+        paths = list(value)
+    except TypeError:
+        return []
+    return [str(path) for path in paths if isinstance(path, str) and str(path).startswith("/")]
+
+pasteboard = NSPasteboard.generalPasteboard()
+paths = valid_paths(pasteboard.propertyListForType_("NSFilenamesPboardType"))
+
+if not paths:
+    for item in pasteboard.pasteboardItems() or []:
+        data = item.dataForType_("NSFilenamesPboardType")
+        if data is not None:
+            try:
+                paths = valid_paths(plistlib.loads(bytes(data)))
+            except Exception:
+                paths = []
+            if paths:
+                break
+
+        text = item.stringForType_("NSFilenamesPboardType")
+        if text:
+            try:
+                paths = valid_paths(plistlib.loads(str(text).encode("utf-8")))
+            except Exception:
+                paths = []
+            if paths:
+                break
+
+print(json.dumps(paths, ensure_ascii=False))
+"""
+
+
+#* 高级粘贴功能，翻译自 windows 版的 AHK-SysUtil 项目
 def advanced_text_processing(text):
     ZERO_WIDTH_SYMBOLS = "\u200b\u200c\u200d\u200e\u200f\u2060\ufeff\u202a\u202b\u202c\u202d\u202e\u206a\u206b\u206c\u206d\u206e\u206f"
     NARROW_SPACES = "\u00a0\u2000\u2002\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u202f\u205f"
@@ -213,6 +255,55 @@ def clipboard(preferred_type):
     result = run(["/usr/bin/pbpaste", "-Prefer", preferred_type])
     return result.stdout if result.returncode == 0 else ""
 
+#* 如在 finder 中 复制了一个或多个文件/文件夹，则粘贴其完整路径，如为多个，按行分隔
+def clipboard_file_paths():
+    result = subprocess.run(
+        [sys.executable, "-c", FILENAMES_CLIPBOARD_SCRIPT],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        text=True,
+        check=False,
+    )
+    if result.returncode == 0 and result.stdout:
+        try:
+            import json
+
+            value = json.loads(result.stdout)
+        except Exception:
+            value = []
+
+        if isinstance(value, list):
+            paths = [
+                path
+                for path in value
+                if isinstance(path, str) and path.startswith("/")
+            ]
+            if paths:
+                return paths
+
+    result = subprocess.run(
+        ["/usr/bin/pbpaste", "-Prefer", "plist"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        check=False,
+    )
+    if result.returncode != 0 or not result.stdout:
+        return []
+
+    try:
+        value = plistlib.loads(result.stdout)
+    except Exception:
+        return []
+
+    if not isinstance(value, list):
+        return []
+
+    return [
+        path
+        for path in value
+        if isinstance(path, str) and path.startswith("/")
+    ]
+
 
 def html_to_text(value):
     value = re.sub(r"<br\s*/?>", "\n", value, flags=re.I)
@@ -226,24 +317,48 @@ def html_to_text(value):
 
 def parse_args():
     parser = argparse.ArgumentParser(add_help=False)
-    parser.add_argument("--crop", action="store_true")
+    parser.add_argument("--advanced", action="store_true")
+    parser.add_argument("--release-shift", action="store_true")
     return parser.parse_args()
+
+
+def release_shift():
+    subprocess.run(
+        [
+            "/usr/bin/osascript",
+            "-e",
+            'tell application "System Events" to key up shift',
+        ],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=False,
+    )
 
 
 def main():
     args = parse_args()
-    text = clipboard("txt")
+    text = ""
+
+    if not args.advanced:
+        file_paths = clipboard_file_paths()
+        if file_paths:
+            text = "\n".join(file_paths)
 
     if not text:
-        source_html = clipboard("html")
-        text = html_to_text(source_html) if source_html else ""
+        text = clipboard("txt")
 
-    if args.crop:
+        if not text:
+            source_html = clipboard("html")
+            text = html_to_text(source_html) if source_html else ""
+
+    if args.advanced:
         text = advanced_text_processing(text)
 
     run(["/usr/bin/pbcopy"], input_text=text)
 
     # Give the triggering shortcut's modifiers and the pasteboard time to settle.
+    if args.release_shift:
+        release_shift()
     time.sleep(0.15)
     subprocess.run(
         [

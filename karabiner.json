@@ -12,80 +12,6 @@
             "virtual_hid_keyboard": { "keyboard_type_v2": "ansi" }
         },
         {
-            "devices": [
-                {
-                    "identifiers": { "is_keyboard": true },
-                    "simple_modifications": [
-                        {
-                            "from": { "apple_vendor_top_case_key_code": "keyboard_fn" },
-                            "to": [{ "key_code": "left_control" }]
-                        },
-                        {
-                            "from": { "key_code": "caps_lock" },
-                            "to": [{ "key_code": "f1" }]
-                        },
-                        {
-                            "from": { "key_code": "left_command" },
-                            "to": [{ "key_code": "left_option" }]
-                        },
-                        {
-                            "from": { "key_code": "left_control" },
-                            "to": [{ "apple_vendor_top_case_key_code": "keyboard_fn" }]
-                        },
-                        {
-                            "from": { "key_code": "left_option" },
-                            "to": [{ "key_code": "left_command" }]
-                        },
-                        {
-                            "from": { "key_code": "right_command" },
-                            "to": [{ "key_code": "right_option" }]
-                        },
-                        {
-                            "from": { "key_code": "right_option" },
-                            "to": [{ "key_code": "right_control" }]
-                        }
-                    ]
-                }
-            ],
-            "name": "Default-RDP",
-            "virtual_hid_keyboard": { "keyboard_type_v2": "ansi" }
-        },
-        {
-            "devices": [
-                {
-                    "identifiers": { "is_keyboard": true },
-                    "simple_modifications": [
-                        {
-                            "from": { "apple_vendor_top_case_key_code": "keyboard_fn" },
-                            "to": [{ "key_code": "left_command" }]
-                        },
-                        {
-                            "from": { "key_code": "left_command" },
-                            "to": [{ "key_code": "left_control" }]
-                        },
-                        {
-                            "from": { "key_code": "left_control" },
-                            "to": [{ "apple_vendor_top_case_key_code": "keyboard_fn" }]
-                        },
-                        {
-                            "from": { "key_code": "left_option" },
-                            "to": [{ "key_code": "left_option" }]
-                        },
-                        {
-                            "from": { "key_code": "right_command" },
-                            "to": [{ "key_code": "right_option" }]
-                        },
-                        {
-                            "from": { "key_code": "right_option" },
-                            "to": [{ "key_code": "right_command" }]
-                        }
-                    ]
-                }
-            ],
-            "name": "Default-Swap",
-            "virtual_hid_keyboard": { "keyboard_type_v2": "ansi" }
-        },
-        {
             "complex_modifications": {
                 "rules": [
                     {
@@ -155,7 +81,7 @@
                         ]
                     },
                     {
-                        "description": "[BuiltinKbd]: LCtrl->Fn",
+                        "description": "[Global]: LCtrl mappings",
                         "manipulators": [
                             {
                                 "conditions": [
@@ -170,12 +96,7 @@
                                 },
                                 "to": [{ "apple_vendor_top_case_key_code": "keyboard_fn" }],
                                 "type": "basic"
-                            }
-                        ]
-                    },
-                    {
-                        "description": "[ExtKbd][Global]: LCtrl->LCom",
-                        "manipulators": [
+                            },
                             {
                                 "conditions": [
                                     {
@@ -200,7 +121,7 @@
                         ]
                     },
                     {
-                        "description": "[BuiltinKbd][Global]: Fn->LCmd",
+                        "description": "[Global/RDP]: Fn mappings",
                         "manipulators": [
                             {
                                 "conditions": [
@@ -218,12 +139,7 @@
                                 },
                                 "to": [{ "key_code": "left_command" }],
                                 "type": "basic"
-                            }
-                        ]
-                    },
-                    {
-                        "description": "[BuiltinKbd][RDP]: Fn->LCtrl",
-                        "manipulators": [
+                            },
                             {
                                 "conditions": [
                                     {
@@ -244,7 +160,7 @@
                         ]
                     },
                     {
-                        "description": "[RDP]: LOpt->LCmd",
+                        "description": "[Global/RDP]: Left modifier mappings",
                         "manipulators": [
                             {
                                 "conditions": [
@@ -262,34 +178,7 @@
                                 },
                                 "to": [{ "key_code": "left_command" }],
                                 "type": "basic"
-                            }
-                        ]
-                    },
-                    {
-                        "description": "[Global]: LOpt->LCtrl",
-                        "manipulators": [
-                            {
-                                "conditions": [
-                                    {
-                                        "bundle_identifiers": [
-                                            "^com\\.microsoft\\.rdc\\.macos$"
-                                        ],
-                                        "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
-                                        "type": "frontmost_application_unless"
-                                    }
-                                ],
-                                "from": {
-                                    "key_code": "left_option",
-                                    "modifiers": { "optional": ["any"] }
-                                },
-                                "to": [{ "key_code": "left_control" }],
-                                "type": "basic"
-                            }
-                        ]
-                    },
-                    {
-                        "description": "[RDP]: LCmd->LOpt",
-                        "manipulators": [
+                            },
                             {
                                 "conditions": [
                                     {
@@ -306,12 +195,7 @@
                                 },
                                 "to": [{ "key_code": "left_option" }],
                                 "type": "basic"
-                            }
-                        ]
-                    },
-                    {
-                        "description": "[Global]: LCmd->LOpt",
-                        "manipulators": [
+                            },
                             {
                                 "conditions": [
                                     {
@@ -326,7 +210,7 @@
                                     "key_code": "left_command",
                                     "modifiers": { "optional": ["any"] }
                                 },
-                                "to": [{ "key_code": "left_option" }],
+                                "to": [{ "key_code": "left_control" }],
                                 "type": "basic"
                             }
                         ]
@@ -335,15 +219,6 @@
                         "description": "[Global]: RCmd->ROpt",
                         "manipulators": [
                             {
-                                "conditions": [
-                                    {
-                                        "bundle_identifiers": [
-                                            "^com\\.microsoft\\.rdc\\.macos$"
-                                        ],
-                                        "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
-                                        "type": "frontmost_application_unless"
-                                    }
-                                ],
                                 "from": {
                                     "key_code": "right_command",
                                     "modifiers": { "optional": ["any"] }
@@ -354,29 +229,7 @@
                         ]
                     },
                     {
-                        "description": "[RDP]: RCmd->ROpt",
-                        "manipulators": [
-                            {
-                                "conditions": [
-                                    {
-                                        "bundle_identifiers": [
-                                            "^com\\.microsoft\\.rdc\\.macos$"
-                                        ],
-                                        "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
-                                        "type": "frontmost_application_if"
-                                    }
-                                ],
-                                "from": {
-                                    "key_code": "right_command",
-                                    "modifiers": { "optional": ["any"] }
-                                },
-                                "to": [{ "key_code": "right_option" }],
-                                "type": "basic"
-                            }
-                        ]
-                    },
-                    {
-                        "description": "[Global]: ROpt->RCmd",
+                        "description": "[Global/RDP]: ROpt mappings",
                         "manipulators": [
                             {
                                 "conditions": [
@@ -394,12 +247,7 @@
                                 },
                                 "to": [{ "key_code": "right_command" }],
                                 "type": "basic"
-                            }
-                        ]
-                    },
-                    {
-                        "description": "[RDP]: ROpt->RCtrl",
-                        "manipulators": [
+                            },
                             {
                                 "conditions": [
                                     {
@@ -420,7 +268,7 @@
                         ]
                     },
                     {
-                        "description": "[Lecoo][Global]: RCtrl->RCmd",
+                        "description": "[Lecoo][Global]: Extra key mappings, (RCtrl, App)",
                         "manipulators": [
                             {
                                 "conditions": [
@@ -448,12 +296,7 @@
                                 },
                                 "to": [{ "key_code": "right_command" }],
                                 "type": "basic"
-                            }
-                        ]
-                    },
-                    {
-                        "description": "[Lecoo][Global]: App->Fn",
-                        "manipulators": [
+                            },
                             {
                                 "conditions": [
                                     {
@@ -476,6 +319,61 @@
                                 ],
                                 "from": { "key_code": "application" },
                                 "to": [{ "apple_vendor_top_case_key_code": "keyboard_fn" }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "[Global]: Ctrl+Space <-> Cmd+Space (Spotlight stays on Cmd+Space)",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^com\\.microsoft\\.rdc\\.macos$"
+                                        ],
+                                        "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "spacebar",
+                                    "modifiers": {
+                                        "mandatory": ["command"],
+                                        "optional": ["any"]
+                                    }
+                                },
+                                "to": [
+                                    {
+                                        "key_code": "spacebar",
+                                        "modifiers": ["control"]
+                                    }
+                                ],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^com\\.microsoft\\.rdc\\.macos$"
+                                        ],
+                                        "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "spacebar",
+                                    "modifiers": {
+                                        "mandatory": ["control"],
+                                        "optional": ["any"]
+                                    }
+                                },
+                                "to": [
+                                    {
+                                        "key_code": "spacebar",
+                                        "modifiers": ["command"]
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -529,7 +427,7 @@
                                     "key_code": "spacebar",
                                     "modifiers": { "optional": ["any"] }
                                 },
-                                "to": [],
+                                "to": [{ "shell_command": "/usr/bin/osascript -e 'tell application \"System Events\" to key up shift'" }],
                                 "to_after_key_up": [{ "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/insert_unicode_symbol.py --use-html --restore-clipboard '__' " }],
                                 "type": "basic"
                             }
@@ -551,6 +449,7 @@
                                     "modifiers": { "optional": ["any"] }
                                 },
                                 "to": [
+                                    { "shell_command": "/usr/bin/osascript -e 'tell application \"System Events\" to key up shift'" },
                                     { "key_code": "left_arrow" },
                                     { "key_code": "delete_or_backspace" },
                                     { "key_code": "right_arrow" }
@@ -560,7 +459,7 @@
                         ]
                     },
                     {
-                        "description": "Caps+Semicolon -> Insert semicolon at end of line",
+                        "description": "Caps+(Shift)+Semicolon -> Insert semicolon/colon at end of line",
                         "manipulators": [
                             {
                                 "conditions": [
@@ -572,8 +471,30 @@
                                 ],
                                 "from": {
                                     "key_code": "semicolon",
-                                    "modifiers": { "optional": ["any"] }
+                                    "modifiers": { "mandatory": ["shift"] }
                                 },
+                                "to": [
+                                    { "shell_command": "/usr/bin/osascript -e 'tell application \"System Events\" to key up shift'" },
+                                    {
+                                        "key_code": "right_arrow",
+                                        "modifiers": ["command"]
+                                    },
+                                    {
+                                        "key_code": "semicolon",
+                                        "modifiers": ["shift"]
+                                    }
+                                ],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": { "key_code": "semicolon" },
                                 "to": [
                                     {
                                         "key_code": "right_arrow",
@@ -601,6 +522,7 @@
                                     "modifiers": { "optional": ["any"] }
                                 },
                                 "to": [
+                                    { "shell_command": "/usr/bin/osascript -e 'tell application \"System Events\" to key up shift'" },
                                     {
                                         "key_code": "right_arrow",
                                         "modifiers": ["command"]
@@ -615,76 +537,7 @@
                         ]
                     },
                     {
-                        "description": "[Global]: Opt+Space <-> Cmd+Space <-> Ctrl+Space",
-                        "manipulators": [
-                            {
-                                "conditions": [
-                                    {
-                                        "bundle_identifiers": [
-                                            "^com\\.microsoft\\.rdc\\.macos$"
-                                        ],
-                                        "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
-                                        "type": "frontmost_application_unless"
-                                    }
-                                ],
-                                "from": {
-                                    "key_code": "spacebar",
-                                    "modifiers": { "mandatory": ["option"] }
-                                },
-                                "to": [
-                                    {
-                                        "key_code": "spacebar",
-                                        "modifiers": ["command"]
-                                    }
-                                ],
-                                "type": "basic"
-                            },
-                            {
-                                "conditions": [
-                                    {
-                                        "bundle_identifiers": [
-                                            "^com\\.microsoft\\.rdc\\.macos$"
-                                        ],
-                                        "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
-                                        "type": "frontmost_application_unless"
-                                    }
-                                ],
-                                "from": {
-                                    "key_code": "spacebar",
-                                    "modifiers": {
-                                        "mandatory": ["control"],
-                                        "optional": ["any"]
-                                    }
-                                },
-                                "to": [{ "key_code": "spacebar" }],
-                                "type": "basic"
-                            },
-                            {
-                                "conditions": [
-                                    {
-                                        "bundle_identifiers": [
-                                            "^com\\.microsoft\\.rdc\\.macos$"
-                                        ],
-                                        "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
-                                        "type": "frontmost_application_unless"
-                                    }
-                                ],
-                                "from": {
-                                    "key_code": "spacebar",
-                                    "modifiers": { "mandatory": ["command"] }
-                                },
-                                "to": [
-                                    {
-                                        "key_code": "spacebar",
-                                        "modifiers": ["control"]
-                                    }
-                                ],
-                                "type": "basic"
-                            }
-                        ]
-                    },
-                    {
-                        "description": "Caps+V -> Paste as Plain Text",
+                        "description": "Caps+V -> Paste as Plain Text, Caps+Shift+V -> Advanced Paste",
                         "manipulators": [
                             {
                                 "conditions": [
@@ -696,16 +549,11 @@
                                 ],
                                 "from": {
                                     "key_code": "v",
-                                    "modifiers": { "optional": ["any"] }
+                                    "modifiers": { "mandatory": ["shift"] }
                                 },
-                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/paste_without_format.py" }],
+                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/paste_without_format.py --advanced --release-shift" }],
                                 "type": "basic"
-                            }
-                        ]
-                    },
-                    {
-                        "description": "Caps+B -> Advanced Paste",
-                        "manipulators": [
+                            },
                             {
                                 "conditions": [
                                     {
@@ -714,11 +562,8 @@
                                         "value": 1
                                     }
                                 ],
-                                "from": {
-                                    "key_code": "b",
-                                    "modifiers": { "optional": ["any"] }
-                                },
-                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/paste_without_format.py --crop" }],
+                                "from": { "key_code": "v" },
+                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/paste_without_format.py" }],
                                 "type": "basic"
                             }
                         ]
@@ -744,30 +589,149 @@
                         ]
                     },
                     {
-                        "description": "[Finder]: XButton1 -> Back",
+                        "description": "Caps+U/O -> Mouse Click",
                         "manipulators": [
                             {
                                 "conditions": [
                                     {
-                                        "bundle_identifiers": [
-                                            "^com\\.apple\\.finder$"
-                                        ],
-                                        "type": "frontmost_application_if"
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
                                     }
                                 ],
-                                "from": { "pointing_button": "button4" },
-                                "to": [
+                                "from": { "key_code": "u" },
+                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/move_mouse_pointer.py --key_click button1" }],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
                                     {
-                                        "key_code": "open_bracket",
-                                        "modifiers": ["command"]
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
                                     }
                                 ],
+                                "from": { "key_code": "o" },
+                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/move_mouse_pointer.py --key_click button2" }],
                                 "type": "basic"
                             }
                         ]
                     },
                     {
-                        "description": "[Finder]: Shift+XButton1 -> Up",
+                        "description": "Caps+I/J/K/L -> Move Mouse Pointer",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "i",
+                                    "modifiers": { "mandatory": ["shift"] }
+                                },
+                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/move_mouse_pointer.py --up 10" }],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "j",
+                                    "modifiers": { "mandatory": ["shift"] }
+                                },
+                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/move_mouse_pointer.py --left 10" }],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "k",
+                                    "modifiers": { "mandatory": ["shift"] }
+                                },
+                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/move_mouse_pointer.py --down 10" }],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "l",
+                                    "modifiers": { "mandatory": ["shift"] }
+                                },
+                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/move_mouse_pointer.py --right 10" }],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": { "key_code": "i" },
+                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/move_mouse_pointer.py --up 1" }],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": { "key_code": "j" },
+                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/move_mouse_pointer.py --left 1" }],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": { "key_code": "k" },
+                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/move_mouse_pointer.py --down 1" }],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": { "key_code": "l" },
+                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/move_mouse_pointer.py --right 1" }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "[Finder]: XButton Support",
                         "manipulators": [
                             {
                                 "conditions": [
@@ -789,12 +753,25 @@
                                     }
                                 ],
                                 "type": "basic"
-                            }
-                        ]
-                    },
-                    {
-                        "description": "[Finder]: XButton2 -> Front",
-                        "manipulators": [
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^com\\.apple\\.finder$"
+                                        ],
+                                        "type": "frontmost_application_if"
+                                    }
+                                ],
+                                "from": { "pointing_button": "button4" },
+                                "to": [
+                                    {
+                                        "key_code": "open_bracket",
+                                        "modifiers": ["command"]
+                                    }
+                                ],
+                                "type": "basic"
+                            },
                             {
                                 "conditions": [
                                     {
@@ -841,7 +818,7 @@
                         ]
                     },
                     {
-                        "description": "[Anki]: XButton2 -> Red",
+                        "description": "[Anki]: XButton1/2, Caps+Q/W/E/R/T/Y/A/S/D/F/G/H -> Custom Shortcuts",
                         "manipulators": [
                             {
                                 "conditions": [
@@ -855,12 +832,7 @@
                                 "from": { "pointing_button": "button5" },
                                 "to": [{ "key_code": "f13" }],
                                 "type": "basic"
-                            }
-                        ]
-                    },
-                    {
-                        "description": "[Anki]: XButton1 -> Clear Style",
-                        "manipulators": [
+                            },
                             {
                                 "conditions": [
                                     {
@@ -878,12 +850,7 @@
                                     }
                                 ],
                                 "type": "basic"
-                            }
-                        ]
-                    },
-                    {
-                        "description": "[Anki]: Caps+Q -> clear",
-                        "manipulators": [
+                            },
                             {
                                 "conditions": [
                                     {
@@ -909,12 +876,7 @@
                                     }
                                 ],
                                 "type": "basic"
-                            }
-                        ]
-                    },
-                    {
-                        "description": "[Anki]: Caps+W -> sz_large",
-                        "manipulators": [
+                            },
                             {
                                 "conditions": [
                                     {
@@ -940,12 +902,7 @@
                                     }
                                 ],
                                 "type": "basic"
-                            }
-                        ]
-                    },
-                    {
-                        "description": "[Anki]: Caps+E -> bg_yl",
-                        "manipulators": [
+                            },
                             {
                                 "conditions": [
                                     {
@@ -971,12 +928,7 @@
                                     }
                                 ],
                                 "type": "basic"
-                            }
-                        ]
-                    },
-                    {
-                        "description": "[Anki]: Caps+R -> bg_gn",
-                        "manipulators": [
+                            },
                             {
                                 "conditions": [
                                     {
@@ -1002,12 +954,7 @@
                                     }
                                 ],
                                 "type": "basic"
-                            }
-                        ]
-                    },
-                    {
-                        "description": "[Anki]: Caps+T -> bg_cy",
-                        "manipulators": [
+                            },
                             {
                                 "conditions": [
                                     {
@@ -1033,12 +980,7 @@
                                     }
                                 ],
                                 "type": "basic"
-                            }
-                        ]
-                    },
-                    {
-                        "description": "[Anki]: Caps+Y -> st_inv",
-                        "manipulators": [
+                            },
                             {
                                 "conditions": [
                                     {
@@ -1064,12 +1006,7 @@
                                     }
                                 ],
                                 "type": "basic"
-                            }
-                        ]
-                    },
-                    {
-                        "description": "[Anki]: Caps+A -> cl_gy",
-                        "manipulators": [
+                            },
                             {
                                 "conditions": [
                                     {
@@ -1095,12 +1032,7 @@
                                     }
                                 ],
                                 "type": "basic"
-                            }
-                        ]
-                    },
-                    {
-                        "description": "[Anki]: Caps+S -> cl_or",
-                        "manipulators": [
+                            },
                             {
                                 "conditions": [
                                     {
@@ -1126,12 +1058,7 @@
                                     }
                                 ],
                                 "type": "basic"
-                            }
-                        ]
-                    },
-                    {
-                        "description": "[Anki]: Caps+D -> fg_or",
-                        "manipulators": [
+                            },
                             {
                                 "conditions": [
                                     {
@@ -1157,12 +1084,7 @@
                                     }
                                 ],
                                 "type": "basic"
-                            }
-                        ]
-                    },
-                    {
-                        "description": "[Anki]: Caps+F -> fg_rd",
-                        "manipulators": [
+                            },
                             {
                                 "conditions": [
                                     {
@@ -1183,12 +1105,7 @@
                                 },
                                 "to": [{ "key_code": "f13" }],
                                 "type": "basic"
-                            }
-                        ]
-                    },
-                    {
-                        "description": "[Anki]: Caps+G -> fg_gn",
-                        "manipulators": [
+                            },
                             {
                                 "conditions": [
                                     {
@@ -1214,12 +1131,7 @@
                                     }
                                 ],
                                 "type": "basic"
-                            }
-                        ]
-                    },
-                    {
-                        "description": "[Anki]: Caps+H -> fg_bl",
-                        "manipulators": [
+                            },
                             {
                                 "conditions": [
                                     {
@@ -1259,16 +1171,18 @@
                         "vendor_id": 13869
                     },
                     "ignore": false
-                }
-            ],
-            "name": "123",
-            "selected": true,
-            "simple_modifications": [
+                },
                 {
-                    "from": { "key_code": "f5" },
-                    "to": [{ "key_code": "f19" }]
+                    "identifiers": {
+                        "is_keyboard": true,
+                        "product_id": 50475,
+                        "vendor_id": 1133
+                    },
+                    "manipulate_caps_lock_led": false
                 }
             ],
+            "name": "ZL",
+            "selected": true,
             "virtual_hid_keyboard": { "keyboard_type_v2": "ansi" }
         }
     ]
