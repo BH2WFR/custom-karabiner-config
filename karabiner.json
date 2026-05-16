@@ -15,7 +15,7 @@
             "complex_modifications": {
                 "rules": [
                     {
-                        "description": "[RDP]: Caps->F1",
+                        "description": "[Map]: [Caps] to [Special Layer], or [to] F1 in RDP",
                         "manipulators": [
                             {
                                 "conditions": [
@@ -33,12 +33,7 @@
                                 },
                                 "to": [{ "key_code": "f1" }],
                                 "type": "basic"
-                            }
-                        ]
-                    },
-                    {
-                        "description": "[Global]: Caps -> Special Layer",
-                        "manipulators": [
+                            },
                             {
                                 "conditions": [
                                     {
@@ -81,47 +76,7 @@
                         ]
                     },
                     {
-                        "description": "[Global]: LCtrl mappings",
-                        "manipulators": [
-                            {
-                                "conditions": [
-                                    {
-                                        "identifiers": [{ "is_built_in_keyboard": true }],
-                                        "type": "device_if"
-                                    }
-                                ],
-                                "from": {
-                                    "key_code": "left_control",
-                                    "modifiers": { "optional": ["any"] }
-                                },
-                                "to": [{ "apple_vendor_top_case_key_code": "keyboard_fn" }],
-                                "type": "basic"
-                            },
-                            {
-                                "conditions": [
-                                    {
-                                        "identifiers": [{ "is_built_in_keyboard": true }],
-                                        "type": "device_unless"
-                                    },
-                                    {
-                                        "bundle_identifiers": [
-                                            "^com\\.microsoft\\.rdc\\.macos$"
-                                        ],
-                                        "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
-                                        "type": "frontmost_application_unless"
-                                    }
-                                ],
-                                "from": {
-                                    "key_code": "left_control",
-                                    "modifiers": { "optional": ["any"] }
-                                },
-                                "to": [{ "key_code": "left_command" }],
-                                "type": "basic"
-                            }
-                        ]
-                    },
-                    {
-                        "description": "[Global/RDP]: Fn mappings",
+                        "description": "[Map]: [Fn] to [Cmd], or to [Ctrl] in RDP",
                         "manipulators": [
                             {
                                 "conditions": [
@@ -160,7 +115,52 @@
                         ]
                     },
                     {
-                        "description": "[Global/RDP]: Left modifier mappings",
+                        "description": "[Map]: [BuiltInKbd] [LCtrl] to [Fn] for built-in keyboard",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "identifiers": [{ "is_built_in_keyboard": true }],
+                                        "type": "device_if"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "left_control",
+                                    "modifiers": { "optional": ["any"] }
+                                },
+                                "to": [{ "apple_vendor_top_case_key_code": "keyboard_fn" }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "[Map]: [ExternalKbd] [LCtrl] to [no remap] in RDP, or to [LCmd] otherwise",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "identifiers": [{ "is_built_in_keyboard": true }],
+                                        "type": "device_unless"
+                                    },
+                                    {
+                                        "bundle_identifiers": [
+                                            "^com\\.microsoft\\.rdc\\.macos$"
+                                        ],
+                                        "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "left_control",
+                                    "modifiers": { "optional": ["any"] }
+                                },
+                                "to": [{ "key_code": "left_command" }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "[Map]: [LOpt] to [LCmd] in RDP, or to [LCtrl] otherwise",
                         "manipulators": [
                             {
                                 "conditions": [
@@ -216,7 +216,7 @@
                         ]
                     },
                     {
-                        "description": "[Global]: RCmd->ROpt",
+                        "description": "[Map]: [RCmd] to [ROpt]",
                         "manipulators": [
                             {
                                 "from": {
@@ -229,7 +229,7 @@
                         ]
                     },
                     {
-                        "description": "[Global/RDP]: ROpt mappings",
+                        "description": "[Map]: [BuiltinKbd] [ROpt] to [RCtrl] in RDP, or to [RCmd] otherwise",
                         "manipulators": [
                             {
                                 "conditions": [
@@ -239,6 +239,10 @@
                                         ],
                                         "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
                                         "type": "frontmost_application_unless"
+                                    },
+                                    {
+                                        "identifiers": [{ "is_built_in_keyboard": true }],
+                                        "type": "device_if"
                                     }
                                 ],
                                 "from": {
@@ -256,6 +260,10 @@
                                         ],
                                         "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
                                         "type": "frontmost_application_if"
+                                    },
+                                    {
+                                        "identifiers": [{ "is_built_in_keyboard": true }],
+                                        "type": "device_if"
                                     }
                                 ],
                                 "from": {
@@ -268,7 +276,7 @@
                         ]
                     },
                     {
-                        "description": "[Lecoo][Global]: Extra key mappings, (RCtrl, App)",
+                        "description": "[Map]: [ExternalKbd] [RCtrl] to [no remap] in RDP, or to [RCmd] otherwise",
                         "manipulators": [
                             {
                                 "conditions": [
@@ -280,14 +288,8 @@
                                         "type": "frontmost_application_unless"
                                     },
                                     {
-                                        "identifiers": [
-                                            {
-                                                "is_keyboard": true,
-                                                "product_id": 33398,
-                                                "vendor_id": 9306
-                                            }
-                                        ],
-                                        "type": "device_if"
+                                        "identifiers": [{ "is_built_in_keyboard": true }],
+                                        "type": "device_unless"
                                     }
                                 ],
                                 "from": {
@@ -307,14 +309,8 @@
                                         "type": "frontmost_application_unless"
                                     },
                                     {
-                                        "identifiers": [
-                                            {
-                                                "is_keyboard": true,
-                                                "product_id": 33398,
-                                                "vendor_id": 9306
-                                            }
-                                        ],
-                                        "type": "device_if"
+                                        "identifiers": [{ "is_built_in_keyboard": true }],
+                                        "type": "device_unless"
                                     }
                                 ],
                                 "from": { "key_code": "application" },
@@ -324,89 +320,7 @@
                         ]
                     },
                     {
-                        "description": "[Global]: Ctrl+Space <-> Cmd+Space (Spotlight stays on Cmd+Space)",
-                        "manipulators": [
-                            {
-                                "conditions": [
-                                    {
-                                        "bundle_identifiers": [
-                                            "^com\\.microsoft\\.rdc\\.macos$"
-                                        ],
-                                        "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
-                                        "type": "frontmost_application_unless"
-                                    }
-                                ],
-                                "from": {
-                                    "key_code": "spacebar",
-                                    "modifiers": {
-                                        "mandatory": ["command"],
-                                        "optional": ["any"]
-                                    }
-                                },
-                                "to": [
-                                    {
-                                        "key_code": "spacebar",
-                                        "modifiers": ["control"]
-                                    }
-                                ],
-                                "type": "basic"
-                            },
-                            {
-                                "conditions": [
-                                    {
-                                        "bundle_identifiers": [
-                                            "^com\\.microsoft\\.rdc\\.macos$"
-                                        ],
-                                        "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
-                                        "type": "frontmost_application_unless"
-                                    }
-                                ],
-                                "from": {
-                                    "key_code": "spacebar",
-                                    "modifiers": {
-                                        "mandatory": ["control"],
-                                        "optional": ["any"]
-                                    }
-                                },
-                                "to": [
-                                    {
-                                        "key_code": "spacebar",
-                                        "modifiers": ["command"]
-                                    }
-                                ],
-                                "type": "basic"
-                            }
-                        ]
-                    },
-                    {
-                        "description": "[Cherry Studio]: Cmd+Return -> Ctrl+Return",
-                        "manipulators": [
-                            {
-                                "conditions": [
-                                    {
-                                        "bundle_identifiers": [
-                                            "^com\\.kangfenmao\\.CherryStudio$"
-                                        ],
-                                        "file_paths": ["^\\/Applications\\/Cherry Studio\\.app\\/Contents\\/MacOS\\/Cherry Studio$"],
-                                        "type": "frontmost_application_if"
-                                    }
-                                ],
-                                "from": {
-                                    "key_code": "return_or_enter",
-                                    "modifiers": { "mandatory": ["command"] }
-                                },
-                                "to": [
-                                    {
-                                        "key_code": "return_or_enter",
-                                        "modifiers": ["control"]
-                                    }
-                                ],
-                                "type": "basic"
-                            }
-                        ]
-                    },
-                    {
-                        "description": "[Global]: Caps+Space -> insert a full-width space",
+                        "description": "Caps+Space -> insert a full-width space",
                         "manipulators": [
                             {
                                 "conditions": [
@@ -434,7 +348,7 @@
                         ]
                     },
                     {
-                        "description": "Caps+Backspace -> Delete first character of previous two-character word",
+                        "description": "Caps+Backspace -> Delete first character of previous two-character word, Caps+Shift+Backspace -> Delete current line",
                         "manipulators": [
                             {
                                 "conditions": [
@@ -445,14 +359,90 @@
                                     }
                                 ],
                                 "from": {
-                                    "key_code": "delete_or_backspace",
-                                    "modifiers": { "optional": ["any"] }
+                                    "key_code": "delete_or_backspace"
                                 },
                                 "to": [
                                     { "shell_command": "/usr/bin/osascript -e 'tell application \"System Events\" to key up shift'" },
                                     { "key_code": "left_arrow" },
                                     { "key_code": "delete_or_backspace" },
                                     { "key_code": "right_arrow" }
+                                ],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "delete_or_backspace",
+                                    "modifiers": { "mandatory": ["shift"] }
+                                },
+                                "to": [
+                                    { "shell_command": "/usr/bin/osascript -e 'tell application \"System Events\" to key up shift'" },
+                                    {
+                                        "key_code": "right_arrow",
+                                        "modifiers": ["command"]
+                                    },
+                                    {
+                                        "key_code": "left_arrow",
+                                        "modifiers": ["command", "shift"]
+                                    },
+                                    {
+                                        "key_code": "left_arrow",
+                                        "modifiers": ["command", "shift"]
+                                    },
+                                    {
+                                        "key_code": "delete_or_backspace",
+                                        "modifiers": ["command"]
+                                    },
+                                    {
+                                        "key_code": "delete_or_backspace",
+                                        "modifiers": ["command"]
+                                    }
+                                ],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Caps+(Shift)+Tab -> Indent/Unindent Selected Lines",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "tab"
+                                },
+                                "to": [
+                                    { "shell_command": "/usr/bin/osascript -e 'tell application \"System Events\" to key up shift'" },
+                                    { "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/indent_select_lines.py --indent" }
+                                ],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "tab",
+                                    "modifiers": { "mandatory": ["shift"] }
+                                },
+                                "to": [
+                                    { "shell_command": "/usr/bin/osascript -e 'tell application \"System Events\" to key up shift'" },
+                                    { "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/indent_select_lines.py --unindent" }
                                 ],
                                 "type": "basic"
                             }
@@ -569,7 +559,64 @@
                         ]
                     },
                     {
-                        "description": "Caps+C -> Copy",
+                        "description": "Caps+X -> Cut, Caps+Shift+X -> Cut this line",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": { "key_code": "x" },
+                                "to": [{ "shell_command": "/bin/sleep 0.1; /usr/bin/osascript -e 'tell application \"System Events\" to key code 7 using {command down}'" }],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "x",
+                                    "modifiers": { "mandatory": ["shift"] }
+                                },
+                                "to": [
+                                    { "shell_command": "/usr/bin/osascript -e 'tell application \"System Events\" to key up shift'" },
+                                    {
+                                        "key_code": "right_arrow",
+                                        "modifiers": ["command"]
+                                    },
+                                    {
+                                        "key_code": "left_arrow",
+                                        "modifiers": ["command", "shift"]
+                                    },
+                                    {
+                                        "key_code": "left_arrow",
+                                        "modifiers": ["command", "shift"]
+                                    },
+                                    {
+                                        "key_code": "x",
+                                        "modifiers": ["command"]
+                                    },
+                                    {
+                                        "key_code": "right_arrow",
+                                        "modifiers": ["command"]
+                                    },
+                                    {
+                                        "key_code": "delete_or_backspace"
+                                    }
+                                ],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Caps+C -> Copy, Caps+Shift+C -> Copy this line",
                         "manipulators": [
                             {
                                 "conditions": [
@@ -580,10 +627,46 @@
                                     }
                                 ],
                                 "from": {
-                                    "key_code": "c",
-                                    "modifiers": { "optional": ["any"] }
+                                    "key_code": "c"
                                 },
-                                "to": [{ "shell_command": "/bin/sleep 0.1; /usr/bin/osascript -e 'tell application \"System Events\" to key code 8 using {command down}'" }],
+                                "to": [{ "shell_command": "/bin/sleep 0.1; /usr/bin/osascript -e 'tell application \"System Events\" to key code 8 using {command down}'; /bin/sleep 0.1;" }],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "c",
+                                    "modifiers": { "mandatory": ["shift"] }
+                                },
+                                "to": [
+                                    { "shell_command": "/usr/bin/osascript -e 'tell application \"System Events\" to key up shift'" },
+                                    {
+                                        "key_code": "right_arrow",
+                                        "modifiers": ["command"]
+                                    },
+                                    {
+                                        "key_code": "left_arrow",
+                                        "modifiers": ["command", "shift"]
+                                    },
+                                    {
+                                        "key_code": "left_arrow",
+                                        "modifiers": ["command", "shift"]
+                                    },
+                                    {
+                                        "key_code": "c",
+                                        "modifiers": ["command"]
+                                    },
+                                    {
+                                        "key_code": "right_arrow",
+                                        "modifiers": ["command"]
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -599,7 +682,10 @@
                                         "value": 1
                                     }
                                 ],
-                                "from": { "key_code": "u" },
+                                "from": {
+                                    "key_code": "u",
+                                    "modifiers": { "optional": ["any"] }
+                                },
                                 "to": [{ "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/move_mouse_pointer.py --key_click button1" }],
                                 "type": "basic"
                             },
@@ -611,7 +697,10 @@
                                         "value": 1
                                     }
                                 ],
-                                "from": { "key_code": "o" },
+                                "from": {
+                                    "key_code": "o",
+                                    "modifiers": { "optional": ["any"] }
+                                },
                                 "to": [{ "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/move_mouse_pointer.py --key_click button2" }],
                                 "type": "basic"
                             }
@@ -793,6 +882,33 @@
                         ]
                     },
                     {
+                        "description": "[Cherry Studio]: Cmd+Return -> Ctrl+Return",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^com\\.kangfenmao\\.CherryStudio$"
+                                        ],
+                                        "file_paths": ["^\\/Applications\\/Cherry Studio\\.app\\/Contents\\/MacOS\\/Cherry Studio$"],
+                                        "type": "frontmost_application_if"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "return_or_enter",
+                                    "modifiers": { "mandatory": ["command"] }
+                                },
+                                "to": [
+                                    {
+                                        "key_code": "return_or_enter",
+                                        "modifiers": ["control"]
+                                    }
+                                ],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
                         "description": "[Rime]: Caps+Period -> Toggle Punct Mode",
                         "manipulators": [
                             {
@@ -917,14 +1033,38 @@
                                         "value": 1
                                     }
                                 ],
-                                "from": {
-                                    "key_code": "e",
-                                    "modifiers": { "optional": ["any"] }
-                                },
+                                "from": { "key_code": "e" },
                                 "to": [
                                     {
                                         "key_code": "f13",
                                         "modifiers": ["option"]
+                                    }
+                                ],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^net\\.ankiweb\\.launcher$"
+                                        ],
+                                        "type": "frontmost_application_if"
+                                    },
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "e",
+                                    "modifiers": { "mandatory": ["shift"] }
+                                },
+                                "to": [
+                                    { "shell_command": "/usr/bin/osascript -e 'tell application \"System Events\" to key up shift'" },
+                                    {
+                                        "key_code": "f13",
+                                        "modifiers": ["control"]
                                     }
                                 ],
                                 "type": "basic"
@@ -995,36 +1135,7 @@
                                         "value": 1
                                     }
                                 ],
-                                "from": {
-                                    "key_code": "y",
-                                    "modifiers": { "optional": ["any"] }
-                                },
-                                "to": [
-                                    {
-                                        "key_code": "f13",
-                                        "modifiers": ["control"]
-                                    }
-                                ],
-                                "type": "basic"
-                            },
-                            {
-                                "conditions": [
-                                    {
-                                        "bundle_identifiers": [
-                                            "^net\\.ankiweb\\.launcher$"
-                                        ],
-                                        "type": "frontmost_application_if"
-                                    },
-                                    {
-                                        "name": "caps_layer",
-                                        "type": "variable_if",
-                                        "value": 1
-                                    }
-                                ],
-                                "from": {
-                                    "key_code": "a",
-                                    "modifiers": { "optional": ["any"] }
-                                },
+                                "from": { "key_code": "a" },
                                 "to": [
                                     {
                                         "key_code": "f13",
@@ -1048,9 +1159,33 @@
                                     }
                                 ],
                                 "from": {
-                                    "key_code": "s",
-                                    "modifiers": { "optional": ["any"] }
+                                    "key_code": "a",
+                                    "modifiers": { "mandatory": ["shift"] }
                                 },
+                                "to": [
+                                    { "shell_command": "/usr/bin/osascript -e 'tell application \"System Events\" to key up shift'" },
+                                    {
+                                        "key_code": "f13",
+                                        "modifiers": ["control", "command", "option"]
+                                    }
+                                ],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^net\\.ankiweb\\.launcher$"
+                                        ],
+                                        "type": "frontmost_application_if"
+                                    },
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": { "key_code": "s" },
                                 "to": [
                                     {
                                         "key_code": "f13",
@@ -1074,13 +1209,64 @@
                                     }
                                 ],
                                 "from": {
-                                    "key_code": "d",
-                                    "modifiers": { "optional": ["any"] }
+                                    "key_code": "s",
+                                    "modifiers": { "mandatory": ["shift"] }
                                 },
+                                "to": [
+                                    { "shell_command": "/usr/bin/osascript -e 'tell application \"System Events\" to key up shift'" },
+                                    {
+                                        "key_code": "f13",
+                                        "modifiers": ["option", "control", "shift"]
+                                    }
+                                ],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^net\\.ankiweb\\.launcher$"
+                                        ],
+                                        "type": "frontmost_application_if"
+                                    },
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": { "key_code": "d" },
                                 "to": [
                                     {
                                         "key_code": "f13",
                                         "modifiers": ["command", "shift"]
+                                    }
+                                ],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^net\\.ankiweb\\.launcher$"
+                                        ],
+                                        "type": "frontmost_application_if"
+                                    },
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "d",
+                                    "modifiers": { "mandatory": ["shift"] }
+                                },
+                                "to": [
+                                    { "shell_command": "/usr/bin/osascript -e 'tell application \"System Events\" to key up shift'" },
+                                    {
+                                        "key_code": "f13",
+                                        "modifiers": ["control", "shift"]
                                     }
                                 ],
                                 "type": "basic"
@@ -1120,10 +1306,7 @@
                                         "value": 1
                                     }
                                 ],
-                                "from": {
-                                    "key_code": "g",
-                                    "modifiers": { "optional": ["any"] }
-                                },
+                                "from": { "key_code": "g" },
                                 "to": [
                                     {
                                         "key_code": "f13",
@@ -1147,10 +1330,11 @@
                                     }
                                 ],
                                 "from": {
-                                    "key_code": "h",
-                                    "modifiers": { "optional": ["any"] }
+                                    "key_code": "g",
+                                    "modifiers": { "mandatory": ["shift"] }
                                 },
                                 "to": [
+                                    { "shell_command": "/usr/bin/osascript -e 'tell application \"System Events\" to key up shift'" },
                                     {
                                         "key_code": "f13",
                                         "modifiers": ["shift"]
