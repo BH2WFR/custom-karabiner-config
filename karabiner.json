@@ -707,6 +707,23 @@
                         ]
                     },
                     {
+                        "description": "Caps+Vertical Wheel -> Horizontal Wheel",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "flip": ["horizontal_wheel"],
+                                "swap": ["wheels"],
+                                "type": "mouse_basic"
+                            }
+                        ]
+                    },
+                    {
                         "description": "Caps+I/J/K/L -> Move Mouse Pointer",
                         "manipulators": [
                             {
