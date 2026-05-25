@@ -358,9 +358,7 @@
                                         "value": 1
                                     }
                                 ],
-                                "from": {
-                                    "key_code": "delete_or_backspace"
-                                },
+                                "from": { "key_code": "delete_or_backspace" },
                                 "to": [
                                     { "shell_command": "/usr/bin/osascript -e 'tell application \"System Events\" to key up shift'" },
                                     { "key_code": "left_arrow" },
@@ -419,9 +417,7 @@
                                         "value": 1
                                     }
                                 ],
-                                "from": {
-                                    "key_code": "tab"
-                                },
+                                "from": { "key_code": "tab" },
                                 "to": [
                                     { "shell_command": "/usr/bin/osascript -e 'tell application \"System Events\" to key up shift'" },
                                     { "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/indent_select_lines.py --indent" }
@@ -607,9 +603,7 @@
                                         "key_code": "right_arrow",
                                         "modifiers": ["command"]
                                     },
-                                    {
-                                        "key_code": "delete_or_backspace"
-                                    }
+                                    { "key_code": "delete_or_backspace" }
                                 ],
                                 "type": "basic"
                             }
@@ -626,10 +620,14 @@
                                         "value": 1
                                     }
                                 ],
-                                "from": {
-                                    "key_code": "c"
-                                },
-                                "to": [{ "shell_command": "/bin/sleep 0.1; /usr/bin/osascript -e 'tell application \"System Events\" to key code 8 using {command down}'; /bin/sleep 0.1;" }],
+                                "from": { "key_code": "c" },
+                                "to": [
+                                    { "shell_command": "/usr/bin/osascript -e 'tell application \"System Events\" to key up shift'" },
+                                    {
+                                        "key_code": "c",
+                                        "modifiers": ["command"]
+                                    }
+                                ],
                                 "type": "basic"
                             },
                             {
@@ -1380,6 +1378,23 @@
                         "vendor_id": 1133
                     },
                     "manipulate_caps_lock_led": false
+                },
+                {
+                    "identifiers": {
+                        "is_keyboard": true,
+                        "is_pointing_device": true,
+                        "product_id": 2803,
+                        "vendor_id": 13364
+                    },
+                    "ignore": false
+                },
+                {
+                    "identifiers": {
+                        "is_pointing_device": true,
+                        "product_id": 45108,
+                        "vendor_id": 1133
+                    },
+                    "ignore": false
                 }
             ],
             "name": "ZL",
