@@ -835,6 +835,71 @@
                         ]
                     },
                     {
+                        "description": "Caps+Shift+-/= -> Horizontal Scroll, Caps+-/= -> Trackpad Pinch Zoom",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "hyphen",
+                                    "modifiers": { "mandatory": ["shift"] }
+                                },
+                                "to": [
+                                    { "shell_command": "/usr/bin/osascript -e 'tell application \"System Events\" to key up shift'" },
+                                    { "mouse_key": { "horizontal_wheel": 64 } }
+                                ],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "equal_sign",
+                                    "modifiers": { "mandatory": ["shift"] }
+                                },
+                                "to": [
+                                    { "shell_command": "/usr/bin/osascript -e 'tell application \"System Events\" to key up shift'" },
+                                    { "mouse_key": { "horizontal_wheel": -64 } }
+                                ],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": { "key_code": "hyphen" },
+                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/trackpad_zoom.py --zoom-out" }],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": { "key_code": "equal_sign" },
+                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/trackpad_zoom.py --zoom-in" }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
                         "description": "[Finder]: XButton Support",
                         "manipulators": [
                             {
@@ -1365,15 +1430,6 @@
                 {
                     "identifiers": {
                         "is_keyboard": true,
-                        "is_pointing_device": true,
-                        "product_id": 53775,
-                        "vendor_id": 13869
-                    },
-                    "ignore": false
-                },
-                {
-                    "identifiers": {
-                        "is_keyboard": true,
                         "product_id": 50475,
                         "vendor_id": 1133
                     },
@@ -1394,7 +1450,26 @@
                         "product_id": 45108,
                         "vendor_id": 1133
                     },
-                    "ignore": false
+                    "ignore": false,
+                    "pointing_motion_xy_multiplier": 1.3
+                },
+                {
+                    "identifiers": {
+                        "is_keyboard": true,
+                        "product_id": 50504,
+                        "vendor_id": 1133
+                    },
+                    "ignore": true,
+                    "ignore_vendor_events": true
+                },
+                {
+                    "identifiers": {
+                        "is_pointing_device": true,
+                        "product_id": 50504,
+                        "vendor_id": 1133
+                    },
+                    "mouse_flip_horizontal_wheel": true,
+                    "pointing_motion_xy_multiplier": 1.2
                 }
             ],
             "name": "ZL",
