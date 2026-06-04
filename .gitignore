@@ -1,7 +1,16 @@
 .DS_Store
 __pycache__/**
+__pycache__
 *.pyc
 *.pyo
 *.pyd
 __MACOSX
 /automatic_backups/**
+/automatic_backups
+*.bak
+*.log
+*.tmp
+*.zip
+*.7z
+*.tar
+*.gz

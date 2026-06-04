@@ -670,8 +670,30 @@
                         ]
                     },
                     {
-                        "description": "Caps+U/O -> Mouse Click",
+                        "description": "Caps+U/O -> Mouse Click, Caps+Shift+U -> Parse Unicode",
                         "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "u",
+                                    "modifiers": { "mandatory": ["shift"] }
+                                },
+                                "to": [
+                                    { "shell_command": "/usr/bin/osascript -e 'tell application \"System Events\" to key up shift'" },
+                                    {
+                                        "key_code": "c",
+                                        "modifiers": ["command"]
+                                    },
+                                    { "shell_command": "open -a Terminal ${HOME}/.config/karabiner/scripts/_parse_unicode_helper.command" }
+                                ],
+                                "type": "basic"
+                            },
                             {
                                 "conditions": [
                                     {
@@ -700,6 +722,82 @@
                                     "modifiers": { "optional": ["any"] }
                                 },
                                 "to": [{ "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/move_mouse_pointer.py --key_click button2" }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Caps+P -> Toggle Built-in Screen",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "p",
+                                    "modifiers": { "optional": ["any"] }
+                                },
+                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/toggle_builtin_screen.py" }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Caps+Enter -> End of line + newline, Caps+Shift+Enter -> Insert line above",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "return_or_enter",
+                                    "modifiers": { "mandatory": ["shift"] }
+                                },
+                                "to": [
+                                    { "shell_command": "/usr/bin/osascript -e 'tell application \"System Events\" to key up shift'" },
+                                    {
+                                        "key_code": "left_arrow",
+                                        "modifiers": ["command"]
+                                    },
+                                    {
+                                        "key_code": "return_or_enter"
+                                    },
+                                    {
+                                        "key_code": "up_arrow"
+                                    }
+                                ],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "return_or_enter",
+                                    "modifiers": { "optional": ["any"] }
+                                },
+                                "to": [
+                                    { "shell_command": "/usr/bin/osascript -e 'tell application \"System Events\" to key up shift'" },
+                                    {
+                                        "key_code": "right_arrow",
+                                        "modifiers": ["command"]
+                                    },
+                                    {
+                                        "key_code": "return_or_enter"
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -1450,7 +1548,6 @@
                         "product_id": 45108,
                         "vendor_id": 1133
                     },
-                    "ignore": false,
                     "pointing_motion_xy_multiplier": 1.3
                 },
                 {
