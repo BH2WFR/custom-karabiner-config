@@ -80,25 +80,22 @@ def _get_active_displays():
     return {ids[i] for i in range(count.value)}
 
 
-def _find_builtin(displays):
-    for did in displays:
+def _find_builtin():
+    for did in _get_all_displays():
         if CGDisplayIsBuiltin(did):
             return did
-    return None
+    return 1
 
 
 def main():
-    displays = _get_all_displays()
-    builtin_id = _find_builtin(displays)
-    if builtin_id is None:
-        print("No built-in display found.", file=sys.stderr)
-        sys.exit(1)
+    builtin_id = _find_builtin()
 
     active_set = _get_active_displays()
+    all_displays = _get_all_displays()
     builtin_active = builtin_id in active_set
 
     external_active_count = sum(
-        1 for did in displays if did != builtin_id and did in active_set)
+        1 for did in all_displays if did != builtin_id and did in active_set)
 
     if external_active_count == 0 and builtin_active:
         print("Built-in is the only active display. Refusing to disable.",
