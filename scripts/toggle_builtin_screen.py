@@ -26,6 +26,12 @@ if not _cgs_handle:
     print("ERROR: Cannot load CoreGraphics framework.", file=sys.stderr)
     sys.exit(1)
 
+_ds_handle = libc.dlopen(
+    b'/System/Library/PrivateFrameworks/DisplayServices.framework/DisplayServices', 1)
+if not _ds_handle:
+    print("ERROR: Cannot load DisplayServices framework.", file=sys.stderr)
+    sys.exit(1)
+
 
 def _lookup(name: str):
     name_bytes = name.encode()
@@ -65,6 +71,14 @@ CGSCompleteDisplayConfiguration = ctypes.CFUNCTYPE(
     ctypes.c_int32, ctypes.c_void_p,
 )(_lookup('CGSCompleteDisplayConfiguration'))
 
+DisplayServicesGetBrightness = ctypes.CFUNCTYPE(
+    ctypes.c_int32, ctypes.c_uint32, ctypes.POINTER(ctypes.c_float),
+)(_lookup('DisplayServicesGetBrightness'))
+
+DisplayServicesSetBrightness = ctypes.CFUNCTYPE(
+    ctypes.c_int32, ctypes.c_uint32, ctypes.c_float,
+)(_lookup('DisplayServicesSetBrightness'))
+
 
 def _get_all_displays():
     ids = (ctypes.c_uint32 * MAX_DISPLAYS)()
@@ -81,10 +95,29 @@ def _get_active_displays():
 
 
 def _find_builtin():
-    for did in _get_all_displays():
+    for did in _get_all_displays(): 
         if CGDisplayIsBuiltin(did):
             return did
     return 1
+
+
+def _get_brightness(display_id):
+    """Return brightness as 0.0-1.0 float, or None on failure."""
+    val = ctypes.c_float(0)
+    if DisplayServicesGetBrightness(display_id, ctypes.byref(val)) == 0:
+        return val.value
+    return None
+
+
+def _set_brightness(display_id, level):
+    """Set brightness to level (0.0-1.0)."""
+    return DisplayServicesSetBrightness(display_id, ctypes.c_float(level)) == 0
+
+
+def _adjust_low_brightness(display_id):
+    cur = _get_brightness(display_id)
+    if cur is not None and cur < 0.2:
+        _set_brightness(display_id, 0.35)
 
 
 def main():
@@ -98,6 +131,7 @@ def main():
         1 for did in all_displays if did != builtin_id and did in active_set)
 
     if external_active_count == 0 and builtin_active:
+        _adjust_low_brightness(builtin_id)
         print("Built-in is the only active display. Refusing to disable.",
               file=sys.stderr)
         sys.exit(1)
@@ -119,6 +153,9 @@ def main():
 
     action = "enabled" if target else "disabled"
     print(f"Built-in display {action}.")
+
+    if target:
+        _adjust_low_brightness(builtin_id)
 
 
 if __name__ == "__main__":

@@ -767,12 +767,8 @@
                                         "key_code": "left_arrow",
                                         "modifiers": ["command"]
                                     },
-                                    {
-                                        "key_code": "return_or_enter"
-                                    },
-                                    {
-                                        "key_code": "up_arrow"
-                                    }
+                                    { "key_code": "return_or_enter" },
+                                    { "key_code": "up_arrow" }
                                 ],
                                 "type": "basic"
                             },
@@ -794,9 +790,7 @@
                                         "key_code": "right_arrow",
                                         "modifiers": ["command"]
                                     },
-                                    {
-                                        "key_code": "return_or_enter"
-                                    }
+                                    { "key_code": "return_or_enter" }
                                 ],
                                 "type": "basic"
                             }
