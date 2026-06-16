@@ -8,7 +8,7 @@ import sys
 import time
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-import insert_unicode_symbol
+import scripts.insert_unicode_symbol_clipboard as insert_unicode_symbol_clipboard
 
 
 INDENT_SPACES = "    "
@@ -159,8 +159,8 @@ def parse_args():
 def main():
     args = parse_args()
     env = os.environ.copy()
-    previous_clipboard = insert_unicode_symbol.clipboard_snapshot(
-        insert_unicode_symbol.RESTORE_CLIPBOARD_MAX_BYTES,
+    previous_clipboard = insert_unicode_symbol_clipboard.clipboard_snapshot(
+        insert_unicode_symbol_clipboard.RESTORE_CLIPBOARD_MAX_BYTES,
         env,
     )
 
@@ -178,7 +178,7 @@ def main():
     paste_text(text)
     if previous_clipboard is not None:
         time.sleep(0.15)
-        insert_unicode_symbol.restore_clipboard_snapshot(previous_clipboard, env)
+        insert_unicode_symbol_clipboard.restore_clipboard_snapshot(previous_clipboard, env)
 
     return 0
 

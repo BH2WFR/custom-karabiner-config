@@ -342,7 +342,7 @@
                                     "modifiers": { "optional": ["any"] }
                                 },
                                 "to": [{ "shell_command": "/usr/bin/osascript -e 'tell application \"System Events\" to key up shift'" }],
-                                "to_after_key_up": [{ "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/insert_unicode_symbol.py --use-html --restore-clipboard '__' " }],
+                                "to_after_key_up": [{ "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/insert_unicode_symbol_cgevent.py '　' " }],
                                 "type": "basic"
                             }
                         ]
