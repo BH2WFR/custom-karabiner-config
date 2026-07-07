@@ -1106,6 +1106,55 @@
                         ]
                     },
                     {
+                        "description": "Caps+R -> Center frontmost window on current display, Caps+Shift+R -> Fit and center, except Anki",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^net\\.ankiweb\\.launcher$",
+                                            "^net\\.ankiweb\\.anki$"
+                                        ],
+                                        "type": "frontmost_application_unless"
+                                    },
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "r",
+                                    "modifiers": { "mandatory": ["shift"] }
+                                },
+                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/center_front_window.py --fit" }],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^net\\.ankiweb\\.launcher$",
+                                            "^net\\.ankiweb\\.anki$"
+                                        ],
+                                        "type": "frontmost_application_unless"
+                                    },
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "r",
+                                    "modifiers": { "optional": ["any"] }
+                                },
+                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/center_front_window.py" }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
                         "description": "[Anki]: XButton1/2, Caps+Q/W/E/R/T/Y/A/S/D/F/G/H -> Custom Shortcuts",
                         "manipulators": [
                             {

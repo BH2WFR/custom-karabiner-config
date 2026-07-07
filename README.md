@@ -69,6 +69,8 @@ Hold `Capslock` to activate the Caps layer. Release to deactivate. Tapping `Caps
 | Keys | App | Function | Notes |
 | --- | --- | --- | --- |
 | `Caps+P` | Any | **Toggle built-in display on/off** | Uses `scripts/toggle_builtin_screen.py` <br />(ctypes, Apple Silicon only); <br />requires **external monitor** |
+| `Caps+R` | Any except Anki | Center frontmost window on current display | Uses `scripts/center_front_window.py`; <br />pass `--display main` to target the main display instead; <br />requires Accessibility permission for Python |
+| `Caps+Shift+R` | Any except Anki | Fit frontmost window to current display, then center | Shrinks only if the window is larger than the target display |
 | `Caps+Shift+U` | Any | Parse Unicode from clipboard | Copies selection, opens Terminal with helper |
 | `Caps+.` | Any | Toggle Rime punctuation mode | **Delete or turn off** (personal use); <br />sends `Ctrl+F19` |
 | `Caps+Q`/`W`/`E`/`R`/`T`/`Y`/`A`/`S`/`D`/`F`/`G`/`H` (+`Shift`) | Anki | Various card review shortcuts | **Delete or turn off** (personal use); <br />mapped to `F13` + modifier combos |
