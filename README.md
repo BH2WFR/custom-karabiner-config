@@ -19,7 +19,7 @@ Repository: [BH2WFR/custom-karabiner-config](https://github.com/BH2WFR/custom-ka
 | `Left Opt` | — | `Left Cmd` |
 | `Left Cmd` | `Left Ctrl` | `Left Opt` |
 | `Right Cmd` | `Right Opt` | `Right Opt` |
-| `Right Opt` <br />(built-in keyboard) | `Right Cmd` | `Right Ctrl` |
+| `Right Opt` <br />(built-in keyboard / Logi Mechanical) | `Right Cmd` | `Right Ctrl` |
 | `Right Ctrl` <br />(external keyboard) | `Right Cmd` | No remap (still `Right Cmd`) |
 | `Application` (external keyboard) or  `Menu` | `Fn` | `Fn` |
 

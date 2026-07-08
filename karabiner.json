@@ -271,7 +271,7 @@
                         ]
                     },
                     {
-                        "description": "[Map]: [BuiltinKbd] [ROpt] to [RCtrl] in RDP, or to [RCmd] otherwise",
+                        "description": "[Map]: [BuiltinKbd/LogiMechanical] [ROpt] to [RCtrl] in RDP, or to [RCmd] otherwise",
                         "manipulators": [
                             {
                                 "conditions": [
@@ -283,7 +283,14 @@
                                         "type": "frontmost_application_unless"
                                     },
                                     {
-                                        "identifiers": [{ "is_built_in_keyboard": true }],
+                                        "identifiers": [
+                                            { "is_built_in_keyboard": true },
+                                            {
+                                                "is_keyboard": true,
+                                                "product_id": 50475,
+                                                "vendor_id": 1133
+                                            }
+                                        ],
                                         "type": "device_if"
                                     }
                                 ],
@@ -304,7 +311,14 @@
                                         "type": "frontmost_application_if"
                                     },
                                     {
-                                        "identifiers": [{ "is_built_in_keyboard": true }],
+                                        "identifiers": [
+                                            { "is_built_in_keyboard": true },
+                                            {
+                                                "is_keyboard": true,
+                                                "product_id": 50475,
+                                                "vendor_id": 1133
+                                            }
+                                        ],
                                         "type": "device_if"
                                     }
                                 ],
