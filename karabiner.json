@@ -38,6 +38,48 @@
                                 "conditions": [
                                     {
                                         "bundle_identifiers": [
+                                            "^net\\.ankiweb\\.launcher$",
+                                            "^net\\.ankiweb\\.anki$"
+                                        ],
+                                        "type": "frontmost_application_if"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "caps_lock",
+                                    "modifiers": { "optional": ["any"] }
+                                },
+                                "parameters": { "basic.to_if_alone_timeout_milliseconds": 250 },
+                                "to": [
+                                    {
+                                        "set_variable": {
+                                            "name": "caps_layer",
+                                            "value": 1
+                                        }
+                                    }
+                                ],
+                                "to_after_key_up": [
+                                    {
+                                        "set_variable": {
+                                            "name": "caps_layer",
+                                            "value": 0
+                                        }
+                                    }
+                                ],
+                                "to_if_alone": [
+                                    {
+                                        "hold_down_milliseconds": 200,
+                                        "key_code": "caps_lock"
+                                    },
+                                    {
+                                        "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/post_dummy_key.py --key-code 79 --delay-ms 80"
+                                    }
+                                ],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
                                             "^com\\.microsoft\\.rdc\\.macos$"
                                         ],
                                         "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
@@ -1106,30 +1148,8 @@
                         ]
                     },
                     {
-                        "description": "Caps+R -> Center frontmost window on current display, Caps+Shift+R -> Fit and center, except Anki",
+                        "description": "Caps+R -> Fit and center frontmost window on current display, except Anki",
                         "manipulators": [
-                            {
-                                "conditions": [
-                                    {
-                                        "bundle_identifiers": [
-                                            "^net\\.ankiweb\\.launcher$",
-                                            "^net\\.ankiweb\\.anki$"
-                                        ],
-                                        "type": "frontmost_application_unless"
-                                    },
-                                    {
-                                        "name": "caps_layer",
-                                        "type": "variable_if",
-                                        "value": 1
-                                    }
-                                ],
-                                "from": {
-                                    "key_code": "r",
-                                    "modifiers": { "mandatory": ["shift"] }
-                                },
-                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/center_front_window.py --fit" }],
-                                "type": "basic"
-                            },
                             {
                                 "conditions": [
                                     {
@@ -1149,7 +1169,34 @@
                                     "key_code": "r",
                                     "modifiers": { "optional": ["any"] }
                                 },
-                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/center_front_window.py" }],
+                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/center_front_window.py --fit" }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Caps+W -> Show frontmost window information, except Anki",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^net\\.ankiweb\\.launcher$",
+                                            "^net\\.ankiweb\\.anki$"
+                                        ],
+                                        "type": "frontmost_application_unless"
+                                    },
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "w",
+                                    "modifiers": { "optional": ["any"] }
+                                },
+                                "to": [{ "shell_command": "${HOME}/.config/karabiner/scripts/show_front_window_info.sh" }],
                                 "type": "basic"
                             }
                         ]
