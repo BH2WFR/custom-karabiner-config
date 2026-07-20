@@ -51,6 +51,8 @@ Hold `Capslock` to activate the Caps layer. Release to deactivate. Tapping `Caps
 | `Caps+Enter` | **Go to end of line + add newline** | |
 | `Caps+Shift+Enter` | Insert blank line above current | |
 | `Caps+Space` | Insert full-width space (U+3000) | Uses `scripts/insert_unicode_symbol.py`; <br />depends on `pyobjc-framework-Cocoa` |
+| `Caps+Z` | `Fn` | Sends `keyboard_fn` |
+| `Caps+\`<br />`Caps+|` | ISO `\|` key | Sends `non_us_backslash` / `Shift+non_us_backslash` |
 
 ### Mouse / Navigation
 
