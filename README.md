@@ -1,6 +1,6 @@
 # Personal Karabiner-Elements Configuration
 
-**Personal** **Karabiner-Elements setup** for macOS. 
+**Personal** **Karabiner-Elements setup** for macOS.
 
 Designed around a **`Capslock` hyper-layer** with context-aware remapping for RDP sessions.
 
@@ -91,10 +91,49 @@ Hold `Capslock` to activate the Caps layer. Release to deactivate. Tapping `Caps
 
 ## Migration Guide
 
+This repository is a personal configuration, not a drop-in universal preset.
+If you use it on another Mac, review the sections below before replacing your
+own `~/.config/karabiner` directory.
+
 ### System Requirements
 
 - macOS (Apple Silicon or Intel)
 - [Karabiner-Elements](https://karabiner-elements.pqrs.org/) (latest version)
+
+### Recommended Porting Workflow
+
+1. Back up your current Karabiner config:
+
+```bash
+cp -a ~/.config/karabiner ~/.config/karabiner.backup.$(date +%Y%m%d-%H%M%S)
+```
+
+2. Clone or copy this repository to `~/.config/karabiner`.
+3. Open `karabiner.json` in Karabiner-Elements and disable rules you do not
+   need before relying on the setup daily.
+4. Check all script paths, device identifiers, app bundle identifiers, and
+   external dependencies listed below.
+5. Grant macOS permissions, then test the basic Caps layer before testing app-
+   specific shortcuts.
+
+### Paths You May Need to Change
+
+Most shell commands assume this repository is located at:
+
+```text
+${HOME}/.config/karabiner
+```
+
+Python commands assume Miniconda is installed at:
+
+```text
+/opt/miniconda3/bin/python3
+```
+
+If your Python lives elsewhere, replace every `/opt/miniconda3/bin/python3`
+entry in `karabiner.json`. Using an absolute path is intentional: Karabiner
+does not run commands in an interactive shell, so `PATH`, Conda activation, and
+shell aliases may not match your Terminal.
 
 ### Python Environment
 
@@ -118,12 +157,72 @@ Required Python packages (install into base conda env):
 /opt/miniconda3/bin/pip install pyobjc-framework-Quartz pyobjc-framework-Cocoa
 ```
 
+### Device-Specific Rules
+
+Several modifier rules distinguish the built-in keyboard, external keyboards,
+and specific Logitech devices. These identifiers are machine- and device-
+specific. Before reusing them, inspect your own devices with:
+
+- Karabiner-Elements → Settings → Devices
+- Karabiner-EventViewer → Devices
+
+Then update or remove `conditions` that match fields such as:
+
+- `vendor_id`
+- `product_id`
+- `is_built_in_keyboard`
+- `is_keyboard`
+- `is_pointing_device`
+
+If a rule targets a keyboard you do not own, remove that device condition or
+disable the whole rule. Do not assume another Logitech keyboard has the same
+`product_id`.
+
+### App-Specific Rules
+
+Rules for RDP, Anki, Cherry Studio, Rime, Finder, and Terminal depend on app
+bundle identifiers or local app behavior. Check bundle IDs on your machine with:
+
+```bash
+osascript -e 'id of app "Anki"'
+osascript -e 'id of app "Windows App"'
+osascript -e 'id of app "Microsoft Remote Desktop"'
+```
+
+Update `frontmost_application_if` / `frontmost_application_unless` conditions
+if your app has a different bundle ID.
+
+Personal app-specific parts you may want to delete or disable:
+
+- **RDP / Windows App** mappings if you do not use remote Windows sessions.
+- **Anki** review shortcuts if your Anki shortcuts are not based on `F13`
+  combinations.
+- **Rime** punctuation toggle if you do not use Rime or do not bind `Ctrl+F19`
+  inside Rime.
+- **Cherry Studio** `Cmd+Enter` remap if you do not use Cherry Studio.
 
 ### Additional Dependencies
 
 - **Rime input method** (personal — delete or turn off) — `Caps+.` toggles punctuation mode via `Ctrl+F19` (configure `F19` as the hotkey in Rime settings)
 - **Anki** (personal — delete or turn off) — `Caps+Q`/`W`/`E`/`R`/`T`/`Y`/`A`/`S`/`D`/`F`/`G`/`H` shortcuts only active when Anki (`net.ankiweb.launcher`) is frontmost; Anki must have `F13`-based shortcuts configured
 - **Cherry Studio** — `Cmd+Enter` remap only active when Cherry Studio is frontmost
+
+### Display and Window Scripts
+
+Some scripts use macOS Accessibility APIs or private/display-related behavior:
+
+- `scripts/toggle_builtin_screen.py` is for Apple Silicon and requires an
+  actual external monitor. Sidecar-only use is not reliable because disabling
+  the built-in panel can interrupt Sidecar.
+- `scripts/center_front_window.py` uses Accessibility APIs to move and resize
+  the frontmost window. It needs Accessibility permission for the Python
+  interpreter that runs it.
+- `scripts/show_front_window_info.sh` opens Terminal to show a snapshot of the
+  frontmost app/window. It is intended for inspection and copying text, not as a
+  persistent GUI.
+
+If these scripts fail after migration, first check permissions and Python
+package availability before changing the Karabiner rule.
 
 ### Accessibility Permissions
 
@@ -140,3 +239,7 @@ After installing, grant these permissions in **System Settings → Privacy & Sec
 3. Hold `Caps+V` → should paste without formatting
 4. In RDP session, `Capslock` should act as `F1`
 5. In RDP session, `Ctrl`/`Cmd` positions should feel like Windows
+
+If a shortcut does nothing, open Karabiner-EventViewer first. Confirm whether
+Karabiner sees the physical key, then confirm whether the intended rule matches
+the current device and frontmost app.
