@@ -7,7 +7,7 @@ import subprocess
 import sys
 import time
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import scripts.insert_unicode_symbol_clipboard as insert_unicode_symbol_clipboard
 
 

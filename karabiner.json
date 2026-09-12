@@ -160,10 +160,17 @@
                         ]
                     },
                     {
-                        "description": "[Layer]: Caps+[LOpt/RCmd] -> [Caps Secondary Layer]",
+                        "description": "[Layer][Non-RDP]: Caps+[LOpt/RCmd] -> [Caps Secondary Layer]",
                         "manipulators": [
                             {
                                 "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^com\\.microsoft\\.rdc\\.macos$"
+                                        ],
+                                        "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
+                                        "type": "frontmost_application_unless"
+                                    },
                                     {
                                         "name": "caps_primary_layer",
                                         "type": "variable_if",
@@ -194,6 +201,13 @@
                             },
                             {
                                 "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^com\\.microsoft\\.rdc\\.macos$"
+                                        ],
+                                        "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
+                                        "type": "frontmost_application_unless"
+                                    },
                                     {
                                         "name": "caps_primary_layer",
                                         "type": "variable_if",
@@ -309,7 +323,7 @@
                         ]
                     },
                     {
-                        "description": "[Map]: [LOpt] to [LCmd] in RDP, or to [LCtrl] otherwise",
+                        "description": "[Map]: [LOpt] <-> [LCmd] in RDP; [LCmd] to [LCtrl] otherwise",
                         "manipulators": [
                             {
                                 "conditions": [
@@ -378,7 +392,7 @@
                         ]
                     },
                     {
-                        "description": "[Map]: [BuiltinKbd/LogiMechanical] [ROpt] to [RCtrl] in RDP, or to [RCmd] otherwise",
+                        "description": "[Map]: [BuiltInKbd/LogiMechanical] [ROpt] to [RCtrl] in RDP, or to [RCmd] otherwise",
                         "manipulators": [
                             {
                                 "conditions": [
@@ -760,7 +774,7 @@
                         ]
                     },
                     {
-                        "description": "Caps+[LOpt/RCmd]+C/V/X, Shift+C/X for Current Line",
+                        "description": "[Caps Secondary Layer]: C/V/X, Shift+C/X for Current Line",
                         "manipulators": [
                             {
                                 "conditions": [
@@ -1170,23 +1184,6 @@
                         ]
                     },
                     {
-                        "description": "Caps+Vertical Wheel -> Horizontal Wheel",
-                        "manipulators": [
-                            {
-                                "conditions": [
-                                    {
-                                        "name": "caps_primary_layer",
-                                        "type": "variable_if",
-                                        "value": 1
-                                    }
-                                ],
-                                "flip": ["horizontal_wheel"],
-                                "swap": ["wheels"],
-                                "type": "mouse_basic"
-                            }
-                        ]
-                    },
-                    {
                         "description": "Caps+I/J/K/L -> Move Mouse Pointer",
                         "manipulators": [
                             {
@@ -1419,68 +1416,6 @@
                         ]
                     },
                     {
-                        "description": "[Finder]: XButton Support",
-                        "manipulators": [
-                            {
-                                "conditions": [
-                                    {
-                                        "bundle_identifiers": [
-                                            "^com\\.apple\\.finder$"
-                                        ],
-                                        "type": "frontmost_application_if"
-                                    }
-                                ],
-                                "from": {
-                                    "modifiers": { "mandatory": ["shift"] },
-                                    "pointing_button": "button4"
-                                },
-                                "to": [
-                                    {
-                                        "key_code": "up_arrow",
-                                        "modifiers": ["command"]
-                                    }
-                                ],
-                                "type": "basic"
-                            },
-                            {
-                                "conditions": [
-                                    {
-                                        "bundle_identifiers": [
-                                            "^com\\.apple\\.finder$"
-                                        ],
-                                        "type": "frontmost_application_if"
-                                    }
-                                ],
-                                "from": { "pointing_button": "button4" },
-                                "to": [
-                                    {
-                                        "key_code": "open_bracket",
-                                        "modifiers": ["command"]
-                                    }
-                                ],
-                                "type": "basic"
-                            },
-                            {
-                                "conditions": [
-                                    {
-                                        "bundle_identifiers": [
-                                            "^com\\.apple\\.finder$"
-                                        ],
-                                        "type": "frontmost_application_if"
-                                    }
-                                ],
-                                "from": { "pointing_button": "button5" },
-                                "to": [
-                                    {
-                                        "key_code": "close_bracket",
-                                        "modifiers": ["command"]
-                                    }
-                                ],
-                                "type": "basic"
-                            }
-                        ]
-                    },
-                    {
                         "description": "[Cherry Studio]: Cmd+Return -> Ctrl+Return",
                         "manipulators": [
                             {
@@ -1533,41 +1468,8 @@
                         ]
                     },
                     {
-                        "description": "[Anki]: XButton1/2, Caps+Q/W/E/R/T/Y/A/S/D/F/G/H -> Custom Shortcuts",
+                        "description": "[Anki]: Caps+Q/W/E/R/T/A/S/D/F/G -> Custom Shortcuts",
                         "manipulators": [
-                            {
-                                "conditions": [
-                                    {
-                                        "bundle_identifiers": [
-                                            "^net\\.ankiweb\\.launcher$",
-                                            "^net\\.ankiweb\\.anki$"
-                                        ],
-                                        "type": "frontmost_application_if"
-                                    }
-                                ],
-                                "from": { "pointing_button": "button5" },
-                                "to": [{ "key_code": "f13" }],
-                                "type": "basic"
-                            },
-                            {
-                                "conditions": [
-                                    {
-                                        "bundle_identifiers": [
-                                            "^net\\.ankiweb\\.launcher$",
-                                            "^net\\.ankiweb\\.anki$"
-                                        ],
-                                        "type": "frontmost_application_if"
-                                    }
-                                ],
-                                "from": { "pointing_button": "button4" },
-                                "to": [
-                                    {
-                                        "key_code": "r",
-                                        "modifiers": ["command"]
-                                    }
-                                ],
-                                "type": "basic"
-                            },
                             {
                                 "conditions": [
                                     {
