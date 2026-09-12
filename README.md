@@ -13,6 +13,7 @@ Repository: [BH2WFR/custom-karabiner-config](https://github.com/BH2WFR/custom-ka
 | Physical Key | Normal | RDP <br />(Microsoft Remote Desktop / Windows App) |
 | --- | --- | --- |
 | `Capslock` | Activates **Caps Layer** (hold) / `Capslock` (tap) | `F1` |
+| `F1` | `F1` | Activates **Caps Layer** (hold) / `F1` (tap) |
 | `Fn` (globe key) | `Left Cmd` | `Left Ctrl` |
 | `Left Ctrl` <br />(built-in keyboard) | `Fn` | `Fn` |
 | `Left Ctrl` <br />(external keyboard) | `Left Cmd` | No remap (still `Left Ctrl`) |
@@ -26,11 +27,18 @@ Repository: [BH2WFR/custom-karabiner-config](https://github.com/BH2WFR/custom-ka
 **Modifier layout summary:**
 
 - **Normal**: `Capslock` is a hyper-layer trigger; `Cmd`/`Ctrl` are swapped (Mac-style bottom row on external keyboards); `Fn` key becomes `Cmd`.
-- **RDP**: `Capslock` becomes `F1`; modifier positions mimic a standard Windows keyboard (`Ctrl` where `Cmd` normally is, etc.).
+- **RDP**: `Capslock` becomes `F1`; physical `F1` directly controls the same
+  `caps_layer` variable while held and remains `F1` when tapped; modifier
+  positions mimic a standard Windows keyboard (`Ctrl` where `Cmd` normally is,
+  etc.).
 
 ## Caps Layer Shortcuts
 
 Hold `Capslock` to activate the Caps layer. Release to deactivate. Tapping `Capslock` alone sends `Capslock` on key-up (i.e., on release), which toggles Caps Lock or switches input method depending on system settings. In Anki, tapping `Capslock` also sends an `F18` dummy key to work around Anki/Qt swallowing the first real key after input-source changes.
+
+When Microsoft Remote Desktop / Windows App is frontmost, hold physical `F1`
+instead. It sets `caps_layer` directly on key-down and clears it on key-up; it
+does not map through `Capslock`. Tapping `F1` alone still sends `F1`.
 
 ### Editing
 
@@ -238,7 +246,9 @@ After installing, grant these permissions in **System Settings → Privacy & Sec
 2. Hold `Caps+C` → should copy (`Cmd+C`)
 3. Hold `Caps+V` → should paste without formatting
 4. In RDP session, `Capslock` should act as `F1`
-5. In RDP session, `Ctrl`/`Cmd` positions should feel like Windows
+5. In RDP session, tap `F1` → should still send `F1`
+6. In RDP session, hold `F1+C` → should run the Caps-layer copy shortcut
+7. In RDP session, `Ctrl`/`Cmd` positions should feel like Windows
 
 If a shortcut does nothing, open Karabiner-EventViewer first. Confirm whether
 Karabiner sees the physical key, then confirm whether the intended rule matches

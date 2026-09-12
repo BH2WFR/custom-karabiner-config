@@ -38,6 +38,40 @@
                                 "conditions": [
                                     {
                                         "bundle_identifiers": [
+                                            "^com\\.microsoft\\.rdc\\.macos$"
+                                        ],
+                                        "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
+                                        "type": "frontmost_application_if"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "f1",
+                                    "modifiers": { "optional": ["any"] }
+                                },
+                                "parameters": { "basic.to_if_alone_timeout_milliseconds": 250 },
+                                "to": [
+                                    {
+                                        "set_variable": {
+                                            "name": "caps_layer",
+                                            "value": 1
+                                        }
+                                    }
+                                ],
+                                "to_after_key_up": [
+                                    {
+                                        "set_variable": {
+                                            "name": "caps_layer",
+                                            "value": 0
+                                        }
+                                    }
+                                ],
+                                "to_if_alone": [{ "key_code": "f1" }],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
                                             "^net\\.ankiweb\\.launcher$",
                                             "^net\\.ankiweb\\.anki$"
                                         ],
@@ -70,9 +104,7 @@
                                         "hold_down_milliseconds": 200,
                                         "key_code": "caps_lock"
                                     },
-                                    {
-                                        "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/post_dummy_key.py --key-code 79 --delay-ms 80"
-                                    }
+                                    { "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/post_dummy_key.py --key-code 79 --delay-ms 80" }
                                 ],
                                 "type": "basic"
                             },
@@ -197,6 +229,71 @@
                                     "modifiers": { "optional": ["any"] }
                                 },
                                 "to": [{ "key_code": "left_command" }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "[Layer]: Caps+Left Option/Right Command -> Option Secondary Caps Layer",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "left_option",
+                                    "modifiers": { "optional": ["any"] }
+                                },
+                                "to": [
+                                    {
+                                        "set_variable": {
+                                            "name": "option_secondary_caps_layer",
+                                            "value": 1
+                                        }
+                                    }
+                                ],
+                                "to_after_key_up": [
+                                    {
+                                        "set_variable": {
+                                            "name": "option_secondary_caps_layer",
+                                            "value": 0
+                                        }
+                                    }
+                                ],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "right_command",
+                                    "modifiers": { "optional": ["any"] }
+                                },
+                                "to": [
+                                    {
+                                        "set_variable": {
+                                            "name": "option_secondary_caps_layer",
+                                            "value": 1
+                                        }
+                                    }
+                                ],
+                                "to_after_key_up": [
+                                    {
+                                        "set_variable": {
+                                            "name": "option_secondary_caps_layer",
+                                            "value": 0
+                                        }
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -371,6 +468,19 @@
                                 ],
                                 "from": { "key_code": "application" },
                                 "to": [{ "apple_vendor_top_case_key_code": "keyboard_fn" }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "[Optional] F2 -> Middle mouse button",
+                        "manipulators": [
+                            {
+                                "from": {
+                                    "key_code": "f2",
+                                    "modifiers": { "optional": ["any"] }
+                                },
+                                "to": [{ "pointing_button": "button3" }],
                                 "type": "basic"
                             }
                         ]
@@ -632,6 +742,142 @@
                                     {
                                         "key_code": "semicolon",
                                         "modifiers": ["shift"]
+                                    }
+                                ],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Caps+[LOpt/RCmd]+C/V/X, Shift+C/X for Current Line",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    },
+                                    {
+                                        "name": "option_secondary_caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "c",
+                                    "modifiers": {
+                                        "mandatory": ["shift"],
+                                        "optional": ["left_option", "right_command"]
+                                    }
+                                },
+                                "to": [
+                                    {
+                                        "repeat": false,
+                                        "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/secondary_clipboard.py copy --current-line"
+                                    }
+                                ],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    },
+                                    {
+                                        "name": "option_secondary_caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "c",
+                                    "modifiers": { "optional": ["left_option", "right_command"] }
+                                },
+                                "to": [
+                                    {
+                                        "repeat": false,
+                                        "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/secondary_clipboard.py copy"
+                                    }
+                                ],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    },
+                                    {
+                                        "name": "option_secondary_caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "v",
+                                    "modifiers": { "optional": ["left_option", "right_command"] }
+                                },
+                                "to": [
+                                    {
+                                        "repeat": false,
+                                        "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/secondary_clipboard.py paste"
+                                    }
+                                ],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    },
+                                    {
+                                        "name": "option_secondary_caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "x",
+                                    "modifiers": {
+                                        "mandatory": ["shift"],
+                                        "optional": ["left_option", "right_command"]
+                                    }
+                                },
+                                "to": [
+                                    {
+                                        "repeat": false,
+                                        "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/secondary_clipboard.py cut --current-line"
+                                    }
+                                ],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    },
+                                    {
+                                        "name": "option_secondary_caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "x",
+                                    "modifiers": { "optional": ["left_option", "right_command"] }
+                                },
+                                "to": [
+                                    {
+                                        "repeat": false,
+                                        "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/secondary_clipboard.py cut"
                                     }
                                 ],
                                 "type": "basic"
@@ -1108,6 +1354,60 @@
                         ]
                     },
                     {
+                        "description": "Caps+W -> Show frontmost window information, except Anki",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^net\\.ankiweb\\.launcher$",
+                                            "^net\\.ankiweb\\.anki$"
+                                        ],
+                                        "type": "frontmost_application_unless"
+                                    },
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "w",
+                                    "modifiers": { "optional": ["any"] }
+                                },
+                                "to": [{ "shell_command": "${HOME}/.config/karabiner/scripts/show_front_window_info.sh" }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Caps+R -> Fit and center frontmost window on current display, except Anki",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^net\\.ankiweb\\.launcher$",
+                                            "^net\\.ankiweb\\.anki$"
+                                        ],
+                                        "type": "frontmost_application_unless"
+                                    },
+                                    {
+                                        "name": "caps_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "r",
+                                    "modifiers": { "optional": ["any"] }
+                                },
+                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/center_front_window.py --fit" }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
                         "description": "[Finder]: XButton Support",
                         "manipulators": [
                             {
@@ -1217,60 +1517,6 @@
                                         "modifiers": ["control"]
                                     }
                                 ],
-                                "type": "basic"
-                            }
-                        ]
-                    },
-                    {
-                        "description": "Caps+R -> Fit and center frontmost window on current display, except Anki",
-                        "manipulators": [
-                            {
-                                "conditions": [
-                                    {
-                                        "bundle_identifiers": [
-                                            "^net\\.ankiweb\\.launcher$",
-                                            "^net\\.ankiweb\\.anki$"
-                                        ],
-                                        "type": "frontmost_application_unless"
-                                    },
-                                    {
-                                        "name": "caps_layer",
-                                        "type": "variable_if",
-                                        "value": 1
-                                    }
-                                ],
-                                "from": {
-                                    "key_code": "r",
-                                    "modifiers": { "optional": ["any"] }
-                                },
-                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/center_front_window.py --fit" }],
-                                "type": "basic"
-                            }
-                        ]
-                    },
-                    {
-                        "description": "Caps+W -> Show frontmost window information, except Anki",
-                        "manipulators": [
-                            {
-                                "conditions": [
-                                    {
-                                        "bundle_identifiers": [
-                                            "^net\\.ankiweb\\.launcher$",
-                                            "^net\\.ankiweb\\.anki$"
-                                        ],
-                                        "type": "frontmost_application_unless"
-                                    },
-                                    {
-                                        "name": "caps_layer",
-                                        "type": "variable_if",
-                                        "value": 1
-                                    }
-                                ],
-                                "from": {
-                                    "key_code": "w",
-                                    "modifiers": { "optional": ["any"] }
-                                },
-                                "to": [{ "shell_command": "${HOME}/.config/karabiner/scripts/show_front_window_info.sh" }],
                                 "type": "basic"
                             }
                         ]

@@ -318,6 +318,7 @@ def html_to_text(value):
 def parse_args():
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--advanced", action="store_true")
+    parser.add_argument("--copy-only", action="store_true")
     parser.add_argument("--release-shift", action="store_true")
     return parser.parse_args()
 
@@ -355,6 +356,9 @@ def main():
         text = advanced_text_processing(text)
 
     run(["/usr/bin/pbcopy"], input_text=text)
+
+    if args.copy_only:
+        return 0
 
     # Give the triggering shortcut's modifiers and the pasteboard time to settle.
     if args.release_shift:
