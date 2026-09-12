@@ -7,6 +7,8 @@ import time
 from pathlib import Path
 from typing import Any
 
+import keyboard_events
+
 AppKit: Any = importlib.import_module("AppKit")
 Foundation: Any = importlib.import_module("Foundation")
 
@@ -15,7 +17,7 @@ NSPasteboardItem = AppKit.NSPasteboardItem
 NSData = Foundation.NSData
 
 
-DEFAULT_PASTEBOARD_NAME = "com.bh2wfr.secondary-clipboard"
+DEFAULT_PASTEBOARD_NAME = "com.personal-scripts.secondary-clipboard"
 TEXT_TYPE = "public.utf8-plain-text"
 COPY_TIMEOUT_SECONDS = 1.0
 PASTE_RESTORE_DELAY_SECONDS = 0.3
@@ -74,68 +76,61 @@ def text_snapshot(text):
     return [[(TEXT_TYPE, text.encode("utf-8"))]]
 
 
+def release_shortcut_keys(trigger_key_code):
+    keyboard_events.release_keys(
+        keyboard_events.LEFT_SHIFT_KEY_CODE,
+        keyboard_events.RIGHT_SHIFT_KEY_CODE,
+        keyboard_events.LEFT_OPTION_KEY_CODE,
+        keyboard_events.RIGHT_OPTION_KEY_CODE,
+        keyboard_events.LEFT_COMMAND_KEY_CODE,
+        keyboard_events.RIGHT_COMMAND_KEY_CODE,
+        trigger_key_code,
+    )
+
+
 def post_shortcut(key_code):
-    result = subprocess.run(
-        [
-            "/usr/bin/osascript",
-            "-e",
-            'tell application "System Events" to key up shift',
-            "-e",
-            'tell application "System Events" to key up option',
-            "-e",
-            'tell application "System Events" to key up command',
-            "-e",
-            f'tell application "System Events" to key code {key_code} using {{command down}}',
-        ],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        check=False,
-    )
-    return result.returncode == 0
+    try:
+        release_shortcut_keys(key_code)
+        keyboard_events.post_keystroke(key_code, keyboard_events.COMMAND_FLAG)
+    except RuntimeError:
+        return False
+    return True
 
 
-def select_current_line():
-    result = subprocess.run(
-        [
-            "/usr/bin/osascript",
-            "-e",
-            'tell application "System Events" to key up shift',
-            "-e",
-            'tell application "System Events" to key up option',
-            "-e",
-            'tell application "System Events" to key up command',
-            "-e",
-            'tell application "System Events" to key code 124 using {command down}',
-            "-e",
-            'tell application "System Events" to key code 123 using {command down, shift down}',
-            "-e",
-            'tell application "System Events" to key code 123 using {command down, shift down}',
-        ],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        check=False,
-    )
-    return result.returncode == 0
+def select_current_line(trigger_key_code):
+    try:
+        release_shortcut_keys(trigger_key_code)
+        keyboard_events.post_keystroke(
+            keyboard_events.RIGHT_ARROW_KEY_CODE,
+            keyboard_events.COMMAND_FLAG,
+        )
+        selection_flags = (
+            keyboard_events.COMMAND_FLAG | keyboard_events.SHIFT_FLAG
+        )
+        keyboard_events.post_keystroke(
+            keyboard_events.LEFT_ARROW_KEY_CODE,
+            selection_flags,
+        )
+        keyboard_events.post_keystroke(
+            keyboard_events.LEFT_ARROW_KEY_CODE,
+            selection_flags,
+        )
+    except RuntimeError:
+        return False
+    return True
 
 
 def finish_current_line(action):
-    command = [
-        "/usr/bin/osascript",
-        "-e",
-        'tell application "System Events" to key code 124 using {command down}',
-    ]
-    if action == "cut":
-        command.extend(
-            ["-e", 'tell application "System Events" to key code 51']
+    try:
+        keyboard_events.post_keystroke(
+            keyboard_events.RIGHT_ARROW_KEY_CODE,
+            keyboard_events.COMMAND_FLAG,
         )
-
-    result = subprocess.run(
-        command,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        check=False,
-    )
-    return result.returncode == 0
+        if action == "cut":
+            keyboard_events.post_keystroke(keyboard_events.DELETE_KEY_CODE)
+    except RuntimeError:
+        return False
+    return True
 
 
 def send_selection_to_general(pasteboard, key_code):
@@ -165,7 +160,7 @@ def normalize_general_pasteboard_to_text():
 def copy_to_secondary(general, secondary, multi_items, *, cut=False):
     original = snapshot_pasteboard(general)
     try:
-        if not send_selection_to_general(general, 8):
+        if not send_selection_to_general(general, keyboard_events.C_KEY_CODE):
             print("Unable to copy the current selection.", file=sys.stderr)
             return 1
 
@@ -183,7 +178,10 @@ def copy_to_secondary(general, secondary, multi_items, *, cut=False):
             return 1
 
         restore_pasteboard(secondary, copied)
-        if cut and not send_selection_to_general(general, 7):
+        if cut and not send_selection_to_general(
+            general,
+            keyboard_events.X_KEY_CODE,
+        ):
             print("Unable to cut the current selection.", file=sys.stderr)
             return 1
         return 0
@@ -205,7 +203,7 @@ def paste_from_secondary(general, secondary, multi_items):
     original = snapshot_pasteboard(general)
     try:
         restore_pasteboard(general, copied)
-        if not post_shortcut(9):
+        if not post_shortcut(keyboard_events.V_KEY_CODE):
             print("Unable to send the paste shortcut.", file=sys.stderr)
             return 1
         time.sleep(PASTE_RESTORE_DELAY_SECONDS)
@@ -224,7 +222,12 @@ def main():
         return 2
 
     if args.action in ("copy", "cut"):
-        if args.current_line and not select_current_line():
+        trigger_key_code = (
+            keyboard_events.C_KEY_CODE
+            if args.action == "copy"
+            else keyboard_events.X_KEY_CODE
+        )
+        if args.current_line and not select_current_line(trigger_key_code):
             print("Unable to select the current line.", file=sys.stderr)
             return 1
         result = copy_to_secondary(

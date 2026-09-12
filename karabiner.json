@@ -953,7 +953,12 @@
                                     }
                                 ],
                                 "from": { "key_code": "x" },
-                                "to": [{ "shell_command": "/bin/sleep 0.1; /usr/bin/osascript -e 'tell application \"System Events\" to key code 7 using {command down}'" }],
+                                "to": [
+                                    {
+                                        "key_code": "x",
+                                        "modifiers": ["command"]
+                                    }
+                                ],
                                 "type": "basic"
                             },
                             {
@@ -969,7 +974,6 @@
                                     "modifiers": { "mandatory": ["shift"] }
                                 },
                                 "to": [
-                                    { "shell_command": "/usr/bin/osascript -e 'tell application \"System Events\" to key up shift'" },
                                     {
                                         "key_code": "right_arrow",
                                         "modifiers": ["command"]
@@ -1009,7 +1013,6 @@
                                 ],
                                 "from": { "key_code": "c" },
                                 "to": [
-                                    { "shell_command": "/usr/bin/osascript -e 'tell application \"System Events\" to key up shift'" },
                                     {
                                         "key_code": "c",
                                         "modifiers": ["command"]
@@ -1030,7 +1033,6 @@
                                     "modifiers": { "mandatory": ["shift"] }
                                 },
                                 "to": [
-                                    { "shell_command": "/usr/bin/osascript -e 'tell application \"System Events\" to key up shift'" },
                                     {
                                         "key_code": "right_arrow",
                                         "modifiers": ["command"]

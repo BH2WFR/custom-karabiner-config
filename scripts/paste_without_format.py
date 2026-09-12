@@ -7,6 +7,8 @@ import subprocess
 import sys
 import time
 
+import keyboard_events
+
 
 FILENAMES_CLIPBOARD_SCRIPT = r"""
 import json
@@ -324,15 +326,17 @@ def parse_args():
 
 
 def release_shift():
-    subprocess.run(
-        [
-            "/usr/bin/osascript",
-            "-e",
-            'tell application "System Events" to key up shift',
-        ],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        check=False,
+    keyboard_events.release_keys(
+        keyboard_events.LEFT_SHIFT_KEY_CODE,
+        keyboard_events.RIGHT_SHIFT_KEY_CODE,
+    )
+
+
+def paste():
+    keyboard_events.release_keys(keyboard_events.V_KEY_CODE)
+    keyboard_events.post_keystroke(
+        keyboard_events.V_KEY_CODE,
+        keyboard_events.COMMAND_FLAG,
     )
 
 
@@ -364,16 +368,7 @@ def main():
     if args.release_shift:
         release_shift()
     time.sleep(0.15)
-    subprocess.run(
-        [
-            "/usr/bin/osascript",
-            "-e",
-            'tell application "System Events" to key code 9 using {command down}',
-        ],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        check=False,
-    )
+    paste()
     return 0
 
 

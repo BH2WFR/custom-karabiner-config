@@ -78,8 +78,8 @@ When Microsoft Remote Desktop / Windows App is frontmost, hold physical `F1` ins
 | `Caps+Shift+C` | Copy entire line | |
 | `Caps+X` | Cut (`Cmd+X`) | |
 | `Caps+Shift+X` | Cut entire line | |
-| `Caps+V` | **Paste as plain text** | Uses `scripts/paste_without_format.py` (depends on `pyobjc-framework-Cocoa` for Finder path extraction); <br />when **copying files from Finder, pastes file paths** (one per line for multiple files) |
-| `Caps+Shift+V` | **Advanced paste** | Uses `scripts/paste_without_format.py --advanced`; <br />strips zero-width chars, normalises spaces, converts full-width→half-width, de-quotes, splits ligatures, CJK-aware line-break removal (while copied from paragraphs from a PDF file), path-slash conversion — then pastes with `Cmd+V` |
+| `Caps+V` | **Paste as plain text** | Uses `scripts/paste_without_format.py` (depends on `pyobjc-framework-Cocoa` for Finder path extraction); posts `Cmd+V` through CoreGraphics; <br />when **copying files from Finder, pastes file paths** (one per line for multiple files) |
+| `Caps+Shift+V` | **Advanced paste** | Uses `scripts/paste_without_format.py --advanced`; releases `Shift` and posts `Cmd+V` through CoreGraphics; <br />strips zero-width chars, normalises spaces, converts full-width→half-width, de-quotes, splits ligatures, CJK-aware line-break removal (while copied from paragraphs from a PDF file), path-slash conversion — then pastes with `Cmd+V` |
 | `Caps+Tab` | Indent selected lines | Uses `scripts/indent_select_lines.py` <br />(stdlib only) |
 | `Caps+Shift+Tab` | Unindent selected lines | Uses `scripts/indent_select_lines.py` <br />(stdlib only) |
 | `Caps+Backspace` | **Delete the first character of the preceding two-character word** | e.g. with the cursor after `结果`: <br />moves left → deletes `结` → moves right, **leaving `果` before the cursor** |
@@ -128,11 +128,11 @@ The **secondary clipboard** is the first set of functions assigned to the Caps S
 
 | Keys | Function | Notes |
 | --- | --- | --- |
-| `Caps+[LOpt/RCmd]+C` | Copy selection to the secondary clipboard as plain text | Uses `scripts/secondary_clipboard.py copy`; image-only and other content without a text representation is rejected; Finder files are converted to full paths |
+| `Caps+[LOpt/RCmd]+C` | Copy selection to the secondary clipboard as plain text | Uses `scripts/secondary_clipboard.py copy` and CoreGraphics keyboard events; image-only and other content without a text representation is rejected; Finder files are converted to full paths |
 | `Caps+[LOpt/RCmd]+Shift+C` | Copy current line to the secondary clipboard as plain text | Uses the same whole-line selection behavior as `Caps+Shift+C` |
 | `Caps+[LOpt/RCmd]+X` | Cut selection to the secondary clipboard as plain text | Confirms that a text representation is available before sending `Cmd+X` |
 | `Caps+[LOpt/RCmd]+Shift+X` | Cut current line to the secondary clipboard as plain text | Uses the same whole-line selection and newline cleanup as `Caps+Shift+X` |
-| `Caps+[LOpt/RCmd]+V` | Paste the secondary clipboard as plain text | Temporarily writes to the general pasteboard, pastes, then restores the previous general pasteboard |
+| `Caps+[LOpt/RCmd]+V` | Paste the secondary clipboard as plain text | Temporarily writes to the general pasteboard, posts `Cmd+V` through CoreGraphics, then restores the previous general pasteboard |
 
 The secondary clipboard is stored in a named macOS `NSPasteboard`, not a temporary file. The script defaults to `com.bh2wfr.secondary-clipboard` and also supports `--pasteboard-name`, `--multi-items`, and the `clear` action from the command line. There are currently no hotkeys for multi-item operations or clearing the secondary clipboard.
 
@@ -278,7 +278,7 @@ The Rime, Anki, and Cherry Studio rules are personal shortcuts documented in **P
 
 ### Additional Dependencies
 
-- **Secondary clipboard** — `scripts/secondary_clipboard.py` uses `pyobjc-framework-Cocoa`, a named `NSPasteboard`, and System Events keyboard automation; it does not write clipboard data to temporary files
+- **Secondary clipboard** — `scripts/secondary_clipboard.py` uses `pyobjc-framework-Cocoa`, a named `NSPasteboard`, and the shared `scripts/keyboard_events.py` CoreGraphics helper; it does not write clipboard data to temporary files
 
 ### Display and Window Scripts
 
