@@ -22,7 +22,7 @@ Repository: [BH2WFR/custom-karabiner-config](https://github.com/BH2WFR/custom-ka
 | `Fn` | Function or Globe key |
 | `App` / `Menu` | Application/Menu key on an external keyboard |
 | `Kbd` | Keyboard, as used in rule names such as `BuiltInKbd` and `ExternalKbd` |
-| `[RDP]` | Remote Desktop Protocol; Microsoft Remote Desktop or Windows App |
+| `[RDP]` | Remote-window rule group: Microsoft Remote Desktop, Windows App, or UU Remote (UU远程); |
 | Physical key | The key actually pressed on the keyboard, before this configuration remaps it |
 | Mapped key | The key produced by a mapping and received by macOS or the target application |
 
@@ -36,7 +36,7 @@ In shortcut notation, `A+B` means that the keys are held together. A group such 
 
 ## Keyboard Mappings
 
-| Physical Key | Normal | RDP <br />(Microsoft Remote Desktop / Windows App) |
+| Physical Key | Normal | RDP <br />(Microsoft Remote Desktop / Windows App / UU Remote) |
 | --- | --- | --- |
 | `Caps` | Activates **Caps Primary Layer** (hold) / `Caps` (tap) | `F1` |
 | `F1` | `F1` | Activates **Caps Primary Layer** (hold) / `F1` (tap) |
@@ -68,7 +68,7 @@ They can be enabled or disabled independently without changing the normal Caps P
 
 Hold `Caps` to activate `caps_primary_layer`. Release it to deactivate the layer. Tapping `Caps` alone sends `Caps` on key-up (i.e., on release), which toggles Caps Lock or switches input method depending on system settings.
 
-When Microsoft Remote Desktop / Windows App is frontmost, hold physical `F1` instead. It sets `caps_primary_layer` directly on key-down and clears it on key-up; it does not map through `Caps`. Tapping `F1` alone still sends `F1`.
+When Microsoft Remote Desktop / Windows App / UU Remote is frontmost, hold physical `F1` instead. It sets `caps_primary_layer` directly on key-down and clears it on key-up; it does not map through `Caps`. Tapping `F1` alone still sends `F1`.
 
 #### Editing
 
@@ -90,6 +90,7 @@ When Microsoft Remote Desktop / Windows App is frontmost, hold physical `F1` ins
 | `Caps+Shift+Enter` | Insert blank line above current | |
 | `Caps+Space` | Insert full-width space (U+3000) | Uses `scripts/insert_unicode_symbol_cgevent.py`; <br />posts Unicode keyboard events with `ctypes` and does not modify the clipboard |
 | `Caps+Z` | `Fn` | Sends `keyboard_fn` |
+| `Caps+Shift+Z` | Repair clipboard images | When Windows App controls a remote computer over RDP, images copied on that computer can arrive in this Mac's clipboard as TIFF data mislabeled as PNG. `scripts/repair_clipboard_images.py` converts them into correctly encoded PNG images; runs once without confirmation or automatic paste |
 | `Caps+\`<br />`Caps+\|` | ISO `\|` key | Sends `non_us_backslash` / `Shift+non_us_backslash` |
 
 #### Mouse / Navigation
@@ -270,15 +271,17 @@ Rules for RDP, Anki, Cherry Studio, and Rime depend on app bundle identifiers or
 osascript -e 'id of app "Anki"'
 osascript -e 'id of app "Windows App"'
 osascript -e 'id of app "Microsoft Remote Desktop"'
+osascript -e 'id of app "UURemote"'
 ```
 
 Update `frontmost_application_if` / `frontmost_application_unless` conditions if your app has a different bundle ID.
 
-The Rime, Anki, and Cherry Studio rules are personal shortcuts documented in **Personal Hotkeys** above; other users should normally disable them. Disable the RDP / Windows App mappings as well if remote Windows sessions are not used.
+The Rime, Anki, and Cherry Studio rules are personal shortcuts documented in **Personal Hotkeys** above; other users should normally disable them. Disable the RDP / Windows App / UU Remote mappings as well if remote Windows sessions are not used.
 
 ### Additional Dependencies
 
 - **Secondary clipboard** — `scripts/secondary_clipboard.py` uses `pyobjc-framework-Cocoa`, a named `NSPasteboard`, and the shared `scripts/keyboard_events.py` CoreGraphics helper; it does not write clipboard data to temporary files
+- **Clipboard image repair** — `scripts/repair_clipboard_images.py` uses the same `pyobjc-framework-Cocoa` dependency for AppKit decoding and PNG encoding, entirely in memory.
 
 ### Display and Window Scripts
 

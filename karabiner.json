@@ -61,7 +61,8 @@
                                 "conditions": [
                                     {
                                         "bundle_identifiers": [
-                                            "^com\\.microsoft\\.rdc\\.macos$"
+                                            "^com\\.microsoft\\.rdc\\.macos$",
+                                            "^com\\.netease\\.uuremote$"
                                         ],
                                         "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
                                         "type": "frontmost_application_unless"
@@ -105,7 +106,8 @@
                                 "conditions": [
                                     {
                                         "bundle_identifiers": [
-                                            "^com\\.microsoft\\.rdc\\.macos$"
+                                            "^com\\.microsoft\\.rdc\\.macos$",
+                                            "^com\\.netease\\.uuremote$"
                                         ],
                                         "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
                                         "type": "frontmost_application_if"
@@ -127,7 +129,8 @@
                                 "conditions": [
                                     {
                                         "bundle_identifiers": [
-                                            "^com\\.microsoft\\.rdc\\.macos$"
+                                            "^com\\.microsoft\\.rdc\\.macos$",
+                                            "^com\\.netease\\.uuremote$"
                                         ],
                                         "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
                                         "type": "frontmost_application_if"
@@ -166,7 +169,8 @@
                                 "conditions": [
                                     {
                                         "bundle_identifiers": [
-                                            "^com\\.microsoft\\.rdc\\.macos$"
+                                            "^com\\.microsoft\\.rdc\\.macos$",
+                                            "^com\\.netease\\.uuremote$"
                                         ],
                                         "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
                                         "type": "frontmost_application_unless"
@@ -203,7 +207,8 @@
                                 "conditions": [
                                     {
                                         "bundle_identifiers": [
-                                            "^com\\.microsoft\\.rdc\\.macos$"
+                                            "^com\\.microsoft\\.rdc\\.macos$",
+                                            "^com\\.netease\\.uuremote$"
                                         ],
                                         "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
                                         "type": "frontmost_application_unless"
@@ -245,7 +250,8 @@
                                 "conditions": [
                                     {
                                         "bundle_identifiers": [
-                                            "^com\\.microsoft\\.rdc\\.macos$"
+                                            "^com\\.microsoft\\.rdc\\.macos$",
+                                            "^com\\.netease\\.uuremote$"
                                         ],
                                         "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
                                         "type": "frontmost_application_unless"
@@ -262,7 +268,8 @@
                                 "conditions": [
                                     {
                                         "bundle_identifiers": [
-                                            "^com\\.microsoft\\.rdc\\.macos$"
+                                            "^com\\.microsoft\\.rdc\\.macos$",
+                                            "^com\\.netease\\.uuremote$"
                                         ],
                                         "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
                                         "type": "frontmost_application_if"
@@ -307,7 +314,8 @@
                                     },
                                     {
                                         "bundle_identifiers": [
-                                            "^com\\.microsoft\\.rdc\\.macos$"
+                                            "^com\\.microsoft\\.rdc\\.macos$",
+                                            "^com\\.netease\\.uuremote$"
                                         ],
                                         "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
                                         "type": "frontmost_application_unless"
@@ -329,7 +337,8 @@
                                 "conditions": [
                                     {
                                         "bundle_identifiers": [
-                                            "^com\\.microsoft\\.rdc\\.macos$"
+                                            "^com\\.microsoft\\.rdc\\.macos$",
+                                            "^com\\.netease\\.uuremote$"
                                         ],
                                         "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
                                         "type": "frontmost_application_if"
@@ -346,7 +355,8 @@
                                 "conditions": [
                                     {
                                         "bundle_identifiers": [
-                                            "^com\\.microsoft\\.rdc\\.macos$"
+                                            "^com\\.microsoft\\.rdc\\.macos$",
+                                            "^com\\.netease\\.uuremote$"
                                         ],
                                         "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
                                         "type": "frontmost_application_if"
@@ -363,7 +373,8 @@
                                 "conditions": [
                                     {
                                         "bundle_identifiers": [
-                                            "^com\\.microsoft\\.rdc\\.macos$"
+                                            "^com\\.microsoft\\.rdc\\.macos$",
+                                            "^com\\.netease\\.uuremote$"
                                         ],
                                         "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
                                         "type": "frontmost_application_unless"
@@ -398,7 +409,8 @@
                                 "conditions": [
                                     {
                                         "bundle_identifiers": [
-                                            "^com\\.microsoft\\.rdc\\.macos$"
+                                            "^com\\.microsoft\\.rdc\\.macos$",
+                                            "^com\\.netease\\.uuremote$"
                                         ],
                                         "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
                                         "type": "frontmost_application_unless"
@@ -426,7 +438,8 @@
                                 "conditions": [
                                     {
                                         "bundle_identifiers": [
-                                            "^com\\.microsoft\\.rdc\\.macos$"
+                                            "^com\\.microsoft\\.rdc\\.macos$",
+                                            "^com\\.netease\\.uuremote$"
                                         ],
                                         "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
                                         "type": "frontmost_application_if"
@@ -459,7 +472,8 @@
                                 "conditions": [
                                     {
                                         "bundle_identifiers": [
-                                            "^com\\.microsoft\\.rdc\\.macos$"
+                                            "^com\\.microsoft\\.rdc\\.macos$",
+                                            "^com\\.netease\\.uuremote$"
                                         ],
                                         "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
                                         "type": "frontmost_application_unless"
@@ -480,7 +494,8 @@
                                 "conditions": [
                                     {
                                         "bundle_identifiers": [
-                                            "^com\\.microsoft\\.rdc\\.macos$"
+                                            "^com\\.microsoft\\.rdc\\.macos$",
+                                            "^com\\.netease\\.uuremote$"
                                         ],
                                         "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
                                         "type": "frontmost_application_unless"
@@ -517,7 +532,8 @@
                                 "conditions": [
                                     {
                                         "bundle_identifiers": [
-                                            "^com\\.microsoft\\.rdc\\.macos$"
+                                            "^com\\.microsoft\\.rdc\\.macos$",
+                                            "^com\\.netease\\.uuremote$"
                                         ],
                                         "file_paths": ["^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"],
                                         "type": "frontmost_application_unless"
@@ -539,8 +555,28 @@
                         ]
                     },
                     {
-                        "description": "Caps+Z -> Fn",
+                        "description": "Caps+Z -> Fn, Caps+Shift+Z -> Repair Clipboard Images",
                         "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "name": "caps_primary_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "z",
+                                    "modifiers": { "mandatory": ["shift"] }
+                                },
+                                "to": [
+                                    {
+                                        "repeat": false,
+                                        "shell_command": "/opt/miniconda3/bin/python3 \"${HOME}/.config/karabiner/scripts/repair_clipboard_images.py\""
+                                    }
+                                ],
+                                "type": "basic"
+                            },
                             {
                                 "conditions": [
                                     {
