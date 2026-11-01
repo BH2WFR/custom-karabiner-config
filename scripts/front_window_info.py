@@ -64,8 +64,8 @@ def _url_path(url: Any) -> str:
 
 def _run_text(args: list[str]) -> str:
     try:
-        return subprocess.check_output(args, text=True, stderr=subprocess.DEVNULL).strip()
-    except (OSError, subprocess.CalledProcessError):
+        return subprocess.check_output(args, text=True, stderr=subprocess.DEVNULL, timeout=3).strip()
+    except (OSError, subprocess.SubprocessError):
         return ""
 
 
@@ -168,61 +168,64 @@ def _print_child_summary(window: Any) -> None:
         print(f"{FLGreen}{idx:>3}{CRst}  {role:<18} {subrole:<24} {title}")
 
 
-def main() -> int:
-    app = _target_app()
-    if app is None:
-        print(f"{FLRed}No target application.{CRst}", file=sys.stderr)
-        return 1
-
+def collect_info(app, window):
+    """Collect display data for an explicit application/window, without changing focus."""
     pid = int(app.processIdentifier())
     app_ref = AS.AXUIElementCreateApplication(pid)
-    window = _focused_window(app_ref)
 
     bundle_path = _url_path(app.bundleURL())
     executable_path = _url_path(app.executableURL())
     info = _bundle_info(bundle_path)
 
+    sections = {
+        "Application": {
+            "Name": app.localizedName(), "Bundle ID": app.bundleIdentifier(), "PID": pid,
+            "Parent PID": _ps_field(pid, "ppid"), "User": _ps_field(pid, "user"),
+            "Executable": executable_path, "Bundle path": bundle_path,
+            "Command": _ps_field(pid, "command"), "Started": _ps_field(pid, "lstart"),
+            "CPU time": _ps_field(pid, "time"),
+            "RSS / VSZ": f"{_ps_field(pid, 'rss')} KB / {_ps_field(pid, 'vsz')} KB",
+            "Binary type": _file_type(executable_path),
+        },
+        "Bundle": {
+            label: info.get(key, "") for label, key in (
+                ("Display name", "CFBundleDisplayName"), ("Name", "CFBundleName"),
+                ("Identifier", "CFBundleIdentifier"), ("Short version", "CFBundleShortVersionString"),
+                ("Bundle version", "CFBundleVersion"), ("Package type", "CFBundlePackageType"),
+                ("Minimum system", "LSMinimumSystemVersion"),
+            )
+        },
+        "Window": {"Status": "No window exposed through Accessibility."},
+    }
+    if window is not None:
+        sections["Window"] = {
+            "Window count": len(_ax_attr(app_ref, AS.kAXWindowsAttribute, [])),
+            "Title": _ax_attr(window, AS.kAXTitleAttribute),
+            "Role": _ax_attr(window, AS.kAXRoleAttribute),
+            "Subrole": _ax_attr(window, AS.kAXSubroleAttribute),
+            "Position": _ax_point(window, AS.kAXPositionAttribute),
+            "Size": _ax_size(window, AS.kAXSizeAttribute),
+            "Minimized": _ax_attr(window, AS.kAXMinimizedAttribute),
+            "Fullscreen": _ax_attr(window, "AXFullScreen"),
+            "Modal": _ax_attr(window, "AXModal"),
+            "Document": _ax_attr(window, "AXDocument"),
+        }
+    return sections
+
+
+def main() -> int:
+    app = _target_app()
+    if app is None:
+        print(f"{FLRed}No target application.{CRst}", file=sys.stderr)
+        return 1
+    window = _focused_window(AS.AXUIElementCreateApplication(app.processIdentifier()))
     print(f"{FLYellow}=========== FRONT WINDOW INFO ==========={CRst}")
-
-    _print_section("Application")
-    _print_kv("Name", app.localizedName())
-    _print_kv("Bundle ID", app.bundleIdentifier())
-    _print_kv("PID", pid)
-    _print_kv("Parent PID", _ps_field(pid, "ppid"))
-    _print_kv("User", _ps_field(pid, "user"))
-    _print_kv("Executable", executable_path)
-    _print_kv("Bundle path", bundle_path)
-    _print_kv("Command", _ps_field(pid, "command"))
-    _print_kv("Started", _ps_field(pid, "lstart"))
-    _print_kv("CPU time", _ps_field(pid, "time"))
-    _print_kv("RSS / VSZ", f"{_ps_field(pid, 'rss')} KB / {_ps_field(pid, 'vsz')} KB")
-    _print_kv("Binary type", _file_type(executable_path))
-
-    _print_section("Bundle")
-    _print_kv("Display name", info.get("CFBundleDisplayName", ""))
-    _print_kv("Name", info.get("CFBundleName", ""))
-    _print_kv("Identifier", info.get("CFBundleIdentifier", ""))
-    _print_kv("Short version", info.get("CFBundleShortVersionString", ""))
-    _print_kv("Bundle version", info.get("CFBundleVersion", ""))
-    _print_kv("Package type", info.get("CFBundlePackageType", ""))
-    _print_kv("Minimum system", info.get("LSMinimumSystemVersion", ""))
-
-    _print_section("Focused Window")
-    if window is None:
-        print(f"{FLRed}No focused window exposed through Accessibility.{CRst}")
-    else:
-        windows = _ax_attr(app_ref, AS.kAXWindowsAttribute, [])
-        _print_kv("Window count", len(windows) if windows else 0)
-        _print_kv("Title", _ax_attr(window, AS.kAXTitleAttribute, ""))
-        _print_kv("Role", _ax_attr(window, AS.kAXRoleAttribute, ""))
-        _print_kv("Subrole", _ax_attr(window, AS.kAXSubroleAttribute, ""))
-        _print_kv("Position", _ax_point(window, AS.kAXPositionAttribute))
-        _print_kv("Size", _ax_size(window, AS.kAXSizeAttribute))
-        _print_kv("Minimized", _ax_attr(window, AS.kAXMinimizedAttribute, ""))
-        _print_kv("Fullscreen", _ax_attr(window, "AXFullScreen", ""))
-        _print_kv("Modal", _ax_attr(window, "AXModal", ""))
-
-        _print_section("Focused Window Children")
+    for title, fields in collect_info(app, window).items():
+        _print_section(title)
+        for label, value in fields.items():
+            _print_kv(label, value)
+    if window is not None:
+        _print_section("Window Children")
         _print_child_summary(window)
 
     if "--pause" in sys.argv:

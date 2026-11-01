@@ -78,7 +78,11 @@ When Microsoft Remote Desktop / Windows App / UU Remote is frontmost, hold physi
 | `Caps+Shift+C` | Copy entire line | |
 | `Caps+X` | Cut (`Cmd+X`) | |
 | `Caps+Shift+X` | Cut entire line | |
-| `Caps+V` | **Paste as plain text** | Uses `scripts/paste_without_format.py` (depends on `pyobjc-framework-Cocoa` for Finder path extraction); posts `Cmd+V` through CoreGraphics; <br />when **copying files from Finder, pastes file paths** (one per line for multiple files) |
+| `Caps+4` | Wrap selected text in `${` and `}` | Replaces the selection through plain-text paste |
+| `Caps+6` / `Caps+Shift+6` | Lowercase / uppercase selected text | Supports Unicode |
+| `Caps+Shift+7` | Title-case selected text | Capitalizes each word and lowercases the remaining letters |
+| `Caps+7` | Inspect selected text and Unicode characters | Edit the original text and press `Commit` to reparse; control characters are red, spaces and other special characters green, and other non-ASCII characters blue |
+| `Caps+V` | **Paste as plain text** | Uses `scripts/paste_without_format.py` (depends on `pyobjc-framework-Cocoa`); posts `Cmd+V` through CoreGraphics; <br />when **copying files from Finder, pastes file paths** (one per line for multiple files); rejects content without text and keeps the clipboard unchanged |
 | `Caps+Shift+V` | **Advanced paste** | Uses `scripts/paste_without_format.py --advanced`; releases `Shift` and posts `Cmd+V` through CoreGraphics; <br />strips zero-width chars, normalises spaces, converts full-width→half-width, de-quotes, splits ligatures, CJK-aware line-break removal (while copied from paragraphs from a PDF file), path-slash conversion — then pastes with `Cmd+V` |
 | `Caps+Tab` | Indent selected lines | Uses `scripts/indent_select_lines.py` <br />(stdlib only) |
 | `Caps+Shift+Tab` | Unindent selected lines | Uses `scripts/indent_select_lines.py` <br />(stdlib only) |
@@ -89,7 +93,8 @@ When Microsoft Remote Desktop / Windows App / UU Remote is frontmost, hold physi
 | `Caps+Enter` | **Go to end of line + add newline** | |
 | `Caps+Shift+Enter` | Insert blank line above current | |
 | `Caps+Space` | Insert full-width space (U+3000) | Uses `scripts/insert_unicode_symbol_cgevent.py`; <br />posts Unicode keyboard events with `ctypes` and does not modify the clipboard |
-| `Caps+Z` | `Fn` | Sends `keyboard_fn` |
+| `Caps+B` | `Fn` | Sends `keyboard_fn` |
+| `Caps+Z` | Type clipboard text as keystrokes | For browser VNC consoles; printable ASCII, Tab and line breaks only; rejects the entire text if unsupported characters occur; leaves the clipboard unchanged |
 | `Caps+Shift+Z` | Repair clipboard images | When Windows App controls a remote computer over RDP, images copied on that computer can arrive in this Mac's clipboard as TIFF data mislabeled as PNG. `scripts/repair_clipboard_images.py` converts them into correctly encoded PNG images; runs once without confirmation or automatic paste |
 | `Caps+\`<br />`Caps+\|` | ISO `\|` key | Sends `non_us_backslash` / `Shift+non_us_backslash` |
 
@@ -110,10 +115,20 @@ When Microsoft Remote Desktop / Windows App / UU Remote is frontmost, hold physi
 
 | Keys | App | Function | Notes |
 | --- | --- | --- | --- |
+| `Caps+A` | Any except Anki | Toggle local Caps Lock | Shows the actual ON/OFF state for 600 ms; does not switch input sources |
+| `Caps+E` | Any except Anki | Open a native quick-access menu at the pointer | Folders, system settings and utilities; includes Homebrew's cache when installed. Select with the mouse; click outside or press Esc to dismiss |
+| `Caps+Q` | Any except Anki | `Esc` | Preserves additional mapped modifiers, e.g. `Cmd+Caps+Q` sends `Cmd+Esc` |
+| `` Caps+` `` | Any | Release both sides of `Cmd`, `Opt`, `Ctrl` and `Shift`, and turn Caps Lock off | Also works while additional modifiers are held |
 | `Caps+P` | Any | **Toggle built-in display on/off** | Uses `scripts/toggle_builtin_screen.py` <br />(ctypes, Apple Silicon only); <br />requires **external monitor** |
 | `Caps+R` | Any except Anki | Fit frontmost window to current display, then center | Uses `scripts/center_front_window.py --fit`; <br />shrinks only if the window is larger than the target display; <br />pass `--display main` to target the main display instead; <br />requires Accessibility permission for Python |
-| `Caps+W` | Any except Anki | Show frontmost window/app information | Captures a snapshot via `scripts/show_front_window_info.sh`, then opens Terminal; <br />shows process, bundle, focused window, and AX child summary |
-| `Caps+Shift+U` | Any | Parse Unicode from clipboard | Copies selection, opens Terminal with helper |
+| `Caps+Shift+R` | Any except Anki | Resize current window to 1024 x 768 logical points | Does not center or fit to the display; warns if the application enforces a different size |
+| `Caps+W` | Any except Anki | Inspect and manage the current window | Separate app/window tabs, arguments and AX children; double-click copies a single cell. Grouped actions for closing/centering/resizing windows, files and process management; kill/restart requires confirmation |
+
+Image repair, window centering, display toggling and rejected text input/paste show English tooltips without taking focus: gray for results, amber for warnings, red for errors.
+
+Selected-text tools use `Cmd+C` and restore the previous clipboard after processing. `Caps+7` replaces the former `Caps+Shift+U` Terminal workflow. Character counts use Unicode code points; words are letter/digit/underscore groups (no Chinese word segmentation), and line counts include a trailing empty line.
+
+The window inspector keeps the captured target when it comes to the foreground. Restart preserves the process's argument list, working directory and readable environment; it cancels if these cannot be obtained or the old process does not exit. A restart launches the executable directly, so applications managed by launchers or services may need their own restart mechanism.
 
 ### Caps Secondary Layer
 
@@ -134,8 +149,22 @@ The **secondary clipboard** is the first set of functions assigned to the Caps S
 | `Caps+[LOpt/RCmd]+X` | Cut selection to the secondary clipboard as plain text | Confirms that a text representation is available before sending `Cmd+X` |
 | `Caps+[LOpt/RCmd]+Shift+X` | Cut current line to the secondary clipboard as plain text | Uses the same whole-line selection and newline cleanup as `Caps+Shift+X` |
 | `Caps+[LOpt/RCmd]+V` | Paste the secondary clipboard as plain text | Temporarily writes to the general pasteboard, posts `Cmd+V` through CoreGraphics, then restores the previous general pasteboard |
+| `Caps+[LOpt/RCmd]+Shift+V` | Advanced paste from the secondary clipboard | Same cleanup as `Caps+Shift+V`; preserves both clipboards |
+| `Caps+[LOpt/RCmd]+Z` | Type secondary clipboard text as keystrokes | Same ASCII input as `Caps+Z`; preserves both clipboards |
 
-The secondary clipboard is stored in a named macOS `NSPasteboard`, not a temporary file. The script defaults to `com.bh2wfr.secondary-clipboard` and also supports `--pasteboard-name`, `--multi-items`, and the `clear` action from the command line. There are currently no hotkeys for multi-item operations or clearing the secondary clipboard.
+Keystroke typing uses US key positions: use US/ABC English input locally and a matching English keyboard layout remotely. Tab and line breaks send real Tab/Enter keys (and may submit a command). Press `Esc` to stop; avoid typing or switching browser tabs while it runs.
+
+The secondary clipboard is stored in a named macOS `NSPasteboard`, not a temporary file. The script defaults to `com.personal-scripts.secondary-clipboard` and also supports `--pasteboard-name`, `--multi-items`, `paste --advanced`, `type`, and `clear` from the command line. There are currently no hotkeys for multi-item operations or clearing the secondary clipboard.
+
+#### Text Tools
+
+| Keys | Function | Notes |
+| --- | --- | --- |
+| `Caps+[LOpt/RCmd]+Tab` | Paste a literal tab character | Bypasses Tab-key navigation; the target must accept pasted tabs |
+| `Caps+[LOpt/RCmd]+T` | Paste a setter name | Ordinary clipboard `myItem` becomes `setMyItem`; except Anki |
+| `Caps+[LOpt/RCmd]+Shift+T` | Paste a getter name | Ordinary clipboard `myItem` becomes `getMyItem`; except Anki |
+
+These tools preserve the ordinary clipboard. Getter/setter names support Unicode and must contain a single name without whitespace.
 
 ## Personal Hotkeys
 
@@ -282,6 +311,13 @@ The Rime, Anki, and Cherry Studio rules are personal shortcuts documented in **P
 
 - **Secondary clipboard** — `scripts/secondary_clipboard.py` uses `pyobjc-framework-Cocoa`, a named `NSPasteboard`, and the shared `scripts/keyboard_events.py` CoreGraphics helper; it does not write clipboard data to temporary files
 - **Clipboard image repair** — `scripts/repair_clipboard_images.py` uses the same `pyobjc-framework-Cocoa` dependency for AppKit decoding and PNG encoding, entirely in memory.
+- **Keystroke typing** — `scripts/type_clipboard.py` uses Cocoa to read the clipboard and CoreGraphics to send keys; requires Python Accessibility permission.
+- **Text tools** — `scripts/text_actions.py` reuses the clipboard and keyboard helpers; its foreground Unicode inspector uses `tkinter` and the current Conda environment's `python.app`.
+- **Window inspector** — `scripts/window_inspector.py` uses `tkinter`, `psutil` and the existing Cocoa/Accessibility helpers. Install `psutil` in the same Python environment if missing; window operations require Accessibility permission, and Finder Get Info may request Automation permission.
+- **Quick-access menu** — `scripts/quick_menu.py` uses `pyobjc-framework-Cocoa`. Common Folders separates personal files, cloud drives, user app data, system/shared directories and startup items. Cloud drives include iCloud Drive and existing OneDrive, Dropbox, Google Drive and Box folders under `~/Library/CloudStorage`; third-party clients must be installed. Custom sync locations can be added as personal folders. Homebrew's cache comes from `brew --cache`.
+- **Custom menu entries** — edit `scripts/quick_menu.json`: `personal_folders` entries use `title` and `path` (`~` supported; relative paths start at the JSON file); `applications` entries use `title`, `name` (without `.app`) and an optional `bundle_id`. Third-party apps appear below a separator in Utilities. Missing directories/apps and empty custom groups are hidden. Changes apply the next time the menu opens.
+- **Menu commands** — `commands` entries use `title`, `command` and `output`: `gui` (default) opens immediately with `Running...`, provides a merged Live Output tab (labeled by source, in arrival order), separate stdout/stderr tabs and the final exit code; `terminal` opens Terminal for interactive commands. Commands run through `/bin/zsh -lc`, with optional `cwd` (default `~`; relative paths start at the JSON file). GUI mode strips ANSI controls, supports copying and Stop, has no stdin and retains up to 1 MiB per stream; it does not block reopening the menu. Programs that buffer output may need an unbuffered option, such as Python's `-u`. The included 10-second test outputs the current time once per second, alternating stdout/stderr. Only add commands you trust.
+- **Hotkey feedback** — the shared `scripts/tooltip.py` uses a native, non-activating macOS panel (`pyobjc-framework-Cocoa`), with no Tkinter or PySide6. It appears near the pointer, stays within the screen's usable area, and ignores clicks without taking keyboard focus. Results, warnings and errors last 600, 1200 and 1600 ms respectively. `scripts/toggle_caps_lock.py` reads and changes Caps Lock through IOKit.
 
 ### Display and Window Scripts
 

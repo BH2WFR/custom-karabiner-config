@@ -22,6 +22,16 @@
 
 - After completing a feature or behavior change, update `README.md` so its mappings, behavior, dependencies, and migration instructions remain accurate.
 
+## Reusable Script Helpers
+
+- `scripts/gui_helpers.py`: one-time Tk window activation on macOS and copying text. Importing it must not create or activate a GUI.
+- `scripts/menu_command.py`: `launch_command(spec)` runs a configured shell command in Terminal or a separate Tk output window; reuse it for quick-menu command execution.
+- `scripts/front_window_info.py`: `collect_info(app, window)` collects structured application, bundle and AX window information for an explicit target; the CLI remains available.
+- `scripts/center_front_window.py`: `center_window(args, window=None)` accepts an explicit AX window. GUI callers must pass their captured window instead of operating on the current frontmost window.
+- `scripts/process_actions.py`: `ProcessTarget` checks PID/start-time identity; `prepare_restart()` captures the executable, full argv, cwd and environment before termination. GUI callers must confirm kill/restart first. Restart uses an argument array without a shell and waits for exit; it must not silently force-kill on timeout.
+- `scripts/keyboard_events.py`, `scripts/secondary_clipboard.py`, `scripts/paste_without_format.py`, and `scripts/tooltip.py` provide the existing keyboard, pasteboard, text-normalization and non-activating notification helpers. Reuse them for related features.
+- Update this helper inventory when adding or changing reusable APIs; the user has authorized these maintenance updates. Keep implementation details in the source.
+
 ## Updating These Instructions
 
-- If the project structure changes and `AGENTS.md` may need to change, stop before editing this file and ask the user whether it should be updated. Modify it only after receiving explicit approval.
+- For structural or instruction changes beyond the reusable-helper inventory above, ask the user before modifying this file.

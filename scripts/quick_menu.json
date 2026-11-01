@@ -1,0 +1,40 @@
+{
+    "personal_folders": [
+        {
+            "title": "Karabiner Configuration",
+            "path": ".."
+        },
+        {
+            "title": "Rime Configuration",
+            "path": "~/Library/Rime"
+        },
+        {
+            "title": "git repositories",
+            "path": "~/gitRepo"
+        }
+    ],
+    "applications": [
+        {
+            "title": "Windows App",
+            "name": "Windows App",
+            "bundle_id": "com.microsoft.rdc.macos"
+        },
+        {
+            "title": "UU Remote",
+            "name": "UURemote",
+            "bundle_id": "com.netease.uuremote"
+        }
+    ],
+    "commands": [
+        {
+            "title": "show home directory",
+            "command": "ls -la ~",
+            "output": "gui"
+        },
+        {
+            "title": "Test live output (10 seconds)",
+            "command": "for i in {1..10}; do if (( i % 2 )); then /bin/date '+%Y-%m-%d %H:%M:%S'; else /bin/date '+%Y-%m-%d %H:%M:%S' >&2; fi; /bin/sleep 1; done",
+            "output": "gui"
+        }
+    ]
+}

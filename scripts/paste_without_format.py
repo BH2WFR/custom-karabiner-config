@@ -1,19 +1,21 @@
 #!/usr/bin/env python3
 import argparse
 import html
-import plistlib
+import json
 import re
 import subprocess
 import sys
 import time
 
 import keyboard_events
+from tooltip import notify
 
 
-FILENAMES_CLIPBOARD_SCRIPT = r"""
+READ_CLIPBOARD_SCRIPT = r"""
 import json
 import plistlib
-from AppKit import NSPasteboard
+import sys
+from AppKit import NSPasteboard, NSAttributedString
 
 def valid_paths(value):
     if value is None or isinstance(value, (str, bytes)):
@@ -24,11 +26,16 @@ def valid_paths(value):
         return []
     return [str(path) for path in paths if isinstance(path, str) and str(path).startswith("/")]
 
-pasteboard = NSPasteboard.generalPasteboard()
-paths = valid_paths(pasteboard.propertyListForType_("NSFilenamesPboardType"))
+pasteboard = (NSPasteboard.pasteboardWithName_(sys.argv[1])
+              if len(sys.argv) > 1 else NSPasteboard.generalPasteboard())
+types = set(pasteboard.types() or [])
+paths = (valid_paths(pasteboard.propertyListForType_("NSFilenamesPboardType"))
+         if "NSFilenamesPboardType" in types else [])
 
 if not paths:
     for item in pasteboard.pasteboardItems() or []:
+        if "NSFilenamesPboardType" not in (item.types() or []):
+            continue
         data = item.dataForType_("NSFilenamesPboardType")
         if data is not None:
             try:
@@ -47,7 +54,25 @@ if not paths:
             if paths:
                 break
 
-print(json.dumps(paths, ensure_ascii=False))
+text = None
+for kind in ("public.utf8-plain-text", "public.utf16-external-plain-text",
+             "public.utf16-plain-text", "NSStringPboardType"):
+    if kind not in types:
+        continue
+    text = pasteboard.stringForType_(kind)
+    if text is not None:
+        break
+source_html = None
+if text is None and "public.html" in types:
+    source_html = pasteboard.stringForType_("public.html")
+if text is None and source_html is None and "public.rtf" in types:
+    rtf = pasteboard.dataForType_("public.rtf")
+    if rtf is not None:
+        attributed, _ = NSAttributedString.alloc().initWithRTF_documentAttributes_(rtf, None)
+        if attributed is not None:
+            text = attributed.string()
+
+print(json.dumps({"paths": paths, "text": text, "html": source_html}, ensure_ascii=False))
 """
 
 
@@ -253,58 +278,28 @@ def run(command, *, input_text=None):
     )
 
 
-def clipboard(preferred_type):
-    result = run(["/usr/bin/pbpaste", "-Prefer", preferred_type])
-    return result.stdout if result.returncode == 0 else ""
-
-#* 如在 finder 中 复制了一个或多个文件/文件夹，则粘贴其完整路径，如为多个，按行分隔
-def clipboard_file_paths():
+def read_clipboard_text(*, prefer_paths=True):
+    # The configured -S entry point cannot import PyObjC. Read explicit formats
+    # in a child using the same Python with site-packages enabled.
     result = subprocess.run(
-        [sys.executable, "-c", FILENAMES_CLIPBOARD_SCRIPT],
+        [sys.executable, "-c", READ_CLIPBOARD_SCRIPT],
         stdout=subprocess.PIPE,
         stderr=subprocess.DEVNULL,
         text=True,
         check=False,
+        timeout=10,
     )
-    if result.returncode == 0 and result.stdout:
-        try:
-            import json
-
-            value = json.loads(result.stdout)
-        except Exception:
-            value = []
-
-        if isinstance(value, list):
-            paths = [
-                path
-                for path in value
-                if isinstance(path, str) and path.startswith("/")
-            ]
-            if paths:
-                return paths
-
-    result = subprocess.run(
-        ["/usr/bin/pbpaste", "-Prefer", "plist"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.DEVNULL,
-        check=False,
-    )
-    if result.returncode != 0 or not result.stdout:
-        return []
-
+    if result.returncode != 0:
+        raise RuntimeError("Cannot read the clipboard. Check the Python Cocoa dependency.")
     try:
-        value = plistlib.loads(result.stdout)
-    except Exception:
-        return []
-
-    if not isinstance(value, list):
-        return []
-
-    return [
-        path
-        for path in value
-        if isinstance(path, str) and path.startswith("/")
-    ]
+        content = json.loads(result.stdout)
+        if prefer_paths and content["paths"]:
+            return "\n".join(content["paths"])
+        if content["text"] is not None:
+            return content["text"]
+        return html_to_text(content["html"]) if content["html"] else ""
+    except (ValueError, KeyError, TypeError) as exc:
+        raise RuntimeError("Cannot decode clipboard text.") from exc
 
 
 def html_to_text(value):
@@ -342,33 +337,38 @@ def paste():
 
 def main():
     args = parse_args()
-    text = ""
-
-    if not args.advanced:
-        file_paths = clipboard_file_paths()
-        if file_paths:
-            text = "\n".join(file_paths)
-
-    if not text:
-        text = clipboard("txt")
-
+    try:
+        text = read_clipboard_text(prefer_paths=not args.advanced)
+        if args.advanced:
+            text = advanced_text_processing(text)
         if not text:
-            source_html = clipboard("html")
-            text = html_to_text(source_html) if source_html else ""
-
-    if args.advanced:
-        text = advanced_text_processing(text)
-
-    run(["/usr/bin/pbcopy"], input_text=text)
+            message = "No text to paste. Clipboard unchanged."
+            print(message, file=sys.stderr)
+            if not args.copy_only:
+                notify(message, level="warning")
+            return 1
+        if run(["/usr/bin/pbcopy"], input_text=text).returncode != 0:
+            raise RuntimeError("Cannot write plain text to the clipboard.")
+    except (RuntimeError, OSError, subprocess.TimeoutExpired) as exc:
+        print(str(exc), file=sys.stderr)
+        if not args.copy_only:
+            message = "Clipboard reading timed out. Clipboard unchanged." if isinstance(exc, subprocess.TimeoutExpired) else str(exc)
+            notify(message, level="error")
+        return 1
 
     if args.copy_only:
         return 0
 
     # Give the triggering shortcut's modifiers and the pasteboard time to settle.
-    if args.release_shift:
-        release_shift()
-    time.sleep(0.15)
-    paste()
+    try:
+        if args.release_shift:
+            release_shift()
+        time.sleep(0.15)
+        paste()
+    except RuntimeError as exc:
+        print(str(exc), file=sys.stderr)
+        notify("Cannot send the paste shortcut. Check Accessibility permission.", level="error")
+        return 1
     return 0
 
 

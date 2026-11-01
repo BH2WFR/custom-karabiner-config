@@ -6,8 +6,11 @@
 import argparse
 import importlib
 import sys
+import time
 from dataclasses import dataclass
 from typing import Any
+
+from tooltip import notify
 
 AS: Any = importlib.import_module("ApplicationServices")
 AppKit: Any = importlib.import_module("AppKit")
@@ -112,23 +115,29 @@ def _window_position(window: Any) -> Any:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument(
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument(
         "--fit",
         action="store_true",
         help="Shrink the window to fit within the target display before centering.",
     )
+    mode.add_argument("--size", nargs=2, type=int, metavar=("WIDTH", "HEIGHT"),
+                      help="Set window size in logical points, without centering or fitting.")
     parser.add_argument(
         "--display",
         choices=("current", "main"),
         default="current",
         help="Target display: the window's current display, or the macOS main display.",
     )
-    return parser.parse_args()
+    args = parser.parse_args()
+    if args.size and any(value <= 0 for value in args.size):
+        parser.error("--size dimensions must be positive")
+    return args
 
 
-def main() -> int:
-    args = parse_args()
-    window = _focused_window()
+def center_window(args, window=None) -> None:
+    if window is None:
+        window = _focused_window()
     position = _window_position(window)
     size = _window_size(window)
     bounds = _target_display_bounds(args.display, position, size)
@@ -146,12 +155,36 @@ def main() -> int:
     y = bounds.origin.y + (bounds.size.height - size.height) / 2
 
     _set_window_position(window, x, y)
+
+
+def main() -> int:
+    args = parse_args()
+    try:
+        if args.size:
+            width, height = args.size
+            window = _focused_window()
+            _set_window_size(window, width, height)
+            # Some apps apply AX changes asynchronously or enforce minimum sizes.
+            deadline = time.monotonic() + .5
+            while True:
+                actual = _window_size(window)
+                if abs(actual.width - width) < 1 and abs(actual.height - height) < 1:
+                    break
+                if time.monotonic() >= deadline:
+                    notify(f"Window size limited to {actual.width:.0f} x {actual.height:.0f}.", level="warning")
+                    return 1
+                time.sleep(.025)
+            message = f"Window resized to {width} x {height}."
+        else:
+            center_window(args)
+            message = "Window centered."
+    except Exception as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        notify("Cannot adjust this window. Check Accessibility permission and window support.", level="error")
+        return 1
+    notify(message)
     return 0
 
 
 if __name__ == "__main__":
-    try:
-        raise SystemExit(main())
-    except Exception as exc:
-        print(f"ERROR: {exc}", file=sys.stderr)
-        raise SystemExit(1)
+    raise SystemExit(main())

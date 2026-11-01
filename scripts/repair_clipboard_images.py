@@ -11,6 +11,8 @@ import importlib
 import sys
 from typing import Any
 
+from tooltip import notify
+
 AppKit: Any = importlib.import_module("AppKit")
 
 PNG_TYPE = "public.png"
@@ -18,6 +20,10 @@ PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 MAX_DATA_BYTES = 128 * 1024 * 1024
 MAX_ITEMS = 16
 MAX_TYPES = 64
+
+
+class NoClipboardImage(RuntimeError):
+    pass
 
 
 def prepare_png_items(items):
@@ -65,7 +71,7 @@ def prepare_png_items(items):
         prepared.append(output)
 
     if not prepared:
-        raise RuntimeError("Clipboard contains no readable bitmap image; clipboard unchanged.")
+        raise NoClipboardImage("Clipboard contains no readable bitmap image; clipboard unchanged.")
     return prepared
 
 
@@ -101,8 +107,10 @@ def main():
         count = repair_clipboard(AppKit.NSPasteboard.generalPasteboard())
     except RuntimeError as exc:
         print(str(exc), file=sys.stderr)
+        notify(str(exc), level="warning" if isinstance(exc, NoClipboardImage) else "error")
         return 1
     print(f"Repaired {count} clipboard image(s) as PNG.")
+    notify(f"Repaired {count} clipboard image(s) as PNG.")
     return 0
 
 

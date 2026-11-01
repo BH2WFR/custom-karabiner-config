@@ -555,10 +555,22 @@
                         ]
                     },
                     {
-                        "description": "Caps+Z -> Fn, Caps+Shift+Z -> Repair Clipboard Images",
+                        "description": "Caps+B -> Fn, Caps+Z -> Type Clipboard, Caps+Shift+Z -> Repair Clipboard Images",
                         "manipulators": [
                             {
                                 "conditions": [
+                                    { "name": "caps_primary_layer", "type": "variable_if", "value": 1 }
+                                ],
+                                "from": {
+                                    "key_code": "b",
+                                    "modifiers": { "optional": ["any"] }
+                                },
+                                "to": [{ "apple_vendor_top_case_key_code": "keyboard_fn" }],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    { "name": "caps_secondary_layer", "type": "variable_unless", "value": 1 },
                                     {
                                         "name": "caps_primary_layer",
                                         "type": "variable_if",
@@ -579,17 +591,44 @@
                             },
                             {
                                 "conditions": [
+                                    { "name": "caps_secondary_layer", "type": "variable_unless", "value": 1 },
                                     {
                                         "name": "caps_primary_layer",
                                         "type": "variable_if",
                                         "value": 1
                                     }
                                 ],
-                                "from": {
-                                    "key_code": "z",
-                                    "modifiers": { "optional": ["any"] }
-                                },
-                                "to": [{ "apple_vendor_top_case_key_code": "keyboard_fn" }],
+                                "from": { "key_code": "z", "modifiers": { "optional": ["caps_lock"] } },
+                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/type_clipboard.py", "repeat": false }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Caps+A -> Toggle Caps Lock, Caps+Q -> Esc, except Anki",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    { "name": "caps_primary_layer", "type": "variable_if", "value": 1 },
+                                    {
+                                        "bundle_identifiers": ["^net\\.ankiweb\\.launcher$", "^net\\.ankiweb\\.anki$"],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
+                                "from": { "key_code": "a", "modifiers": { "optional": ["caps_lock"] } },
+                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/toggle_caps_lock.py", "repeat": false }],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    { "name": "caps_primary_layer", "type": "variable_if", "value": 1 },
+                                    {
+                                        "bundle_identifiers": ["^net\\.ankiweb\\.launcher$", "^net\\.ankiweb\\.anki$"],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
+                                "from": { "key_code": "q", "modifiers": { "optional": ["any"] } },
+                                "to": [{ "key_code": "escape" }],
                                 "type": "basic"
                             }
                         ]
@@ -689,6 +728,87 @@
                                         "modifiers": ["command"]
                                     }
                                 ],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Caps+Grave -> Release Modifiers and Disable Caps Lock, Caps+4/6/7 -> Selected Text Tools",
+                        "manipulators": [
+                            {
+                                "conditions": [{ "name": "caps_primary_layer", "type": "variable_if", "value": 1 }],
+                                "from": { "key_code": "grave_accent_and_tilde", "modifiers": { "optional": ["any"] } },
+                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/keyboard_events.py --release-modifiers", "repeat": false }],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [{ "name": "caps_primary_layer", "type": "variable_if", "value": 1 }],
+                                "from": { "key_code": "4", "modifiers": { "optional": ["caps_lock"] } },
+                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/text_actions.py wrap", "repeat": false }],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [{ "name": "caps_primary_layer", "type": "variable_if", "value": 1 }],
+                                "from": { "key_code": "6", "modifiers": { "mandatory": ["shift"], "optional": ["caps_lock"] } },
+                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/text_actions.py upper", "repeat": false }],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [{ "name": "caps_primary_layer", "type": "variable_if", "value": 1 }],
+                                "from": { "key_code": "6", "modifiers": { "optional": ["caps_lock"] } },
+                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/text_actions.py lower", "repeat": false }],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [{ "name": "caps_primary_layer", "type": "variable_if", "value": 1 }],
+                                "from": { "key_code": "7", "modifiers": { "mandatory": ["shift"], "optional": ["caps_lock"] } },
+                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/text_actions.py title", "repeat": false }],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [{ "name": "caps_primary_layer", "type": "variable_if", "value": 1 }],
+                                "from": { "key_code": "7", "modifiers": { "optional": ["caps_lock"] } },
+                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/text_actions.py stats", "repeat": false }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "[Caps Secondary Layer]: Tab -> Literal Tab, (Shift)+T -> Setter/Getter",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    { "name": "caps_primary_layer", "type": "variable_if", "value": 1 },
+                                    { "name": "caps_secondary_layer", "type": "variable_if", "value": 1 }
+                                ],
+                                "from": { "key_code": "tab", "modifiers": { "optional": ["left_option", "right_command", "caps_lock"] } },
+                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/text_actions.py tab", "repeat": false }],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    { "name": "caps_primary_layer", "type": "variable_if", "value": 1 },
+                                    { "name": "caps_secondary_layer", "type": "variable_if", "value": 1 },
+                                    {
+                                        "bundle_identifiers": ["^net\\.ankiweb\\.launcher$", "^net\\.ankiweb\\.anki$"],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
+                                "from": { "key_code": "t", "modifiers": { "mandatory": ["shift"], "optional": ["left_option", "right_command", "caps_lock"] } },
+                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/text_actions.py getter", "repeat": false }],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    { "name": "caps_primary_layer", "type": "variable_if", "value": 1 },
+                                    { "name": "caps_secondary_layer", "type": "variable_if", "value": 1 },
+                                    {
+                                        "bundle_identifiers": ["^net\\.ankiweb\\.launcher$", "^net\\.ankiweb\\.anki$"],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
+                                "from": { "key_code": "t", "modifiers": { "optional": ["left_option", "right_command", "caps_lock"] } },
+                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/text_actions.py setter", "repeat": false }],
                                 "type": "basic"
                             }
                         ]
@@ -810,8 +930,32 @@
                         ]
                     },
                     {
-                        "description": "[Caps Secondary Layer]: C/V/X, Shift+C/X for Current Line",
+                        "description": "[Caps Secondary Layer]: C/V/X, Shift+C/X for Current Line, Shift+V Advanced Paste, Z Type Clipboard",
                         "manipulators": [
+                            {
+                                "conditions": [
+                                    { "name": "caps_primary_layer", "type": "variable_if", "value": 1 },
+                                    { "name": "caps_secondary_layer", "type": "variable_if", "value": 1 }
+                                ],
+                                "from": {
+                                    "key_code": "z",
+                                    "modifiers": { "optional": ["left_option", "right_command", "caps_lock"] }
+                                },
+                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/secondary_clipboard.py type", "repeat": false }],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    { "name": "caps_primary_layer", "type": "variable_if", "value": 1 },
+                                    { "name": "caps_secondary_layer", "type": "variable_if", "value": 1 }
+                                ],
+                                "from": {
+                                    "key_code": "v",
+                                    "modifiers": { "mandatory": ["shift"], "optional": ["left_option", "right_command", "caps_lock"] }
+                                },
+                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/secondary_clipboard.py paste --advanced", "repeat": false }],
+                                "type": "basic"
+                            },
                             {
                                 "conditions": [
                                     {
@@ -1095,30 +1239,8 @@
                         ]
                     },
                     {
-                        "description": "Caps+U/O -> Mouse Click, Caps+Shift+U -> Parse Unicode",
+                        "description": "Caps+U/O -> Mouse Click",
                         "manipulators": [
-                            {
-                                "conditions": [
-                                    {
-                                        "name": "caps_primary_layer",
-                                        "type": "variable_if",
-                                        "value": 1
-                                    }
-                                ],
-                                "from": {
-                                    "key_code": "u",
-                                    "modifiers": { "mandatory": ["shift"] }
-                                },
-                                "to": [
-                                    { "shell_command": "/usr/bin/osascript -e 'tell application \"System Events\" to key up shift'" },
-                                    {
-                                        "key_code": "c",
-                                        "modifiers": ["command"]
-                                    },
-                                    { "shell_command": "open -a Terminal ${HOME}/.config/karabiner/scripts/_parse_unicode_helper.command" }
-                                ],
-                                "type": "basic"
-                            },
                             {
                                 "conditions": [
                                     {
@@ -1400,6 +1522,24 @@
                         ]
                     },
                     {
+                        "description": "Caps+E -> Quick access menu, except Anki",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    { "name": "caps_primary_layer", "type": "variable_if", "value": 1 },
+                                    { "name": "caps_secondary_layer", "type": "variable_unless", "value": 1 },
+                                    {
+                                        "bundle_identifiers": ["^net\\.ankiweb\\.launcher$", "^net\\.ankiweb\\.anki$"],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
+                                "from": { "key_code": "e", "modifiers": { "optional": ["caps_lock"] } },
+                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 \"${HOME}/.config/karabiner/scripts/quick_menu.py\"", "repeat": false }],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
                         "description": "Caps+W -> Show frontmost window information, except Anki",
                         "manipulators": [
                             {
@@ -1421,14 +1561,26 @@
                                     "key_code": "w",
                                     "modifiers": { "optional": ["any"] }
                                 },
-                                "to": [{ "shell_command": "${HOME}/.config/karabiner/scripts/show_front_window_info.sh" }],
+                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 \"${HOME}/.config/karabiner/scripts/window_inspector.py\"", "repeat": false }],
                                 "type": "basic"
                             }
                         ]
                     },
                     {
-                        "description": "Caps+R -> Fit and center frontmost window on current display, except Anki",
+                        "description": "Caps+R -> Fit and center window, Caps+Shift+R -> Resize to 1024x768, except Anki",
                         "manipulators": [
+                            {
+                                "conditions": [
+                                    { "name": "caps_primary_layer", "type": "variable_if", "value": 1 },
+                                    {
+                                        "bundle_identifiers": ["^net\\.ankiweb\\.launcher$", "^net\\.ankiweb\\.anki$"],
+                                        "type": "frontmost_application_unless"
+                                    }
+                                ],
+                                "from": { "key_code": "r", "modifiers": { "mandatory": ["shift"], "optional": ["caps_lock"] } },
+                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/center_front_window.py --size 1024 768", "repeat": false }],
+                                "type": "basic"
+                            },
                             {
                                 "conditions": [
                                     {

@@ -8,6 +8,8 @@ from pathlib import Path
 from typing import Any
 
 import keyboard_events
+from paste_without_format import advanced_text_processing
+from tooltip import notify
 
 AppKit: Any = importlib.import_module("AppKit")
 Foundation: Any = importlib.import_module("Foundation")
@@ -25,9 +27,10 @@ PASTE_RESTORE_DELAY_SECONDS = 0.3
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Copy, cut, paste, or clear a named secondary pasteboard."
+        description="Copy, cut, paste, type, or clear a named secondary pasteboard."
     )
-    parser.add_argument("action", choices=("copy", "cut", "paste", "clear"))
+    parser.add_argument("action", choices=("copy", "cut", "paste", "type", "clear"))
+    parser.add_argument("--advanced", action="store_true", help="apply advanced plain-text paste cleanup")
     parser.add_argument(
         "--pasteboard-name",
         default=DEFAULT_PASTEBOARD_NAME,
@@ -43,7 +46,12 @@ def parse_args():
         action="store_true",
         help="copy or cut the current line using plain text",
     )
-    return parser.parse_args()
+    args = parser.parse_args()
+    if args.advanced and (args.action != "paste" or args.multi_items):
+        parser.error("--advanced requires paste without --multi-items")
+    if args.action == "type" and args.multi_items:
+        parser.error("type only supports plain text")
+    return args
 
 
 def snapshot_pasteboard(pasteboard):
@@ -60,16 +68,17 @@ def snapshot_pasteboard(pasteboard):
 
 
 def restore_pasteboard(pasteboard, snapshot):
-    pasteboard.clearContents()
     items = []
     for representations in snapshot:
         item = NSPasteboardItem.alloc().init()
         for pasteboard_type, payload in representations:
             data = NSData.dataWithBytes_length_(payload, len(payload))
-            item.setData_forType_(data, pasteboard_type)
+            if not item.setData_forType_(data, pasteboard_type):
+                raise RuntimeError("Cannot prepare clipboard data.")
         items.append(item)
-    if items:
-        pasteboard.writeObjects_(items)
+    pasteboard.clearContents()
+    if items and not pasteboard.writeObjects_(items):
+        raise RuntimeError("Cannot write clipboard data.")
 
 
 def text_snapshot(text):
@@ -77,15 +86,8 @@ def text_snapshot(text):
 
 
 def release_shortcut_keys(trigger_key_code):
-    keyboard_events.release_keys(
-        keyboard_events.LEFT_SHIFT_KEY_CODE,
-        keyboard_events.RIGHT_SHIFT_KEY_CODE,
-        keyboard_events.LEFT_OPTION_KEY_CODE,
-        keyboard_events.RIGHT_OPTION_KEY_CODE,
-        keyboard_events.LEFT_COMMAND_KEY_CODE,
-        keyboard_events.RIGHT_COMMAND_KEY_CODE,
-        trigger_key_code,
-    )
+    keyboard_events.release_modifiers()
+    keyboard_events.release_keys(trigger_key_code)
 
 
 def post_shortcut(key_code):
@@ -189,15 +191,18 @@ def copy_to_secondary(general, secondary, multi_items, *, cut=False):
         restore_pasteboard(general, original)
 
 
-def paste_from_secondary(general, secondary, multi_items):
+def paste_from_secondary(general, secondary, multi_items, *, advanced=False):
     if multi_items:
         copied = snapshot_pasteboard(secondary)
     else:
         text = secondary.stringForType_(TEXT_TYPE)
-        copied = text_snapshot(str(text)) if text is not None else []
+        if text is not None and advanced:
+            text = advanced_text_processing(str(text))
+        copied = text_snapshot(str(text)) if text else []
 
     if not copied:
         print("The secondary pasteboard is empty or has no supported data.", file=sys.stderr)
+        notify("Secondary clipboard has no supported data." if multi_items else "Secondary clipboard has no text to paste.", level="warning")
         return 1
 
     original = snapshot_pasteboard(general)
@@ -241,7 +246,11 @@ def main():
             return 1
         return result
     if args.action == "paste":
-        return paste_from_secondary(general, secondary, args.multi_items)
+        return paste_from_secondary(general, secondary, args.multi_items, advanced=args.advanced)
+    if args.action == "type":
+        from type_clipboard import type_from_pasteboard
+
+        return type_from_pasteboard(secondary)
 
     secondary.clearContents()
     return 0

@@ -5,14 +5,22 @@ Minimal script for Karabiner-Elements keybinding. Apple Silicon only."""
 import sys
 import os
 import ctypes
+from typing import NoReturn
+
+from tooltip import notify
+
+
+def fail(message, *, level="error") -> NoReturn:
+    print(message, file=sys.stderr)
+    notify(message, level=level)
+    raise SystemExit(1)
+
 
 if sys.platform != "darwin":
-    print(f"ERROR: macOS only. Current: {sys.platform}", file=sys.stderr)
-    sys.exit(1)
+    fail("Display toggle is only available on macOS.")
 
 if os.uname().machine != "arm64":
-    print(f"ERROR: Apple Silicon only. Current: {os.uname().machine}", file=sys.stderr)
-    sys.exit(1)
+    fail("Display toggle requires Apple Silicon.")
 
 libc = ctypes.CDLL('/usr/lib/libSystem.dylib')
 libc.dlopen.argtypes = [ctypes.c_char_p, ctypes.c_int]
@@ -23,14 +31,12 @@ libc.dlsym.restype = ctypes.c_void_p
 _cgs_handle = libc.dlopen(
     b'/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics', 1)
 if not _cgs_handle:
-    print("ERROR: Cannot load CoreGraphics framework.", file=sys.stderr)
-    sys.exit(1)
+    fail("Cannot load CoreGraphics framework.")
 
 _ds_handle = libc.dlopen(
     b'/System/Library/PrivateFrameworks/DisplayServices.framework/DisplayServices', 1)
 if not _ds_handle:
-    print("ERROR: Cannot load DisplayServices framework.", file=sys.stderr)
-    sys.exit(1)
+    fail("Cannot load DisplayServices framework.")
 
 
 def _lookup(name: str):
@@ -39,8 +45,7 @@ def _lookup(name: str):
     if not ptr:
         ptr = libc.dlsym(ctypes.c_void_p(-2), name_bytes)
     if not ptr:
-        print(f"ERROR: symbol `{name}` not found.", file=sys.stderr)
-        sys.exit(1)
+        fail(f"Display API unavailable: {name}.")
     return ptr
 
 
@@ -83,14 +88,16 @@ DisplayServicesSetBrightness = ctypes.CFUNCTYPE(
 def _get_all_displays():
     ids = (ctypes.c_uint32 * MAX_DISPLAYS)()
     count = ctypes.c_uint32(0)
-    CGSGetDisplayList(MAX_DISPLAYS, ids, ctypes.byref(count))
+    if CGSGetDisplayList(MAX_DISPLAYS, ids, ctypes.byref(count)) != 0:
+        fail("Cannot read the display list.")
     return [ids[i] for i in range(count.value)]
 
 
 def _get_active_displays():
     ids = (ctypes.c_uint32 * MAX_DISPLAYS)()
     count = ctypes.c_uint32(0)
-    CGGetActiveDisplayList(MAX_DISPLAYS, ids, ctypes.byref(count))
+    if CGGetActiveDisplayList(MAX_DISPLAYS, ids, ctypes.byref(count)) != 0:
+        fail("Cannot read the active display list.")
     return {ids[i] for i in range(count.value)}
 
 
@@ -98,7 +105,7 @@ def _find_builtin():
     for did in _get_all_displays(): 
         if CGDisplayIsBuiltin(did):
             return did
-    return 1
+    fail("No built-in display found.", level="warning")
 
 
 def _get_brightness(display_id):
@@ -132,30 +139,26 @@ def main():
 
     if external_active_count == 0 and builtin_active:
         _adjust_low_brightness(builtin_id)
-        print("Built-in is the only active display. Refusing to disable.",
-              file=sys.stderr)
-        sys.exit(1)
+        fail("Connect an external display before disabling the built-in display.", level="warning")
 
     target = not builtin_active
 
     config = ctypes.c_void_p(0)
     if CGBeginDisplayConfiguration(ctypes.byref(config)) != 0:
-        print("CGBeginDisplayConfiguration failed.", file=sys.stderr)
-        sys.exit(1)
+        fail("Cannot begin display configuration.")
 
     if CGSConfigureDisplayEnabled(config, builtin_id, target) != 0:
-        print("CGSConfigureDisplayEnabled failed.", file=sys.stderr)
-        sys.exit(1)
+        fail("Cannot change the built-in display state.")
 
     if CGSCompleteDisplayConfiguration(config) != 0:
-        print("CGSCompleteDisplayConfiguration failed.", file=sys.stderr)
-        sys.exit(1)
+        fail("Cannot apply the display configuration.")
 
     action = "enabled" if target else "disabled"
     print(f"Built-in display {action}.")
 
     if target:
         _adjust_low_brightness(builtin_id)
+    notify(f"Built-in display {action}.")
 
 
 if __name__ == "__main__":
