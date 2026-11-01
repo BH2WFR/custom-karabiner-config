@@ -88,6 +88,7 @@ def text_statistics(text):
     return {
         "Characters": len(text),
         "UTF-8 bytes": len(text.encode("utf-8")),
+        "UTF-16 bytes": len(text.encode("utf-16-le")),
         "Words": len(WORDS.findall(text)),
         "Lines": text.replace("\r\n", "\n").replace("\r", "\n").count("\n") + 1 if text else 0,
     }
@@ -113,6 +114,8 @@ def unicode_character_rows(text):
 
 
 def character_style(character):
+    if ord(character) > 0xFFFF:
+        return "non_bmp"
     category = unicodedata.category(character)
     if category == "Cc":
         return "control"
@@ -129,6 +132,12 @@ def inspect_text(text):
         "statistics": text_statistics(text),
         "characters": unicode_character_rows(text),
     }
+
+
+def _require_inspector_text(text):
+    if text is None or text == "":
+        raise RuntimeError("Clipboard is empty or contains no text.")
+    return str(text)
 
 
 def _frontmost_pid():
@@ -149,6 +158,8 @@ def perform_action(action, pasteboard):
     try:
         if action in SELECTION_ACTIONS:
             if not clipboard.send_selection_to_general(pasteboard, keys.C_KEY_CODE):
+                if action == "stats":
+                    raise RuntimeError("No text copied. Select text to inspect.")
                 raise ValueError("Cannot copy selected text. Select some text first.")
             owned_count = pasteboard.changeCount()
             changed = True
@@ -161,9 +172,7 @@ def perform_action(action, pasteboard):
         if pasteboard.changeCount() != owned_count:
             raise RuntimeError("Clipboard changed. Text action cancelled.")
         if action == "stats":
-            if not text:
-                raise ValueError("No selected text to inspect.")
-            return inspect_text(text)
+            return inspect_text(_require_inspector_text(text))
         result = transform_text(action, text)
         changed = True
         try:
@@ -224,13 +233,16 @@ def build_inspector_window(root, report):
     summary.grid(row=2, column=0, sticky="ew", pady=(0, 10))
     statistic_values = {}
     for column, (label, value) in enumerate(report["statistics"].items()):
-        ttk.Label(summary, text=label).grid(row=0, column=column * 2, padx=(0, 6))
+        if column:
+            ttk.Separator(summary, orient="vertical").grid(
+                row=0, column=column * 3 - 1, sticky="ns", padx=6, pady=2)
+        ttk.Label(summary, text=label).grid(row=0, column=column * 3, padx=(0, 4))
         statistic_values[label] = tk.StringVar(value=str(value))
         field = ttk.Entry(
-            summary, width=max(7, len(str(value)) + 2), justify="right",
+            summary, width=max(5, len(str(value)) + 1), justify="right",
             textvariable=statistic_values[label], state="readonly",
         )
-        field.grid(row=0, column=column * 2 + 1, padx=(0, 18))
+        field.grid(row=0, column=column * 3 + 1)
 
     columns = ("Index", "Character", "Code point", "Decimal", "UTF-8", "Category", "Name")
     table_frame = ttk.Frame(body)
@@ -241,6 +253,7 @@ def build_inspector_window(root, report):
     table.tag_configure("control", foreground="#c62828")
     table.tag_configure("special", foreground="#2e7d32")
     table.tag_configure("non_ascii", foreground="#1565c0")
+    table.tag_configure("non_bmp", foreground="#8b4513")
     widths = {"Index": 60, "Character": 145, "Code point": 90, "Decimal": 75,
               "UTF-8": 120, "Category": 170, "Name": 330}
     for column in columns:
@@ -309,6 +322,7 @@ def _inspector_pasteboard(name):
 
 
 def launch_inspector(text):
+    text = _require_inspector_text(text)
     name = f"{INSPECTOR_PASTEBOARD_PREFIX}.{uuid.uuid4()}"
     pasteboard = _inspector_pasteboard(name)
     clipboard.restore_pasteboard(pasteboard, clipboard.text_snapshot(text))
@@ -329,9 +343,7 @@ def run_inspector(pasteboard_name):
     pasteboard = _inspector_pasteboard(pasteboard_name)
     try:
         text = pasteboard.stringForType_(clipboard.TEXT_TYPE)
-        if text is None:
-            raise RuntimeError("Inspector text is no longer available.")
-        report = inspect_text(str(text))
+        report = inspect_text(_require_inspector_text(text))
     finally:
         pasteboard.releaseGlobally()
     show_inspector(report)

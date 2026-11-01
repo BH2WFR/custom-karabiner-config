@@ -5,6 +5,7 @@ import os
 import subprocess
 import sys
 import time
+import keyboard_events
 
 
 RESTORE_CLIPBOARD_MAX_BYTES = 50000
@@ -185,16 +186,7 @@ def pbcopy_html(text, env):
 
 
 def paste():
-    subprocess.run(
-        [
-            "/usr/bin/osascript",
-            "-e",
-            'tell application "System Events" to key code 9 using {command down}',
-        ],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        check=False,
-    )
+    keyboard_events.post_keystroke(keyboard_events.V_KEY_CODE, keyboard_events.COMMAND_FLAG)
 
 
 def parse_args():

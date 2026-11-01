@@ -1,22 +1,9 @@
-import argparse
-import html
-import re
-import subprocess
-import sys
-import time
+import keyboard_events
 
 
 def release_shift():
-    subprocess.run(
-        [
-            "/usr/bin/osascript",
-            "-e",
-            'tell application "System Events" to key up shift',
-        ],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        check=False,
-    )
+    keyboard_events.release_keys(keyboard_events.LEFT_SHIFT_KEY_CODE,
+                                 keyboard_events.RIGHT_SHIFT_KEY_CODE)
 
 
 if __name__ == "__main__":

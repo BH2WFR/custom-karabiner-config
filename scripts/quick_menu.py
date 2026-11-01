@@ -217,12 +217,15 @@ def menu_entries():
         Entry("Utilities", children=utilities),
         *((Entry("Personal Folders", children=personal),) if personal else ()),
         *((Entry("Commands", children=commands),) if commands else ()),
+        Entry(""), Entry("Exit", "exit:"),
     )
 
 
 class MenuTarget(Foundation.NSObject):
     def choose_(self, sender):
         self.selected = sender.representedObject()
+        if self.selected == "exit:":
+            self.selected = None
 
 
 def build_menu(entries, target):
@@ -247,10 +250,10 @@ def build_menu(entries, target):
                 item.setToolTip_(destination["command"])
                 icon = AppKit.NSImage.imageWithSystemSymbolName_accessibilityDescription_("terminal", None)
             else:
-                item.setToolTip_(destination)
+                item.setToolTip_("Close menu" if destination == "exit:" else destination)
                 icon = (workspace.iconForFile_(destination) if destination.startswith("/")
                         else AppKit.NSImage.imageWithSystemSymbolName_accessibilityDescription_(
-                            "trash" if destination == "trash:" else "gearshape", None))
+                            {"trash:": "trash", "exit:": "xmark"}.get(destination, "gearshape"), None))
             if icon is not None:
                 icon = icon.copy()
                 icon.setSize_((16, 16))

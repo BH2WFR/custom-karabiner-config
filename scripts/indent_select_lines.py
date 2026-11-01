@@ -6,6 +6,7 @@ import re
 import subprocess
 import sys
 import time
+import keyboard_events
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import scripts.insert_unicode_symbol_clipboard as insert_unicode_symbol_clipboard
@@ -36,22 +37,12 @@ def set_clipboard(text):
 
 
 def key_code(code, modifiers=None):
-    modifiers = modifiers or []
-    if modifiers:
-        modifier_text = " using {" + ", ".join(f"{key} down" for key in modifiers) + "}"
-    else:
-        modifier_text = ""
-
-    subprocess.run(
-        [
-            "/usr/bin/osascript",
-            "-e",
-            f'tell application "System Events" to key code {code}{modifier_text}',
-        ],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        check=False,
-    )
+    flags = 0
+    masks = {"command": keyboard_events.COMMAND_FLAG, "shift": keyboard_events.SHIFT_FLAG,
+             "option": keyboard_events.OPTION_FLAG, "control": keyboard_events.CONTROL_FLAG}
+    for modifier in modifiers or []:
+        flags |= masks[modifier]
+    keyboard_events.post_keystroke(code, flags)
 
 
 def copy_selection():
@@ -164,6 +155,9 @@ def main():
         env,
     )
 
+    keyboard_events.release_modifiers()
+    keyboard_events.release_keys(keyboard_events.KEY_CODES["tab"])
+    time.sleep(keyboard_events.CHORD_EVENT_INTERVAL)
     text = copy_selection()
     if not text:
         return 0

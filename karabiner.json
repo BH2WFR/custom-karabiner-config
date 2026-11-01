@@ -1,5 +1,8 @@
 {
-    "global": { "enable_notification_window": false },
+    "global": {
+        "enable_notification_window": false,
+        "enable_cgeventtap_fallback": true
+    },
     "profiles": [
         {
             "name": "Default profile",
@@ -14,6 +17,56 @@
         {
             "complex_modifications": {
                 "rules": [
+                    {
+                        "description": "[Debug]: Caps+1 -> Show app and modifiers",
+                        "manipulators": [
+                            {
+                                "type": "basic",
+                                "from": {
+                                    "key_code": "1",
+                                    "modifiers": { "optional": ["any"] }
+                                },
+                                "conditions": [
+                                    {
+                                        "type": "variable_if",
+                                        "name": "caps_primary_layer",
+                                        "value": 1
+                                    },
+                                    {
+                                        "type": "variable_if",
+                                        "name": "caps_secondary_layer",
+                                        "value": 1
+                                    }
+                                ],
+                                "to": [
+                                    {
+                                        "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/show_input_info.py --layer secondary",
+                                        "repeat": false
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "basic",
+                                "from": {
+                                    "key_code": "1",
+                                    "modifiers": { "optional": ["any"] }
+                                },
+                                "conditions": [
+                                    {
+                                        "type": "variable_if",
+                                        "name": "caps_primary_layer",
+                                        "value": 1
+                                    }
+                                ],
+                                "to": [
+                                    {
+                                        "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/show_input_info.py --layer primary",
+                                        "repeat": false
+                                    }
+                                ]
+                            }
+                        ]
+                    },
                     {
                         "description": "[Layer]: [Caps] to [Caps Primary Layer]",
                         "manipulators": [
@@ -163,7 +216,7 @@
                         ]
                     },
                     {
-                        "description": "[Layer][Non-RDP]: Caps+[LOpt/RCmd] -> [Caps Secondary Layer]",
+                        "description": "[Layer][Non-RDP]: Caps+[LOpt/RCmd/LCmd] -> [Caps Secondary Layer]",
                         "manipulators": [
                             {
                                 "conditions": [
@@ -176,8 +229,8 @@
                                         "type": "frontmost_application_unless"
                                     },
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
@@ -214,14 +267,58 @@
                                         "type": "frontmost_application_unless"
                                     },
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
                                 "from": {
                                     "key_code": "right_command",
                                     "modifiers": { "optional": ["any"] }
+                                },
+                                "to": [
+                                    {
+                                        "set_variable": {
+                                            "name": "caps_secondary_layer",
+                                            "value": 1
+                                        }
+                                    }
+                                ],
+                                "to_after_key_up": [
+                                    {
+                                        "set_variable": {
+                                            "name": "caps_secondary_layer",
+                                            "value": 0
+                                        }
+                                    }
+                                ],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "bundle_identifiers": [
+                                            "^com\\.microsoft\\.rdc\\.macos$",
+                                            "^com\\.netease\\.uuremote$"
+                                        ],
+                                        "file_paths": [
+                                            "^/Applications/Windows App\\.app/Contents/MacOS/Windows App$"
+                                        ],
+                                        "type": "frontmost_application_unless"
+                                    },
+                                    {
+                                        "type": "variable_if",
+                                        "name": "caps_primary_layer",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "left_command",
+                                    "modifiers": {
+                                        "optional": [
+                                            "any"
+                                        ]
+                                    }
                                 },
                                 "to": [
                                     {
@@ -513,7 +610,6 @@
                     },
                     {
                         "description": "[Map][Optional]: [F2] -> [Middle mouse button] (turned off by default)",
-                        "enabled": false,
                         "manipulators": [
                             {
                                 "from": {
@@ -539,8 +635,8 @@
                                         "type": "frontmost_application_unless"
                                     },
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
@@ -548,18 +644,27 @@
                                     "key_code": "spacebar",
                                     "modifiers": { "optional": ["any"] }
                                 },
-                                "to": [{ "shell_command": "/usr/bin/osascript -e 'tell application \"System Events\" to key up shift'" }],
-                                "to_after_key_up": [{ "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/insert_unicode_symbol_cgevent.py '　' " }],
+                                "to": [],
+                                "to_after_key_up": [
+                                    {
+                                        "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/send_keys.py --release-key spacebar --text '　'",
+                                        "repeat": false
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
                     },
                     {
-                        "description": "Caps+B -> Fn, Caps+Z -> Type Clipboard, Caps+Shift+Z -> Repair Clipboard Images",
+                        "description": "Caps+B -> Fn",
                         "manipulators": [
                             {
                                 "conditions": [
-                                    { "name": "caps_primary_layer", "type": "variable_if", "value": 1 }
+                                    {
+                                        "type": "variable_if",
+                                        "name": "caps_primary_layer",
+                                        "value": 1
+                                    }
                                 ],
                                 "from": {
                                     "key_code": "b",
@@ -567,13 +672,22 @@
                                 },
                                 "to": [{ "apple_vendor_top_case_key_code": "keyboard_fn" }],
                                 "type": "basic"
-                            },
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Caps+Z -> Type Clipboard, Caps+Shift+Z -> Repair Clipboard Images",
+                        "manipulators": [
                             {
                                 "conditions": [
-                                    { "name": "caps_secondary_layer", "type": "variable_unless", "value": 1 },
                                     {
-                                        "name": "caps_primary_layer",
+                                        "name": "caps_secondary_layer",
+                                        "type": "variable_unless",
+                                        "value": 1
+                                    },
+                                    {
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
@@ -591,15 +705,27 @@
                             },
                             {
                                 "conditions": [
-                                    { "name": "caps_secondary_layer", "type": "variable_unless", "value": 1 },
                                     {
-                                        "name": "caps_primary_layer",
+                                        "name": "caps_secondary_layer",
+                                        "type": "variable_unless",
+                                        "value": 1
+                                    },
+                                    {
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
-                                "from": { "key_code": "z", "modifiers": { "optional": ["caps_lock"] } },
-                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/type_clipboard.py", "repeat": false }],
+                                "from": {
+                                    "key_code": "z",
+                                    "modifiers": { "optional": ["caps_lock"] }
+                                },
+                                "to": [
+                                    {
+                                        "repeat": false,
+                                        "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/type_clipboard.py"
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -609,26 +735,56 @@
                         "manipulators": [
                             {
                                 "conditions": [
-                                    { "name": "caps_primary_layer", "type": "variable_if", "value": 1 },
                                     {
-                                        "bundle_identifiers": ["^net\\.ankiweb\\.launcher$", "^net\\.ankiweb\\.anki$"],
+                                        "type": "variable_if",
+                                        "name": "caps_primary_layer",
+                                        "value": 1
+                                    },
+                                    {
+                                        "bundle_identifiers": [
+                                            "^net\\.ankiweb\\.launcher$",
+                                            "^net\\.ankiweb\\.anki$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
-                                "from": { "key_code": "a", "modifiers": { "optional": ["caps_lock"] } },
-                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/toggle_caps_lock.py", "repeat": false }],
+                                "from": {
+                                    "key_code": "a",
+                                    "modifiers": { "optional": ["caps_lock"] }
+                                },
+                                "to": [
+                                    {
+                                        "repeat": false,
+                                        "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/toggle_caps_lock.py"
+                                    }
+                                ],
                                 "type": "basic"
                             },
                             {
                                 "conditions": [
-                                    { "name": "caps_primary_layer", "type": "variable_if", "value": 1 },
                                     {
-                                        "bundle_identifiers": ["^net\\.ankiweb\\.launcher$", "^net\\.ankiweb\\.anki$"],
+                                        "type": "variable_if",
+                                        "name": "caps_primary_layer",
+                                        "value": 1
+                                    },
+                                    {
+                                        "bundle_identifiers": [
+                                            "^net\\.ankiweb\\.launcher$",
+                                            "^net\\.ankiweb\\.anki$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
-                                "from": { "key_code": "q", "modifiers": { "optional": ["any"] } },
-                                "to": [{ "key_code": "escape" }],
+                                "from": {
+                                    "key_code": "q",
+                                    "modifiers": { "optional": ["any"] }
+                                },
+                                "to": [
+                                    {
+                                        "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/send_keys.py --release-key q --inherit-modifiers --key escape",
+                                        "repeat": false
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -639,8 +795,8 @@
                             {
                                 "conditions": [
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
@@ -650,8 +806,8 @@
                                 },
                                 "to": [
                                     {
-                                        "key_code": "non_us_backslash",
-                                        "modifiers": ["shift"]
+                                        "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/send_keys.py --release-key backslash --key shift+non_us_backslash",
+                                        "repeat": false
                                     }
                                 ],
                                 "type": "basic"
@@ -659,8 +815,8 @@
                             {
                                 "conditions": [
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
@@ -668,7 +824,12 @@
                                     "key_code": "backslash",
                                     "modifiers": { "optional": ["any"] }
                                 },
-                                "to": [{ "key_code": "non_us_backslash" }],
+                                "to": [
+                                    {
+                                        "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/send_keys.py --release-key backslash --inherit-modifiers --key non_us_backslash",
+                                        "repeat": false
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -679,25 +840,25 @@
                             {
                                 "conditions": [
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
                                 "from": { "key_code": "delete_or_backspace" },
                                 "to": [
-                                    { "shell_command": "/usr/bin/osascript -e 'tell application \"System Events\" to key up shift'" },
-                                    { "key_code": "left_arrow" },
-                                    { "key_code": "delete_or_backspace" },
-                                    { "key_code": "right_arrow" }
+                                    {
+                                        "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/send_keys.py --release-key delete_or_backspace --key left_arrow --key delete_or_backspace --key right_arrow",
+                                        "repeat": false
+                                    }
                                 ],
                                 "type": "basic"
                             },
                             {
                                 "conditions": [
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
@@ -706,26 +867,9 @@
                                     "modifiers": { "mandatory": ["shift"] }
                                 },
                                 "to": [
-                                    { "shell_command": "/usr/bin/osascript -e 'tell application \"System Events\" to key up shift'" },
                                     {
-                                        "key_code": "right_arrow",
-                                        "modifiers": ["command"]
-                                    },
-                                    {
-                                        "key_code": "left_arrow",
-                                        "modifiers": ["command", "shift"]
-                                    },
-                                    {
-                                        "key_code": "left_arrow",
-                                        "modifiers": ["command", "shift"]
-                                    },
-                                    {
-                                        "key_code": "delete_or_backspace",
-                                        "modifiers": ["command"]
-                                    },
-                                    {
-                                        "key_code": "delete_or_backspace",
-                                        "modifiers": ["command"]
+                                        "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/send_keys.py --release-key delete_or_backspace --key command+right_arrow --key command+shift+left_arrow --key command+shift+left_arrow --key command+delete_or_backspace --key command+delete_or_backspace",
+                                        "repeat": false
                                     }
                                 ],
                                 "type": "basic"
@@ -736,39 +880,129 @@
                         "description": "Caps+Grave -> Release Modifiers and Disable Caps Lock, Caps+4/6/7 -> Selected Text Tools",
                         "manipulators": [
                             {
-                                "conditions": [{ "name": "caps_primary_layer", "type": "variable_if", "value": 1 }],
-                                "from": { "key_code": "grave_accent_and_tilde", "modifiers": { "optional": ["any"] } },
-                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/keyboard_events.py --release-modifiers", "repeat": false }],
+                                "conditions": [
+                                    {
+                                        "type": "variable_if",
+                                        "name": "caps_primary_layer",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "grave_accent_and_tilde",
+                                    "modifiers": { "optional": ["any"] }
+                                },
+                                "to": [
+                                    {
+                                        "repeat": false,
+                                        "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/keyboard_events.py --release-modifiers"
+                                    }
+                                ],
                                 "type": "basic"
                             },
                             {
-                                "conditions": [{ "name": "caps_primary_layer", "type": "variable_if", "value": 1 }],
-                                "from": { "key_code": "4", "modifiers": { "optional": ["caps_lock"] } },
-                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/text_actions.py wrap", "repeat": false }],
+                                "conditions": [
+                                    {
+                                        "type": "variable_if",
+                                        "name": "caps_primary_layer",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "4",
+                                    "modifiers": { "optional": ["caps_lock"] }
+                                },
+                                "to": [
+                                    {
+                                        "repeat": false,
+                                        "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/text_actions.py wrap"
+                                    }
+                                ],
                                 "type": "basic"
                             },
                             {
-                                "conditions": [{ "name": "caps_primary_layer", "type": "variable_if", "value": 1 }],
-                                "from": { "key_code": "6", "modifiers": { "mandatory": ["shift"], "optional": ["caps_lock"] } },
-                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/text_actions.py upper", "repeat": false }],
+                                "conditions": [
+                                    {
+                                        "type": "variable_if",
+                                        "name": "caps_primary_layer",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "6",
+                                    "modifiers": {
+                                        "mandatory": ["shift"],
+                                        "optional": ["caps_lock"]
+                                    }
+                                },
+                                "to": [
+                                    {
+                                        "repeat": false,
+                                        "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/text_actions.py upper"
+                                    }
+                                ],
                                 "type": "basic"
                             },
                             {
-                                "conditions": [{ "name": "caps_primary_layer", "type": "variable_if", "value": 1 }],
-                                "from": { "key_code": "6", "modifiers": { "optional": ["caps_lock"] } },
-                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/text_actions.py lower", "repeat": false }],
+                                "conditions": [
+                                    {
+                                        "type": "variable_if",
+                                        "name": "caps_primary_layer",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "6",
+                                    "modifiers": { "optional": ["caps_lock"] }
+                                },
+                                "to": [
+                                    {
+                                        "repeat": false,
+                                        "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/text_actions.py lower"
+                                    }
+                                ],
                                 "type": "basic"
                             },
                             {
-                                "conditions": [{ "name": "caps_primary_layer", "type": "variable_if", "value": 1 }],
-                                "from": { "key_code": "7", "modifiers": { "mandatory": ["shift"], "optional": ["caps_lock"] } },
-                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/text_actions.py title", "repeat": false }],
+                                "conditions": [
+                                    {
+                                        "type": "variable_if",
+                                        "name": "caps_primary_layer",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "7",
+                                    "modifiers": {
+                                        "mandatory": ["shift"],
+                                        "optional": ["caps_lock"]
+                                    }
+                                },
+                                "to": [
+                                    {
+                                        "repeat": false,
+                                        "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/text_actions.py title"
+                                    }
+                                ],
                                 "type": "basic"
                             },
                             {
-                                "conditions": [{ "name": "caps_primary_layer", "type": "variable_if", "value": 1 }],
-                                "from": { "key_code": "7", "modifiers": { "optional": ["caps_lock"] } },
-                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/text_actions.py stats", "repeat": false }],
+                                "conditions": [
+                                    {
+                                        "type": "variable_if",
+                                        "name": "caps_primary_layer",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "7",
+                                    "modifiers": { "optional": ["caps_lock"] }
+                                },
+                                "to": [
+                                    {
+                                        "repeat": false,
+                                        "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/text_actions.py stats"
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -778,37 +1012,94 @@
                         "manipulators": [
                             {
                                 "conditions": [
-                                    { "name": "caps_primary_layer", "type": "variable_if", "value": 1 },
-                                    { "name": "caps_secondary_layer", "type": "variable_if", "value": 1 }
+                                    {
+                                        "type": "variable_if",
+                                        "name": "caps_primary_layer",
+                                        "value": 1
+                                    },
+                                    {
+                                        "name": "caps_secondary_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
                                 ],
-                                "from": { "key_code": "tab", "modifiers": { "optional": ["left_option", "right_command", "caps_lock"] } },
-                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/text_actions.py tab", "repeat": false }],
+                                "from": {
+                                    "key_code": "tab",
+                                    "modifiers": { "optional": ["left_option", "right_command", "left_command", "caps_lock"] }
+                                },
+                                "to": [
+                                    {
+                                        "repeat": false,
+                                        "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/text_actions.py tab"
+                                    }
+                                ],
                                 "type": "basic"
                             },
                             {
                                 "conditions": [
-                                    { "name": "caps_primary_layer", "type": "variable_if", "value": 1 },
-                                    { "name": "caps_secondary_layer", "type": "variable_if", "value": 1 },
                                     {
-                                        "bundle_identifiers": ["^net\\.ankiweb\\.launcher$", "^net\\.ankiweb\\.anki$"],
+                                        "type": "variable_if",
+                                        "name": "caps_primary_layer",
+                                        "value": 1
+                                    },
+                                    {
+                                        "name": "caps_secondary_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    },
+                                    {
+                                        "bundle_identifiers": [
+                                            "^net\\.ankiweb\\.launcher$",
+                                            "^net\\.ankiweb\\.anki$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
-                                "from": { "key_code": "t", "modifiers": { "mandatory": ["shift"], "optional": ["left_option", "right_command", "caps_lock"] } },
-                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/text_actions.py getter", "repeat": false }],
+                                "from": {
+                                    "key_code": "t",
+                                    "modifiers": {
+                                        "mandatory": ["shift"],
+                                        "optional": ["left_option", "right_command", "left_command", "caps_lock"]
+                                    }
+                                },
+                                "to": [
+                                    {
+                                        "repeat": false,
+                                        "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/text_actions.py getter"
+                                    }
+                                ],
                                 "type": "basic"
                             },
                             {
                                 "conditions": [
-                                    { "name": "caps_primary_layer", "type": "variable_if", "value": 1 },
-                                    { "name": "caps_secondary_layer", "type": "variable_if", "value": 1 },
                                     {
-                                        "bundle_identifiers": ["^net\\.ankiweb\\.launcher$", "^net\\.ankiweb\\.anki$"],
+                                        "type": "variable_if",
+                                        "name": "caps_primary_layer",
+                                        "value": 1
+                                    },
+                                    {
+                                        "name": "caps_secondary_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    },
+                                    {
+                                        "bundle_identifiers": [
+                                            "^net\\.ankiweb\\.launcher$",
+                                            "^net\\.ankiweb\\.anki$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
-                                "from": { "key_code": "t", "modifiers": { "optional": ["left_option", "right_command", "caps_lock"] } },
-                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/text_actions.py setter", "repeat": false }],
+                                "from": {
+                                    "key_code": "t",
+                                    "modifiers": { "optional": ["left_option", "right_command", "left_command", "caps_lock"] }
+                                },
+                                "to": [
+                                    {
+                                        "repeat": false,
+                                        "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/text_actions.py setter"
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -819,23 +1110,24 @@
                             {
                                 "conditions": [
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
                                 "from": { "key_code": "tab" },
                                 "to": [
-                                    { "shell_command": "/usr/bin/osascript -e 'tell application \"System Events\" to key up shift'" },
-                                    { "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/indent_select_lines.py --indent" }
+                                    {
+                                        "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/indent_select_lines.py --indent"
+                                    }
                                 ],
                                 "type": "basic"
                             },
                             {
                                 "conditions": [
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
@@ -844,8 +1136,9 @@
                                     "modifiers": { "mandatory": ["shift"] }
                                 },
                                 "to": [
-                                    { "shell_command": "/usr/bin/osascript -e 'tell application \"System Events\" to key up shift'" },
-                                    { "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/indent_select_lines.py --unindent" }
+                                    {
+                                        "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/indent_select_lines.py --unindent"
+                                    }
                                 ],
                                 "type": "basic"
                             }
@@ -857,8 +1150,8 @@
                             {
                                 "conditions": [
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
@@ -867,14 +1160,9 @@
                                     "modifiers": { "mandatory": ["shift"] }
                                 },
                                 "to": [
-                                    { "shell_command": "/usr/bin/osascript -e 'tell application \"System Events\" to key up shift'" },
                                     {
-                                        "key_code": "right_arrow",
-                                        "modifiers": ["command"]
-                                    },
-                                    {
-                                        "key_code": "semicolon",
-                                        "modifiers": ["shift"]
+                                        "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/send_keys.py --release-key semicolon --key command+right_arrow --text :",
+                                        "repeat": false
                                     }
                                 ],
                                 "type": "basic"
@@ -882,18 +1170,17 @@
                             {
                                 "conditions": [
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
                                 "from": { "key_code": "semicolon" },
                                 "to": [
                                     {
-                                        "key_code": "right_arrow",
-                                        "modifiers": ["command"]
-                                    },
-                                    { "key_code": "semicolon" }
+                                        "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/send_keys.py --release-key semicolon --key command+right_arrow --text ';'",
+                                        "repeat": false
+                                    }
                                 ],
                                 "type": "basic"
                             }
@@ -905,8 +1192,8 @@
                             {
                                 "conditions": [
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
@@ -915,14 +1202,9 @@
                                     "modifiers": { "optional": ["any"] }
                                 },
                                 "to": [
-                                    { "shell_command": "/usr/bin/osascript -e 'tell application \"System Events\" to key up shift'" },
                                     {
-                                        "key_code": "right_arrow",
-                                        "modifiers": ["command"]
-                                    },
-                                    {
-                                        "key_code": "semicolon",
-                                        "modifiers": ["shift"]
+                                        "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/send_keys.py --release-key quote --inherit-modifiers --exclude-modifiers shift --key command+right_arrow --text :",
+                                        "repeat": false
                                     }
                                 ],
                                 "type": "basic"
@@ -934,33 +1216,62 @@
                         "manipulators": [
                             {
                                 "conditions": [
-                                    { "name": "caps_primary_layer", "type": "variable_if", "value": 1 },
-                                    { "name": "caps_secondary_layer", "type": "variable_if", "value": 1 }
+                                    {
+                                        "type": "variable_if",
+                                        "name": "caps_primary_layer",
+                                        "value": 1
+                                    },
+                                    {
+                                        "name": "caps_secondary_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
                                 ],
                                 "from": {
                                     "key_code": "z",
-                                    "modifiers": { "optional": ["left_option", "right_command", "caps_lock"] }
+                                    "modifiers": { "optional": ["left_option", "right_command", "left_command", "caps_lock"] }
                                 },
-                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/secondary_clipboard.py type", "repeat": false }],
-                                "type": "basic"
-                            },
-                            {
-                                "conditions": [
-                                    { "name": "caps_primary_layer", "type": "variable_if", "value": 1 },
-                                    { "name": "caps_secondary_layer", "type": "variable_if", "value": 1 }
+                                "to": [
+                                    {
+                                        "repeat": false,
+                                        "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/secondary_clipboard.py type"
+                                    }
                                 ],
-                                "from": {
-                                    "key_code": "v",
-                                    "modifiers": { "mandatory": ["shift"], "optional": ["left_option", "right_command", "caps_lock"] }
-                                },
-                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/secondary_clipboard.py paste --advanced", "repeat": false }],
                                 "type": "basic"
                             },
                             {
                                 "conditions": [
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
+                                        "value": 1
+                                    },
+                                    {
+                                        "name": "caps_secondary_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "v",
+                                    "modifiers": {
+                                        "mandatory": ["shift"],
+                                        "optional": ["left_option", "right_command", "left_command", "caps_lock"]
+                                    }
+                                },
+                                "to": [
+                                    {
+                                        "repeat": false,
+                                        "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/secondary_clipboard.py paste --advanced"
+                                    }
+                                ],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     },
                                     {
@@ -973,7 +1284,7 @@
                                     "key_code": "c",
                                     "modifiers": {
                                         "mandatory": ["shift"],
-                                        "optional": ["left_option", "right_command"]
+                                        "optional": ["left_option", "right_command", "left_command"]
                                     }
                                 },
                                 "to": [
@@ -987,8 +1298,8 @@
                             {
                                 "conditions": [
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     },
                                     {
@@ -999,7 +1310,7 @@
                                 ],
                                 "from": {
                                     "key_code": "c",
-                                    "modifiers": { "optional": ["left_option", "right_command"] }
+                                    "modifiers": { "optional": ["left_option", "right_command", "left_command"] }
                                 },
                                 "to": [
                                     {
@@ -1012,8 +1323,8 @@
                             {
                                 "conditions": [
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     },
                                     {
@@ -1024,7 +1335,7 @@
                                 ],
                                 "from": {
                                     "key_code": "v",
-                                    "modifiers": { "optional": ["left_option", "right_command"] }
+                                    "modifiers": { "optional": ["left_option", "right_command", "left_command"] }
                                 },
                                 "to": [
                                     {
@@ -1037,8 +1348,8 @@
                             {
                                 "conditions": [
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     },
                                     {
@@ -1051,7 +1362,7 @@
                                     "key_code": "x",
                                     "modifiers": {
                                         "mandatory": ["shift"],
-                                        "optional": ["left_option", "right_command"]
+                                        "optional": ["left_option", "right_command", "left_command"]
                                     }
                                 },
                                 "to": [
@@ -1065,8 +1376,8 @@
                             {
                                 "conditions": [
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     },
                                     {
@@ -1077,7 +1388,7 @@
                                 ],
                                 "from": {
                                     "key_code": "x",
-                                    "modifiers": { "optional": ["left_option", "right_command"] }
+                                    "modifiers": { "optional": ["left_option", "right_command", "left_command"] }
                                 },
                                 "to": [
                                     {
@@ -1095,8 +1406,8 @@
                             {
                                 "conditions": [
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
@@ -1110,8 +1421,8 @@
                             {
                                 "conditions": [
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
@@ -1127,16 +1438,16 @@
                             {
                                 "conditions": [
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
                                 "from": { "key_code": "x" },
                                 "to": [
                                     {
-                                        "key_code": "x",
-                                        "modifiers": ["command"]
+                                        "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/send_keys.py --release-key x --key command+x",
+                                        "repeat": false
                                     }
                                 ],
                                 "type": "basic"
@@ -1144,8 +1455,8 @@
                             {
                                 "conditions": [
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
@@ -1155,26 +1466,9 @@
                                 },
                                 "to": [
                                     {
-                                        "key_code": "right_arrow",
-                                        "modifiers": ["command"]
-                                    },
-                                    {
-                                        "key_code": "left_arrow",
-                                        "modifiers": ["command", "shift"]
-                                    },
-                                    {
-                                        "key_code": "left_arrow",
-                                        "modifiers": ["command", "shift"]
-                                    },
-                                    {
-                                        "key_code": "x",
-                                        "modifiers": ["command"]
-                                    },
-                                    {
-                                        "key_code": "right_arrow",
-                                        "modifiers": ["command"]
-                                    },
-                                    { "key_code": "delete_or_backspace" }
+                                        "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/send_keys.py --release-key x --key command+right_arrow --key command+shift+left_arrow --key command+shift+left_arrow --key command+x --key command+right_arrow --key delete_or_backspace",
+                                        "repeat": false
+                                    }
                                 ],
                                 "type": "basic"
                             }
@@ -1186,16 +1480,16 @@
                             {
                                 "conditions": [
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
                                 "from": { "key_code": "c" },
                                 "to": [
                                     {
-                                        "key_code": "c",
-                                        "modifiers": ["command"]
+                                        "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/send_keys.py --release-key c --key command+c",
+                                        "repeat": false
                                     }
                                 ],
                                 "type": "basic"
@@ -1203,8 +1497,8 @@
                             {
                                 "conditions": [
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
@@ -1214,24 +1508,8 @@
                                 },
                                 "to": [
                                     {
-                                        "key_code": "right_arrow",
-                                        "modifiers": ["command"]
-                                    },
-                                    {
-                                        "key_code": "left_arrow",
-                                        "modifiers": ["command", "shift"]
-                                    },
-                                    {
-                                        "key_code": "left_arrow",
-                                        "modifiers": ["command", "shift"]
-                                    },
-                                    {
-                                        "key_code": "c",
-                                        "modifiers": ["command"]
-                                    },
-                                    {
-                                        "key_code": "right_arrow",
-                                        "modifiers": ["command"]
+                                        "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/send_keys.py --release-key c --key command+right_arrow --key command+shift+left_arrow --key command+shift+left_arrow --key command+c --key command+right_arrow",
+                                        "repeat": false
                                     }
                                 ],
                                 "type": "basic"
@@ -1244,8 +1522,8 @@
                             {
                                 "conditions": [
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
@@ -1259,8 +1537,8 @@
                             {
                                 "conditions": [
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
@@ -1279,8 +1557,8 @@
                             {
                                 "conditions": [
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
@@ -1299,8 +1577,8 @@
                             {
                                 "conditions": [
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
@@ -1309,21 +1587,18 @@
                                     "modifiers": { "mandatory": ["shift"] }
                                 },
                                 "to": [
-                                    { "shell_command": "/usr/bin/osascript -e 'tell application \"System Events\" to key up shift'" },
                                     {
-                                        "key_code": "left_arrow",
-                                        "modifiers": ["command"]
-                                    },
-                                    { "key_code": "return_or_enter" },
-                                    { "key_code": "up_arrow" }
+                                        "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/send_keys.py --release-key return_or_enter --key command+left_arrow --key return_or_enter --key up_arrow",
+                                        "repeat": false
+                                    }
                                 ],
                                 "type": "basic"
                             },
                             {
                                 "conditions": [
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
@@ -1332,12 +1607,10 @@
                                     "modifiers": { "optional": ["any"] }
                                 },
                                 "to": [
-                                    { "shell_command": "/usr/bin/osascript -e 'tell application \"System Events\" to key up shift'" },
                                     {
-                                        "key_code": "right_arrow",
-                                        "modifiers": ["command"]
-                                    },
-                                    { "key_code": "return_or_enter" }
+                                        "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/send_keys.py --release-key return_or_enter --inherit-modifiers --exclude-modifiers shift --key command+right_arrow --key return_or_enter",
+                                        "repeat": false
+                                    }
                                 ],
                                 "type": "basic"
                             }
@@ -1349,8 +1622,8 @@
                             {
                                 "conditions": [
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
@@ -1364,8 +1637,8 @@
                             {
                                 "conditions": [
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
@@ -1379,8 +1652,8 @@
                             {
                                 "conditions": [
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
@@ -1394,8 +1667,8 @@
                             {
                                 "conditions": [
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
@@ -1409,8 +1682,8 @@
                             {
                                 "conditions": [
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
@@ -1421,8 +1694,8 @@
                             {
                                 "conditions": [
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
@@ -1433,8 +1706,8 @@
                             {
                                 "conditions": [
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
@@ -1445,8 +1718,8 @@
                             {
                                 "conditions": [
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
@@ -1462,8 +1735,8 @@
                             {
                                 "conditions": [
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
@@ -1472,7 +1745,7 @@
                                     "modifiers": { "mandatory": ["shift"] }
                                 },
                                 "to": [
-                                    { "shell_command": "/usr/bin/osascript -e 'tell application \"System Events\" to key up shift'" },
+                                    { "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/release_shift.py" },
                                     { "mouse_key": { "horizontal_wheel": 64 } }
                                 ],
                                 "type": "basic"
@@ -1480,8 +1753,8 @@
                             {
                                 "conditions": [
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
@@ -1490,7 +1763,7 @@
                                     "modifiers": { "mandatory": ["shift"] }
                                 },
                                 "to": [
-                                    { "shell_command": "/usr/bin/osascript -e 'tell application \"System Events\" to key up shift'" },
+                                    { "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/release_shift.py" },
                                     { "mouse_key": { "horizontal_wheel": -64 } }
                                 ],
                                 "type": "basic"
@@ -1498,8 +1771,8 @@
                             {
                                 "conditions": [
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
@@ -1510,8 +1783,8 @@
                             {
                                 "conditions": [
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
@@ -1526,15 +1799,34 @@
                         "manipulators": [
                             {
                                 "conditions": [
-                                    { "name": "caps_primary_layer", "type": "variable_if", "value": 1 },
-                                    { "name": "caps_secondary_layer", "type": "variable_unless", "value": 1 },
                                     {
-                                        "bundle_identifiers": ["^net\\.ankiweb\\.launcher$", "^net\\.ankiweb\\.anki$"],
+                                        "type": "variable_if",
+                                        "name": "caps_primary_layer",
+                                        "value": 1
+                                    },
+                                    {
+                                        "name": "caps_secondary_layer",
+                                        "type": "variable_unless",
+                                        "value": 1
+                                    },
+                                    {
+                                        "bundle_identifiers": [
+                                            "^net\\.ankiweb\\.launcher$",
+                                            "^net\\.ankiweb\\.anki$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
-                                "from": { "key_code": "e", "modifiers": { "optional": ["caps_lock"] } },
-                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 \"${HOME}/.config/karabiner/scripts/quick_menu.py\"", "repeat": false }],
+                                "from": {
+                                    "key_code": "e",
+                                    "modifiers": { "optional": ["caps_lock"] }
+                                },
+                                "to": [
+                                    {
+                                        "repeat": false,
+                                        "shell_command": "/opt/miniconda3/bin/python3 \"${HOME}/.config/karabiner/scripts/quick_menu.py\""
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -1552,8 +1844,8 @@
                                         "type": "frontmost_application_unless"
                                     },
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
@@ -1561,24 +1853,47 @@
                                     "key_code": "w",
                                     "modifiers": { "optional": ["any"] }
                                 },
-                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 \"${HOME}/.config/karabiner/scripts/window_inspector.py\"", "repeat": false }],
+                                "to": [
+                                    {
+                                        "repeat": false,
+                                        "shell_command": "/opt/miniconda3/bin/python3 \"${HOME}/.config/karabiner/scripts/window_inspector.py\""
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
                     },
                     {
-                        "description": "Caps+R -> Fit and center window, Caps+Shift+R -> Resize to 1024x768, except Anki",
+                        "description": "Caps+R -> Fit and center window, Caps+Shift+R -> Resize to 1024x768 and center, except Anki",
                         "manipulators": [
                             {
                                 "conditions": [
-                                    { "name": "caps_primary_layer", "type": "variable_if", "value": 1 },
                                     {
-                                        "bundle_identifiers": ["^net\\.ankiweb\\.launcher$", "^net\\.ankiweb\\.anki$"],
+                                        "type": "variable_if",
+                                        "name": "caps_primary_layer",
+                                        "value": 1
+                                    },
+                                    {
+                                        "bundle_identifiers": [
+                                            "^net\\.ankiweb\\.launcher$",
+                                            "^net\\.ankiweb\\.anki$"
+                                        ],
                                         "type": "frontmost_application_unless"
                                     }
                                 ],
-                                "from": { "key_code": "r", "modifiers": { "mandatory": ["shift"], "optional": ["caps_lock"] } },
-                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/center_front_window.py --size 1024 768", "repeat": false }],
+                                "from": {
+                                    "key_code": "r",
+                                    "modifiers": {
+                                        "mandatory": ["shift"],
+                                        "optional": ["caps_lock"]
+                                    }
+                                },
+                                "to": [
+                                    {
+                                        "repeat": false,
+                                        "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/center_front_window.py --size 1024 768 --center"
+                                    }
+                                ],
                                 "type": "basic"
                             },
                             {
@@ -1591,8 +1906,8 @@
                                         "type": "frontmost_application_unless"
                                     },
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
@@ -1624,8 +1939,8 @@
                                 },
                                 "to": [
                                     {
-                                        "key_code": "return_or_enter",
-                                        "modifiers": ["control"]
+                                        "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/send_keys.py --release-key return_or_enter --key control+return_or_enter",
+                                        "repeat": false
                                     }
                                 ],
                                 "type": "basic"
@@ -1638,8 +1953,8 @@
                             {
                                 "conditions": [
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
@@ -1649,8 +1964,8 @@
                                 },
                                 "to": [
                                     {
-                                        "key_code": "f19",
-                                        "modifiers": ["control"]
+                                        "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/send_keys.py --release-key period --inherit-modifiers --key control+f19",
+                                        "repeat": false
                                     }
                                 ],
                                 "type": "basic"
@@ -1670,8 +1985,8 @@
                                         "type": "frontmost_application_if"
                                     },
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
@@ -1681,8 +1996,8 @@
                                 },
                                 "to": [
                                     {
-                                        "key_code": "r",
-                                        "modifiers": ["command"]
+                                        "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/send_keys.py --release-key q --inherit-modifiers --key command+r",
+                                        "repeat": false
                                     }
                                 ],
                                 "type": "basic"
@@ -1697,8 +2012,8 @@
                                         "type": "frontmost_application_if"
                                     },
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
@@ -1708,8 +2023,8 @@
                                 },
                                 "to": [
                                     {
-                                        "key_code": "f13",
-                                        "modifiers": ["command", "control"]
+                                        "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/send_keys.py --release-key w --inherit-modifiers --key command+control+f13",
+                                        "repeat": false
                                     }
                                 ],
                                 "type": "basic"
@@ -1724,16 +2039,16 @@
                                         "type": "frontmost_application_if"
                                     },
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
                                 "from": { "key_code": "e" },
                                 "to": [
                                     {
-                                        "key_code": "f13",
-                                        "modifiers": ["option"]
+                                        "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/send_keys.py --release-key e --key option+f13",
+                                        "repeat": false
                                     }
                                 ],
                                 "type": "basic"
@@ -1748,8 +2063,8 @@
                                         "type": "frontmost_application_if"
                                     },
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
@@ -1758,10 +2073,9 @@
                                     "modifiers": { "mandatory": ["shift"] }
                                 },
                                 "to": [
-                                    { "shell_command": "/usr/bin/osascript -e 'tell application \"System Events\" to key up shift'" },
                                     {
-                                        "key_code": "f13",
-                                        "modifiers": ["control"]
+                                        "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/send_keys.py --release-key e --key control+f13",
+                                        "repeat": false
                                     }
                                 ],
                                 "type": "basic"
@@ -1776,8 +2090,8 @@
                                         "type": "frontmost_application_if"
                                     },
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
@@ -1787,8 +2101,8 @@
                                 },
                                 "to": [
                                     {
-                                        "key_code": "f13",
-                                        "modifiers": ["command", "option"]
+                                        "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/send_keys.py --release-key r --inherit-modifiers --key command+option+f13",
+                                        "repeat": false
                                     }
                                 ],
                                 "type": "basic"
@@ -1803,8 +2117,8 @@
                                         "type": "frontmost_application_if"
                                     },
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
@@ -1814,8 +2128,8 @@
                                 },
                                 "to": [
                                     {
-                                        "key_code": "f13",
-                                        "modifiers": ["command", "option", "shift"]
+                                        "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/send_keys.py --release-key t --inherit-modifiers --key command+option+shift+f13",
+                                        "repeat": false
                                     }
                                 ],
                                 "type": "basic"
@@ -1830,16 +2144,16 @@
                                         "type": "frontmost_application_if"
                                     },
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
                                 "from": { "key_code": "a" },
                                 "to": [
                                     {
-                                        "key_code": "f13",
-                                        "modifiers": ["control", "command", "shift"]
+                                        "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/send_keys.py --release-key a --key control+command+shift+f13",
+                                        "repeat": false
                                     }
                                 ],
                                 "type": "basic"
@@ -1854,8 +2168,8 @@
                                         "type": "frontmost_application_if"
                                     },
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
@@ -1864,10 +2178,9 @@
                                     "modifiers": { "mandatory": ["shift"] }
                                 },
                                 "to": [
-                                    { "shell_command": "/usr/bin/osascript -e 'tell application \"System Events\" to key up shift'" },
                                     {
-                                        "key_code": "f13",
-                                        "modifiers": ["control", "command", "option"]
+                                        "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/send_keys.py --release-key a --key control+command+option+f13",
+                                        "repeat": false
                                     }
                                 ],
                                 "type": "basic"
@@ -1882,16 +2195,16 @@
                                         "type": "frontmost_application_if"
                                     },
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
                                 "from": { "key_code": "s" },
                                 "to": [
                                     {
-                                        "key_code": "f13",
-                                        "modifiers": ["option", "control"]
+                                        "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/send_keys.py --release-key s --key option+control+f13",
+                                        "repeat": false
                                     }
                                 ],
                                 "type": "basic"
@@ -1906,8 +2219,8 @@
                                         "type": "frontmost_application_if"
                                     },
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
@@ -1916,10 +2229,9 @@
                                     "modifiers": { "mandatory": ["shift"] }
                                 },
                                 "to": [
-                                    { "shell_command": "/usr/bin/osascript -e 'tell application \"System Events\" to key up shift'" },
                                     {
-                                        "key_code": "f13",
-                                        "modifiers": ["option", "control", "shift"]
+                                        "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/send_keys.py --release-key s --key option+control+shift+f13",
+                                        "repeat": false
                                     }
                                 ],
                                 "type": "basic"
@@ -1934,16 +2246,16 @@
                                         "type": "frontmost_application_if"
                                     },
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
                                 "from": { "key_code": "d" },
                                 "to": [
                                     {
-                                        "key_code": "f13",
-                                        "modifiers": ["command", "shift"]
+                                        "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/send_keys.py --release-key d --key command+shift+f13",
+                                        "repeat": false
                                     }
                                 ],
                                 "type": "basic"
@@ -1958,8 +2270,8 @@
                                         "type": "frontmost_application_if"
                                     },
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
@@ -1968,10 +2280,9 @@
                                     "modifiers": { "mandatory": ["shift"] }
                                 },
                                 "to": [
-                                    { "shell_command": "/usr/bin/osascript -e 'tell application \"System Events\" to key up shift'" },
                                     {
-                                        "key_code": "f13",
-                                        "modifiers": ["control", "shift"]
+                                        "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/send_keys.py --release-key d --key control+shift+f13",
+                                        "repeat": false
                                     }
                                 ],
                                 "type": "basic"
@@ -1986,8 +2297,8 @@
                                         "type": "frontmost_application_if"
                                     },
                                     {
-                                        "name": "caps_primary_layer",
                                         "type": "variable_if",
+                                        "name": "caps_primary_layer",
                                         "value": 1
                                     }
                                 ],
@@ -1995,7 +2306,12 @@
                                     "key_code": "f",
                                     "modifiers": { "optional": ["any"] }
                                 },
-                                "to": [{ "key_code": "f13" }],
+                                "to": [
+                                    {
+                                        "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/send_keys.py --release-key f --inherit-modifiers --key f13",
+                                        "repeat": false
+                                    }
+                                ],
                                 "type": "basic"
                             },
                             {
@@ -2016,8 +2332,8 @@
                                 "from": { "key_code": "g" },
                                 "to": [
                                     {
-                                        "key_code": "f13",
-                                        "modifiers": ["command"]
+                                        "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/send_keys.py --release-key g --key command+f13",
+                                        "repeat": false
                                     }
                                 ],
                                 "type": "basic"
@@ -2042,10 +2358,9 @@
                                     "modifiers": { "mandatory": ["shift"] }
                                 },
                                 "to": [
-                                    { "shell_command": "/usr/bin/osascript -e 'tell application \"System Events\" to key up shift'" },
                                     {
-                                        "key_code": "f13",
-                                        "modifiers": ["shift"]
+                                        "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/send_keys.py --release-key g --key shift+f13",
+                                        "repeat": false
                                     }
                                 ],
                                 "type": "basic"

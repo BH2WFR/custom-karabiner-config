@@ -122,7 +122,9 @@ def parse_args() -> argparse.Namespace:
         help="Shrink the window to fit within the target display before centering.",
     )
     mode.add_argument("--size", nargs=2, type=int, metavar=("WIDTH", "HEIGHT"),
-                      help="Set window size in logical points, without centering or fitting.")
+                      help="Set window size in logical points, without fitting to the display.")
+    parser.add_argument("--center", action="store_true",
+                        help="Also center the window when using --size.")
     parser.add_argument(
         "--display",
         choices=("current", "main"),
@@ -133,6 +135,12 @@ def parse_args() -> argparse.Namespace:
     if args.size and any(value <= 0 for value in args.size):
         parser.error("--size dimensions must be positive")
     return args
+
+
+def _center_on_display(window, bounds, size) -> None:
+    x = bounds.origin.x + (bounds.size.width - size.width) / 2
+    y = bounds.origin.y + (bounds.size.height - size.height) / 2
+    _set_window_position(window, x, y)
 
 
 def center_window(args, window=None) -> None:
@@ -151,10 +159,7 @@ def center_window(args, window=None) -> None:
             position = _window_position(window)
             bounds = _target_display_bounds(args.display, position, size)
 
-    x = bounds.origin.x + (bounds.size.width - size.width) / 2
-    y = bounds.origin.y + (bounds.size.height - size.height) / 2
-
-    _set_window_position(window, x, y)
+    _center_on_display(window, bounds, size)
 
 
 def main() -> int:
@@ -163,6 +168,9 @@ def main() -> int:
         if args.size:
             width, height = args.size
             window = _focused_window()
+            bounds = None
+            if args.center:
+                bounds = _target_display_bounds(args.display, _window_position(window), _window_size(window))
             _set_window_size(window, width, height)
             # Some apps apply AX changes asynchronously or enforce minimum sizes.
             deadline = time.monotonic() + .5
@@ -171,10 +179,17 @@ def main() -> int:
                 if abs(actual.width - width) < 1 and abs(actual.height - height) < 1:
                     break
                 if time.monotonic() >= deadline:
-                    notify(f"Window size limited to {actual.width:.0f} x {actual.height:.0f}.", level="warning")
-                    return 1
+                    break
                 time.sleep(.025)
-            message = f"Window resized to {width} x {height}."
+            if bounds is not None:
+                _center_on_display(window, bounds, actual)
+            if abs(actual.width - width) >= 1 or abs(actual.height - height) >= 1:
+                message = f"Window size limited to {actual.width:.0f} x {actual.height:.0f}."
+                if args.center:
+                    message += " Window centered."
+                notify(message, level="warning")
+                return 1
+            message = f"Window resized to {width} x {height}" + (" and centered." if args.center else ".")
         else:
             center_window(args)
             message = "Window centered."

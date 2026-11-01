@@ -2,20 +2,14 @@
 """Post a harmless keyboard event after a short delay."""
 
 import argparse
-import importlib
 import time
-from typing import Any
-
-CG: Any = importlib.import_module("Quartz.CoreGraphics")
+from keyboard_events import post_keystroke
 
 F18_KEY_CODE = 79
 
 
 def _post_key(key_code: int) -> None:
-    down = CG.CGEventCreateKeyboardEvent(None, key_code, True)
-    up = CG.CGEventCreateKeyboardEvent(None, key_code, False)
-    CG.CGEventPost(CG.kCGHIDEventTap, down)
-    CG.CGEventPost(CG.kCGHIDEventTap, up)
+    post_keystroke(key_code)
 
 
 def parse_args() -> argparse.Namespace:

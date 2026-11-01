@@ -4,56 +4,20 @@ Insert Unicode text as simulated keystrokes via CGEventKeyboardSetUnicodeString.
 
 Replaces the old clipboard-round-trip approach:
   - No side effects — the clipboard is never touched.
-  - No timing / sleep — no race with clipboard restore.
+  - Paced key-down/key-up delivery — no clipboard restore race.
   - ctypes-only (stdlib) — works under `python3 -S`.
 """
 import argparse
-import ctypes
 import sys
-
-
-# ── CoreGraphics bridge ────────────────────────────────────────────
-
-_CG = ctypes.CDLL(
-    "/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics"
-)
-
-_CG.CGEventCreateKeyboardEvent.argtypes = [
-    ctypes.c_void_p,   # CGEventSourceRef (NULL → default)
-    ctypes.c_uint16,   # CGKeyCode (ignored when unicode string is set)
-    ctypes.c_bool,     # keyDown
-]
-_CG.CGEventCreateKeyboardEvent.restype = ctypes.c_void_p  # CGEventRef
-
-_CG.CGEventKeyboardSetUnicodeString.argtypes = [
-    ctypes.c_void_p,   # CGEventRef
-    ctypes.c_uint64,   # UniCharCount (number of UTF-16 code units)
-    ctypes.c_void_p,   # const UniChar *
-]
-
-_CG.CGEventPost.argtypes = [
-    ctypes.c_uint32,   # CGEventTapLocation
-    ctypes.c_void_p,   # CGEventRef
-]
-
-kCGHIDEventTap = 0
+import keyboard_events
 
 
 def insert(text: str) -> None:
-    """Post *text* as HID keyboard events — no clipboard involved."""
+    """Post Unicode text after the HID fallback, without using the clipboard."""
     if not text:
         return
 
-    utf16 = text.encode("utf-16-le")
-    char_count = len(utf16) // 2
-    buf = (ctypes.c_ubyte * len(utf16)).from_buffer_copy(utf16)
-
-    down = _CG.CGEventCreateKeyboardEvent(None, 0, True)
-    _CG.CGEventKeyboardSetUnicodeString(down, char_count, buf)
-    _CG.CGEventPost(kCGHIDEventTap, down)
-
-    up = _CG.CGEventCreateKeyboardEvent(None, 0, False)
-    _CG.CGEventPost(kCGHIDEventTap, up)
+    keyboard_events.post_keystroke(0, unicode_text=text)
 
 
 # ── Text aliases ───────────────────────────────────────────────────

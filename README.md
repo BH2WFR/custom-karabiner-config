@@ -26,12 +26,13 @@ Repository: [BH2WFR/custom-karabiner-config](https://github.com/BH2WFR/custom-ka
 | Physical key | The key actually pressed on the keyboard, before this configuration remaps it |
 | Mapped key | The key produced by a mapping and received by macOS or the target application |
 
-In shortcut notation, `A+B` means that the keys are held together. A group such as `[LOpt/RCmd]` means either physical `LOpt` or physical `RCmd`; the square brackets do not mean that the modifier is optional. Outside RDP, the Caps Secondary Layer can be activated by physical `RCmd`, even though that key is normally mapped to `ROpt` when it is not being used as the layer trigger.
+In shortcut notation, `A+B` means that the keys are held together. `[LOpt/RCmd/LCmd]` means any one of those physical keys; the square brackets do not mean that the modifier is optional. Secondary Layer triggers use physical key names, before remapping.
 
 ## Profile Settings
 
 - The active profile is `ZL`.
 - Karabiner's notification window is disabled globally with `enable_notification_window: false`.
+- `enable_cgeventtap_fallback` is a global experimental switch: `true` enables it and `false` disables it; saving the configuration applies the change. Close the test keyboard and release all keys before switching.
 - The inactive `Default profile` contains a simple `F1` to `F13` mapping. It does not affect the selected `ZL` profile.
 
 ## Keyboard Mappings
@@ -52,8 +53,8 @@ In shortcut notation, `A+B` means that the keys are held together. A group such 
 
 **Modifier layout summary:**
 
-- **Normal**: `Caps` activates `caps_primary_layer`; after `Caps` is already held, physical `LOpt` or `RCmd` activates `caps_secondary_layer`. Physical `LOpt` remains `LOpt`, while physical `RCmd` maps to `ROpt`, so both keys are mapped Option keys outside RDP. `Cmd`/`Ctrl` are swapped (Mac-style bottom row on external keyboards); `Fn` becomes `Cmd`.
-- **RDP**: `Caps` becomes `F1`; physical `F1` directly controls the same `caps_primary_layer` variable while held and remains `F1` when tapped. The Caps Secondary Layer is disabled, and physical `LOpt`/`RCmd` follow their normal RDP mappings. Modifier positions mimic a standard Windows keyboard (`Ctrl` where `Cmd` normally is, etc.).
+- **Normal**: `Caps` activates `caps_primary_layer`; after `Caps` is already held, physical `LOpt`, `RCmd` or `LCmd` activates `caps_secondary_layer` and suppresses that key's normal modifier output. `Cmd`/`Ctrl` are swapped (Mac-style bottom row on external keyboards); `Fn` becomes `Cmd`.
+- **RDP**: `Caps` becomes `F1`; physical `F1` directly controls the same `caps_primary_layer` variable while held and remains `F1` when tapped. The Caps Secondary Layer is disabled, and physical `LOpt`/`RCmd`/`LCmd` follow their normal RDP mappings. Modifier positions mimic a standard Windows keyboard (`Ctrl` where `Cmd` normally is, etc.).
 
 The RDP mappings are separate Complex Modification rules:
 
@@ -63,6 +64,8 @@ The RDP mappings are separate Complex Modification rules:
 They can be enabled or disabled independently without changing the normal Caps Primary Layer rule.
 
 ## Hotkey Reference
+
+One-shot key shortcuts and editing sequences use `scripts/send_keys.py` and the shared keyboard sender, with complete modifier press/release events that bypass the HID fallback. Modifier remapping, held `Fn` and mouse output remain native Karabiner mappings.
 
 ### Caps Primary Layer
 
@@ -81,20 +84,20 @@ When Microsoft Remote Desktop / Windows App / UU Remote is frontmost, hold physi
 | `Caps+4` | Wrap selected text in `${` and `}` | Replaces the selection through plain-text paste |
 | `Caps+6` / `Caps+Shift+6` | Lowercase / uppercase selected text | Supports Unicode |
 | `Caps+Shift+7` | Title-case selected text | Capitalizes each word and lowercases the remaining letters |
-| `Caps+7` | Inspect selected text and Unicode characters | Edit the original text and press `Commit` to reparse; control characters are red, spaces and other special characters green, and other non-ASCII characters blue |
-| `Caps+V` | **Paste as plain text** | Uses `scripts/paste_without_format.py` (depends on `pyobjc-framework-Cocoa`); posts `Cmd+V` through CoreGraphics; <br />when **copying files from Finder, pastes file paths** (one per line for multiple files); rejects content without text and keeps the clipboard unchanged |
+| `Caps+7` | Inspect selected text and Unicode characters | No text to inspect triggers an error tooltip instead of opening a window. Edit the original text and press `Commit` to reparse; non-BMP characters are brown. Within BMP, controls are red, spaces and other special characters green, and other non-ASCII characters blue |
+| `Caps+V` | **Paste as plain text** | Uses `scripts/paste_without_format.py` (depends on `pyobjc-framework-Cocoa`); sends a paced `Cmd+V` press/release sequence through CoreGraphics to avoid stuck modifiers; <br />when **copying files from Finder, pastes file paths** (one per line for multiple files); rejects content without text and keeps the clipboard unchanged |
 | `Caps+Shift+V` | **Advanced paste** | Uses `scripts/paste_without_format.py --advanced`; releases `Shift` and posts `Cmd+V` through CoreGraphics; <br />strips zero-width chars, normalises spaces, converts full-width→half-width, de-quotes, splits ligatures, CJK-aware line-break removal (while copied from paragraphs from a PDF file), path-slash conversion — then pastes with `Cmd+V` |
 | `Caps+Tab` | Indent selected lines | Uses `scripts/indent_select_lines.py` <br />(stdlib only) |
 | `Caps+Shift+Tab` | Unindent selected lines | Uses `scripts/indent_select_lines.py` <br />(stdlib only) |
 | `Caps+Backspace` | **Delete the first character of the preceding two-character word** | e.g. with the cursor after `结果`: <br />moves left → deletes `结` → moves right, **leaving `果` before the cursor** |
 | `Caps+Shift+Backspace` | Delete current line | |
-| `Caps+;` | Insert `;` **at end of line** | |
-| `Caps+Shift+;`<br />`Caps+'` | Insert `:` **at end of line** | |
+| `Caps+;` | Insert `;` **at end of line** | Sends the literal ASCII character through Unicode events, without the clipboard or Chinese punctuation conversion |
+| `Caps+Shift+;`<br />`Caps+'` | Insert `:` **at end of line** | Same Unicode input; releases Shift before moving the cursor |
 | `Caps+Enter` | **Go to end of line + add newline** | |
 | `Caps+Shift+Enter` | Insert blank line above current | |
-| `Caps+Space` | Insert full-width space (U+3000) | Uses `scripts/insert_unicode_symbol_cgevent.py`; <br />posts Unicode keyboard events with `ctypes` and does not modify the clipboard |
+| `Caps+Space` | Insert full-width space (U+3000) | Uses `scripts/send_keys.py` on key-up; posts Unicode events without modifying the clipboard |
 | `Caps+B` | `Fn` | Sends `keyboard_fn` |
-| `Caps+Z` | Type clipboard text as keystrokes | For browser VNC consoles; printable ASCII, Tab and line breaks only; rejects the entire text if unsupported characters occur; leaves the clipboard unchanged |
+| `Caps+Z` | Type clipboard text as keystrokes | ASCII uses US-layout keys; non-ASCII uses experimental Unicode events. Default event interval: 10 ms; leaves the clipboard unchanged |
 | `Caps+Shift+Z` | Repair clipboard images | When Windows App controls a remote computer over RDP, images copied on that computer can arrive in this Mac's clipboard as TIFF data mislabeled as PNG. `scripts/repair_clipboard_images.py` converts them into correctly encoded PNG images; runs once without confirmation or automatic paste |
 | `Caps+\`<br />`Caps+\|` | ISO `\|` key | Sends `non_us_backslash` / `Shift+non_us_backslash` |
 
@@ -115,28 +118,29 @@ When Microsoft Remote Desktop / Windows App / UU Remote is frontmost, hold physi
 
 | Keys | App | Function | Notes |
 | --- | --- | --- | --- |
+| `Caps+1` | Any | Show frontmost app, layer and modifiers | Non-activating English tooltip for 2.5 seconds; sides are decoded from session flags, or marked unavailable. The layer is captured at trigger time; modifiers are read when the script runs. Secondary Layer triggers suppress their normal modifier output |
 | `Caps+A` | Any except Anki | Toggle local Caps Lock | Shows the actual ON/OFF state for 600 ms; does not switch input sources |
-| `Caps+E` | Any except Anki | Open a native quick-access menu at the pointer | Folders, system settings and utilities; includes Homebrew's cache when installed. Select with the mouse; click outside or press Esc to dismiss |
+| `Caps+E` | Any except Anki | Open a native quick-access menu at the pointer | Folders, system settings and utilities; includes Homebrew's cache when installed. Select with the mouse |
 | `Caps+Q` | Any except Anki | `Esc` | Preserves additional mapped modifiers, e.g. `Cmd+Caps+Q` sends `Cmd+Esc` |
 | `` Caps+` `` | Any | Release both sides of `Cmd`, `Opt`, `Ctrl` and `Shift`, and turn Caps Lock off | Also works while additional modifiers are held |
 | `Caps+P` | Any | **Toggle built-in display on/off** | Uses `scripts/toggle_builtin_screen.py` <br />(ctypes, Apple Silicon only); <br />requires **external monitor** |
 | `Caps+R` | Any except Anki | Fit frontmost window to current display, then center | Uses `scripts/center_front_window.py --fit`; <br />shrinks only if the window is larger than the target display; <br />pass `--display main` to target the main display instead; <br />requires Accessibility permission for Python |
-| `Caps+Shift+R` | Any except Anki | Resize current window to 1024 x 768 logical points | Does not center or fit to the display; warns if the application enforces a different size |
+| `Caps+Shift+R` | Any except Anki | Resize current window to 1024 x 768 logical points and center | Centers on the window's original display without fitting; if the app enforces a different size, centers the actual size and warns |
 | `Caps+W` | Any except Anki | Inspect and manage the current window | Separate app/window tabs, arguments and AX children; double-click copies a single cell. Grouped actions for closing/centering/resizing windows, files and process management; kill/restart requires confirmation |
 
 Image repair, window centering, display toggling and rejected text input/paste show English tooltips without taking focus: gray for results, amber for warnings, red for errors.
 
-Selected-text tools use `Cmd+C` and restore the previous clipboard after processing. `Caps+7` replaces the former `Caps+Shift+U` Terminal workflow. Character counts use Unicode code points; words are letter/digit/underscore groups (no Chinese word segmentation), and line counts include a trailing empty line.
+Selected-text tools use `Cmd+C` and restore the previous clipboard after processing. `Caps+7` replaces the former `Caps+Shift+U` Terminal workflow and shows five copyable counters in one row. Character counts use Unicode code points; UTF-8/UTF-16 byte counts exclude an added BOM (non-BMP characters use 4 bytes in UTF-16). Words are letter/digit/underscore groups (no Chinese word segmentation), and line counts include a trailing empty line.
 
 The window inspector keeps the captured target when it comes to the foreground. Restart preserves the process's argument list, working directory and readable environment; it cancels if these cannot be obtained or the old process does not exit. A restart launches the executable directly, so applications managed by launchers or services may need their own restart mechanism.
 
 ### Caps Secondary Layer
 
-The **Caps Secondary Layer** is a general-purpose extension layer and is available only outside RDP. To activate `caps_secondary_layer`, **press and hold `Caps` first**, then **press and hold physical `LOpt` or physical `RCmd`** (outside RDP, they are both mapped to `Opt`). The order is required: pressing either trigger before `Caps` applies its normal mapping and does not retroactively activate the layer.
+The **Caps Secondary Layer** is a general-purpose extension layer available only outside RDP. **Hold `Caps` first, then physical `LOpt`, `RCmd` or `LCmd`.** Pressing a trigger before `Caps` applies its normal mapping and does not retroactively activate the layer.
 
-Outside RDP, physical `LOpt` remains `LOpt`, while physical `RCmd` maps to `ROpt`; therefore, both triggers are mapped `Opt` keys during normal use. When the secondary layer captures them after `Caps`, their Option output is suppressed so it does not leak into the frontmost application.
+Normally, `LOpt` remains `LOpt`, `RCmd` maps to `ROpt`, and `LCmd` maps to `LCtrl`. As Secondary Layer triggers, their normal modifier output is suppressed; all three operate the same shortcuts.
 
-In RDP, `caps_secondary_layer` cannot be activated. Physical `LOpt` maps normally to `LCmd`, physical `RCmd` maps normally to `ROpt`, and neither key participates in the special layer even while the RDP Primary Layer is active through `F1`.
+In RDP, none of these keys enters Secondary, even while `F1` activates Primary. Their normal mappings remain `LOpt` → `LCmd`, `RCmd` → `ROpt`, and `LCmd` → `LOpt`.
 
 #### Secondary Clipboard Shortcuts
 
@@ -144,15 +148,17 @@ The **secondary clipboard** is the first set of functions assigned to the Caps S
 
 | Keys | Function | Notes |
 | --- | --- | --- |
-| `Caps+[LOpt/RCmd]+C` | Copy selection to the secondary clipboard as plain text | Uses `scripts/secondary_clipboard.py copy` and CoreGraphics keyboard events; image-only and other content without a text representation is rejected; Finder files are converted to full paths |
-| `Caps+[LOpt/RCmd]+Shift+C` | Copy current line to the secondary clipboard as plain text | Uses the same whole-line selection behavior as `Caps+Shift+C` |
-| `Caps+[LOpt/RCmd]+X` | Cut selection to the secondary clipboard as plain text | Confirms that a text representation is available before sending `Cmd+X` |
-| `Caps+[LOpt/RCmd]+Shift+X` | Cut current line to the secondary clipboard as plain text | Uses the same whole-line selection and newline cleanup as `Caps+Shift+X` |
-| `Caps+[LOpt/RCmd]+V` | Paste the secondary clipboard as plain text | Temporarily writes to the general pasteboard, posts `Cmd+V` through CoreGraphics, then restores the previous general pasteboard |
-| `Caps+[LOpt/RCmd]+Shift+V` | Advanced paste from the secondary clipboard | Same cleanup as `Caps+Shift+V`; preserves both clipboards |
-| `Caps+[LOpt/RCmd]+Z` | Type secondary clipboard text as keystrokes | Same ASCII input as `Caps+Z`; preserves both clipboards |
+| `Caps+[LOpt/RCmd/LCmd]+C` | Copy selection to the secondary clipboard as plain text | Uses `scripts/secondary_clipboard.py copy` and CoreGraphics keyboard events; image-only and other content without a text representation is rejected; Finder files are converted to full paths |
+| `Caps+[LOpt/RCmd/LCmd]+Shift+C` | Copy current line to the secondary clipboard as plain text | Uses the same whole-line selection behavior as `Caps+Shift+C` |
+| `Caps+[LOpt/RCmd/LCmd]+X` | Cut selection to the secondary clipboard as plain text | Confirms that a text representation is available before sending `Cmd+X` |
+| `Caps+[LOpt/RCmd/LCmd]+Shift+X` | Cut current line to the secondary clipboard as plain text | Uses the same whole-line selection and newline cleanup as `Caps+Shift+X` |
+| `Caps+[LOpt/RCmd/LCmd]+V` | Paste the secondary clipboard as plain text | Temporarily writes to the general pasteboard, posts `Cmd+V` through CoreGraphics, then restores the previous general pasteboard |
+| `Caps+[LOpt/RCmd/LCmd]+Shift+V` | Advanced paste from the secondary clipboard | Same cleanup as `Caps+Shift+V`; preserves both clipboards |
+| `Caps+[LOpt/RCmd/LCmd]+Z` | Type secondary clipboard text as keystrokes | Same ASCII / experimental Unicode input as `Caps+Z`; preserves both clipboards |
 
-Keystroke typing uses US key positions: use US/ABC English input locally and a matching English keyboard layout remotely. Tab and line breaks send real Tab/Enter keys (and may submit a command). Press `Esc` to stop; avoid typing or switching browser tabs while it runs.
+ASCII typing uses US key positions: use US/ABC English input locally and a matching English keyboard layout remotely. Unicode support depends on the target application; browser VNC consoles may not accept it. `type_clipboard.py --ascii-only` rejects non-ASCII text before typing; `--interval-ms` controls the wait after each key/modifier event, not each character, and `--pasteboard-name` selects a named clipboard. Other control characters and unpaired surrogates are rejected before any input.
+
+Tab and line breaks send real Tab/Enter keys (and may submit a command). During typing, `Esc` stops input and is swallowed, including repeats and key-up, so it does not reach the target application. Pressed keys are released, but already queued input cannot be withdrawn. Esc works normally outside typing. Switching applications also stops typing; avoid switching tabs within the same browser while it runs.
 
 The secondary clipboard is stored in a named macOS `NSPasteboard`, not a temporary file. The script defaults to `com.personal-scripts.secondary-clipboard` and also supports `--pasteboard-name`, `--multi-items`, `paste --advanced`, `type`, and `clear` from the command line. There are currently no hotkeys for multi-item operations or clearing the secondary clipboard.
 
@@ -160,9 +166,9 @@ The secondary clipboard is stored in a named macOS `NSPasteboard`, not a tempora
 
 | Keys | Function | Notes |
 | --- | --- | --- |
-| `Caps+[LOpt/RCmd]+Tab` | Paste a literal tab character | Bypasses Tab-key navigation; the target must accept pasted tabs |
-| `Caps+[LOpt/RCmd]+T` | Paste a setter name | Ordinary clipboard `myItem` becomes `setMyItem`; except Anki |
-| `Caps+[LOpt/RCmd]+Shift+T` | Paste a getter name | Ordinary clipboard `myItem` becomes `getMyItem`; except Anki |
+| `Caps+[LOpt/RCmd/LCmd]+Tab` | Paste a literal tab character | Bypasses Tab-key navigation; the target must accept pasted tabs |
+| `Caps+[LOpt/RCmd/LCmd]+T` | Paste a setter name | Ordinary clipboard `myItem` becomes `setMyItem`; except Anki |
+| `Caps+[LOpt/RCmd/LCmd]+Shift+T` | Paste a getter name | Ordinary clipboard `myItem` becomes `getMyItem`; except Anki |
 
 These tools preserve the ordinary clipboard. Getter/setter names support Unicode and must contain a single name without whitespace.
 
@@ -311,7 +317,7 @@ The Rime, Anki, and Cherry Studio rules are personal shortcuts documented in **P
 
 - **Secondary clipboard** — `scripts/secondary_clipboard.py` uses `pyobjc-framework-Cocoa`, a named `NSPasteboard`, and the shared `scripts/keyboard_events.py` CoreGraphics helper; it does not write clipboard data to temporary files
 - **Clipboard image repair** — `scripts/repair_clipboard_images.py` uses the same `pyobjc-framework-Cocoa` dependency for AppKit decoding and PNG encoding, entirely in memory.
-- **Keystroke typing** — `scripts/type_clipboard.py` uses Cocoa to read the clipboard and CoreGraphics to send keys; requires Python Accessibility permission.
+- **Keystroke typing** — `scripts/type_clipboard.py` uses Cocoa for the clipboard, CoreGraphics for keys, and `pyobjc-framework-Quartz` to intercept Escape during typing and until the cancelling Escape is released. Python needs Accessibility and, if requested by macOS, Input Monitoring permission.
 - **Text tools** — `scripts/text_actions.py` reuses the clipboard and keyboard helpers; its foreground Unicode inspector uses `tkinter` and the current Conda environment's `python.app`.
 - **Window inspector** — `scripts/window_inspector.py` uses `tkinter`, `psutil` and the existing Cocoa/Accessibility helpers. Install `psutil` in the same Python environment if missing; window operations require Accessibility permission, and Finder Get Info may request Automation permission.
 - **Quick-access menu** — `scripts/quick_menu.py` uses `pyobjc-framework-Cocoa`. Common Folders separates personal files, cloud drives, user app data, system/shared directories and startup items. Cloud drives include iCloud Drive and existing OneDrive, Dropbox, Google Drive and Box folders under `~/Library/CloudStorage`; third-party clients must be installed. Custom sync locations can be added as personal folders. Homebrew's cache comes from `brew --cache`.
@@ -343,14 +349,14 @@ After installing, grant these permissions in **System Settings → Privacy & Sec
 2. Hold `Caps+C` → should copy (`Cmd+C`)
 3. Hold `Caps+V` → should paste without formatting
 4. Hold `Caps+LOpt+C`, then `Caps+LOpt+V` → should copy and paste through the secondary clipboard without changing the general clipboard
-5. Repeat step 4 with physical `RCmd` as the secondary-layer trigger
+5. Repeat step 4 with physical `RCmd` and `LCmd` as the secondary-layer trigger
 6. Hold `Caps+LOpt+Shift+C` or `Caps+LOpt+Shift+X` → should copy or cut the current line through the secondary clipboard
 7. Select multiple lines and test `Caps+Tab` / `Caps+Shift+Tab` → should indent or unindent them
 8. In RDP session, `Caps` should act as `F1`
 9. In RDP session, tap `F1` → should still send `F1`
 10. In RDP session, hold `F1+C` → should run the Caps Primary Layer copy shortcut
-11. In RDP session, `F1+[LOpt/RCmd]` must not activate the Caps Secondary Layer or invoke any of its functions
-12. In RDP session, physical `LOpt` and `RCmd` should retain their normal RDP mappings (`LCmd` and `ROpt`, respectively)
+11. In RDP session, `F1+[LOpt/RCmd/LCmd]` must not activate the Caps Secondary Layer or invoke any of its functions
+12. In RDP session, physical `LOpt`, `RCmd` and `LCmd` retain their normal RDP mappings (`LCmd`, `ROpt` and `LOpt`, respectively)
 13. In RDP session, `Ctrl`/`Cmd` positions should feel like Windows
 
 If a shortcut does nothing, open Karabiner-EventViewer first. Confirm whether Karabiner sees the physical key, then confirm whether the intended rule matches the current device and frontmost app.
