@@ -30,6 +30,8 @@ _CG.CGEventPost.argtypes = [ctypes.c_uint32, ctypes.c_void_p]
 _CG.CGEventPost.restype = None
 _CG.CGPreflightPostEventAccess.argtypes = []
 _CG.CGPreflightPostEventAccess.restype = ctypes.c_bool
+_CG.CGRequestPostEventAccess.argtypes = []
+_CG.CGRequestPostEventAccess.restype = ctypes.c_bool
 _CG.CGEventSourceKeyState.argtypes = [ctypes.c_int, ctypes.c_uint16]
 _CG.CGEventSourceKeyState.restype = ctypes.c_bool
 _CF.CFRelease.argtypes = [ctypes.c_void_p]
@@ -55,6 +57,7 @@ ESCAPE_KEY_CODE = 53
 RIGHT_COMMAND_KEY_CODE = 54
 LEFT_COMMAND_KEY_CODE = 55
 LEFT_SHIFT_KEY_CODE = 56
+CAPS_LOCK_KEY_CODE = 57
 LEFT_OPTION_KEY_CODE = 58
 LEFT_CONTROL_KEY_CODE = 59
 RIGHT_SHIFT_KEY_CODE = 60
@@ -103,7 +106,13 @@ KEY_CODES = {
     "non_us_backslash": 10, "return_or_enter": 36, "quote": 39,
     "semicolon": 41, "backslash": 42, "period": 47, "tab": 48,
     "spacebar": 49, "delete_or_backspace": DELETE_KEY_CODE,
-    "escape": ESCAPE_KEY_CODE, "f13": 105, "f18": 79, "f19": 80,
+    "escape": ESCAPE_KEY_CODE,
+    "f1": 122, "f2": 120, "f3": 99, "f4": 118, "f5": 96, "f6": 97,
+    "f7": 98, "f8": 100, "f9": 101, "f10": 109, "f11": 103, "f12": 111,
+    "f13": 105, "f14": 107, "f15": 113, "f18": 79, "f19": 80,
+    "insert": 114, "home": 115, "page_up": 116,
+    "delete_forward": 117, "end": 119, "page_down": 121,
+    "application": 110,
     "left_arrow": LEFT_ARROW_KEY_CODE, "right_arrow": RIGHT_ARROW_KEY_CODE,
     "down_arrow": 125, "up_arrow": 126,
 }
@@ -137,13 +146,18 @@ def can_post_events():
     return _CG.CGPreflightPostEventAccess()
 
 
+def request_post_events():
+    """Request system authorization only when event-posting access is missing."""
+    return can_post_events() or _CG.CGRequestPostEventAccess()
+
+
 def is_key_down(key_code):
     return _CG.CGEventSourceKeyState(0, key_code)  # Combined session state.
 
 
-def post_key_event(key_code, key_down, flags=0, *, flags_changed=False,
+def post_key_event(key_code, key_down, flags: int | None = 0, *, flags_changed=False,
                    event_tap=SESSION_EVENT_TAP, unicode_text=None):
-    """Post final output after Karabiner's HID tap; use HID explicitly for test input."""
+    """Post Session output by default; flags=None preserves native event flags."""
     event = _CG.CGEventCreateKeyboardEvent(None, key_code, key_down)
     if not event:
         raise RuntimeError("Unable to create keyboard event.")
@@ -151,7 +165,8 @@ def post_key_event(key_code, key_down, flags=0, *, flags_changed=False,
     try:
         if flags_changed:
             _CG.CGEventSetType(event, FLAGS_CHANGED_EVENT)
-        _CG.CGEventSetFlags(event, flags)
+        if flags is not None:
+            _CG.CGEventSetFlags(event, flags)
         if unicode_text is not None:
             encoded = unicode_text.encode("utf-16-le")
             buffer = (ctypes.c_ubyte * len(encoded)).from_buffer_copy(encoded)
@@ -159,6 +174,16 @@ def post_key_event(key_code, key_down, flags=0, *, flags_changed=False,
         _CG.CGEventPost(event_tap, event)
     finally:
         _CF.CFRelease(event)
+
+
+def tap_caps_lock():
+    """Send a short native Caps Lock press, including its generated lock flags."""
+    post_key_event(CAPS_LOCK_KEY_CODE, True, flags=None)
+    try:
+        time.sleep(.2)
+    finally:
+        post_key_event(CAPS_LOCK_KEY_CODE, False, flags=None)
+        time.sleep(CHORD_EVENT_INTERVAL)
 
 
 def release_keys(*key_codes):
@@ -190,8 +215,14 @@ def post_keystroke(key_code, flags=0, *, interval=CHORD_EVENT_INTERVAL,
         post_key_event(code, down, active_flags, flags_changed=modifier,
                        unicode_text=None if modifier else unicode_text)
 
-    modifiers = [MODIFIER_KEYS[name] for name in ("LCtrl", "LOpt", "LCmd", "LShift", "Fn")
-                 if flags & MODIFIER_KEYS[name][1]]
+    modifiers = []
+    for left, right in (("LCtrl", "RCtrl"), ("LOpt", "ROpt"),
+                        ("LCmd", "RCmd"), ("LShift", "RShift")):
+        pair = (MODIFIER_KEYS[left], MODIFIER_KEYS[right])
+        if flags & pair[0][1]:
+            modifiers.extend([item for item in pair if flags & item[2]] or [pair[0]])
+    if flags & FN_FLAG:
+        modifiers.append(MODIFIER_KEYS["Fn"])
     active_flags = flags
     for _, generic, side in modifiers:
         active_flags &= ~(generic | side)
@@ -211,8 +242,11 @@ def post_keystroke(key_code, flags=0, *, interval=CHORD_EVENT_INTERVAL,
             send(key_code, False, active_flags)
         pause()
     finally:
-        for code, generic, side in reversed(pressed):
-            active_flags &= ~(generic | side)
+        while pressed:
+            code, generic, side = pressed.pop()
+            active_flags &= ~side
+            if not any(other_generic == generic for _, other_generic, _ in pressed):
+                active_flags &= ~generic
             send(code, False, active_flags, modifier=True)
             # Cleanup must finish even after cancellation; retain normal pacing otherwise.
             if cancel_event is None:

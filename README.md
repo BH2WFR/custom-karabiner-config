@@ -32,7 +32,7 @@ In shortcut notation, `A+B` means that the keys are held together. `[LOpt/RCmd/L
 
 - The active profile is `ZL`.
 - Karabiner's notification window is disabled globally with `enable_notification_window: false`.
-- `enable_cgeventtap_fallback` is a global experimental switch: `true` enables it and `false` disables it; saving the configuration applies the change. Close the test keyboard and release all keys before switching.
+- `enable_cgeventtap_fallback` is a global experimental switch: `true` enables it and `false` disables it; saving the configuration applies the change. Close the screen/test keyboard and release all keys before switching. The screen keyboard never changes this setting.
 - The inactive `Default profile` contains a simple `F1` to `F13` mapping. It does not affect the selected `ZL` profile.
 
 ## Keyboard Mappings
@@ -126,6 +126,7 @@ When Microsoft Remote Desktop / Windows App / UU Remote is frontmost, hold physi
 | `Caps+P` | Any | **Toggle built-in display on/off** | Uses `scripts/toggle_builtin_screen.py` <br />(ctypes, Apple Silicon only); <br />requires **external monitor** |
 | `Caps+R` | Any except Anki | Fit frontmost window to current display, then center | Uses `scripts/center_front_window.py --fit`; <br />shrinks only if the window is larger than the target display; <br />pass `--display main` to target the main display instead; <br />requires Accessibility permission for Python |
 | `Caps+Shift+R` | Any except Anki | Resize current window to 1024 x 768 logical points and center | Centers on the window's original display without fitting; if the app enforces a different size, centers the actual size and warns |
+| `Caps+S` | Any except Anki | Open or restore the screen keyboard | Requires `~/Applications/Caps Keyboard.app`; does not enable fallback automatically |
 | `Caps+W` | Any except Anki | Inspect and manage the current window | Separate app/window tabs, arguments and AX children; double-click copies a single cell. Grouped actions for closing/centering/resizing windows, files and process management; kill/restart requires confirmation |
 
 Image repair, window centering, display toggling and rejected text input/paste show English tooltips without taking focus: gray for results, amber for warnings, red for errors.
@@ -188,6 +189,28 @@ The shortcuts in this section are **tailored** to my own Rime, Anki, and Cherry 
 | Hotkey | App | Function | Notes |
 | --- | --- | --- | --- |
 | `F2` | Any | Middle mouse button | Intended mainly for **middle-button drag/pan** operations in **CAD applications**; optional rule, disabled by default with `enabled: false` |
+
+## Screen Keyboard
+
+`scripts/screen_keyboard.py` provides an 84-key, non-activating keyboard in six compact, color-coded rows: blue letters, yellow symbols, cyan modifiers, pink Caps, purple arrows and green function/navigation keys. Labels are centered and single-line; shifted symbol pairs remain separated by spaces. Common keys use symbols such as `⌫`, `⇥`, `↩` and `⇧` in both macOS and RDP. It remembers its position; startup and **Reset size** both use 533 x 207 content points. It can shrink to 456 x 186 or be enlarged manually; minimizing is supported, maximizing/full screen are disabled. Outside RDP, Caps is a one-shot function layer when Karabiner fallback is available. Secondary Layer still requires Caps first.
+
+Ordinary keys send one key-down on mouse-down and one key-up on release; repeat behavior is left to the system/input path, with no scripted repeats. Short-tapped modifiers apply to one input; holding a modifier for 0.5 seconds locks it across inputs until clicked again, shown as dark red with yellow text. Switching apps, minimizing or releasing screen keys clears locks. Local Caps remains one-shot. Other pressed or selected keys turn dark with white text; the rest stay enabled during input.
+
+The dark-green **extended keys** button between F12 and Ins opens Screenshot, Menu and F13 on macOS; in RDP it offers F13 and Menu/Shift+F10. Remote F13 reception depends on the client's keyboard mode; it is not a guaranteed PrtSc replacement. Selected screen modifiers are included; screen keys are released when the menu opens, even if it is cancelled. Output bypasses local Karabiner layers.
+
+Outside RDP, the bottom row represents physical `LCtrl LOpt LCmd` / `RCmd Fn ROpt`, with mapped results underneath: `LCmd LOpt LCtrl` / `ROpt Fn RCmd`. Button labels omit L/R, but events distinguish both sides. In RDP, the bottom row shows `Ctrl Win Alt` / `Alt Win Ctrl`; the right Win sends RWin. Hidden mapping text retains its space, keeping key sizes unchanged. RDP screen input sends final key values directly, bypassing local remapping and preserving modifier sides. Caps holds remote F1 for AutoHotkey layers: a short click retains F1 through the next key, while a long press locks it across inputs. It does not activate a local Caps layer. Menu remains in the extended menu. Physical-keyboard mappings are unchanged. Key legends assume a US layout.
+
+The top bar has separate **input source** (globe), **release screen keys** (circled X), **minimize** and **reset size** buttons. Drag any blank background area to move the window. In RDP, the input-source button taps an unmodified `F1`; the remote computer must handle F1 as its language-switch key. It does not change the Mac's input source. Outside RDP, it currently toggles the previous enabled source through macOS TIS; it does not yet reproduce Caps Lock's language/English switching. The menu offers **Release all modifiers** (identical to ``Caps+` ``), status refresh and quit. Minimizing releases screen keys; reopening from Dock restores the window. Closing exits without a background service. Exceptions also print full tracebacks to stderr when run from a terminal.
+
+When fallback is off or Karabiner's configuration/event tap is unavailable, the top bar warns and the keyboard sends ordinary macOS keys directly: Caps becomes Caps Lock, and the modifier labels reflect unremapped keys. Status refreshes on interaction, not by background polling. Startup requests missing Accessibility permission through macOS; key output stays disabled until authorized. `--check` and `--quit` never request permission.
+
+Build/register the local Dock launcher with the existing Conda environment and Xcode Command Line Tools:
+
+```bash
+/opt/miniconda3/bin/python3 installation/install_screen_keyboard.py
+```
+
+The installer creates `~/Applications/Caps Keyboard.app`; drag it into Dock. It uses this checkout and Python installation, not a bundled Python runtime. Grant **Caps Keyboard** Accessibility permission for key output. Enable fallback manually to use Karabiner layers; ordinary keyboard mode works with fallback off. The installer changes neither Dock settings nor fallback.
 
 ## Migration Guide
 
@@ -344,6 +367,8 @@ After installing, grant these permissions in **System Settings → Privacy & Sec
 - **Automation** — Allow Karabiner to control System Events if prompted
 
 ### Verification
+
+Automated regression tests live in [`test/`](test/README.md). Run `/opt/miniconda3/bin/python3 -m unittest discover -s test` from the repository root; they do not send real input or modify the clipboard.
 
 1. Tap `Caps` alone → should toggle Caps Lock
 2. Hold `Caps+C` → should copy (`Cmd+C`)

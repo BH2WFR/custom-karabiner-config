@@ -40,19 +40,21 @@ def check_setup():
 
 
 class KeyboardState:
-    def __init__(self):
+    def __init__(self, event_keys=None, *, event_tap=HID_EVENT_TAP):
         self.held = []
         self.caps = False
+        self.event_keys = MODIFIER_KEYS if event_keys is None else event_keys
+        self.event_tap = event_tap
 
     def flags(self):
         flags = current_modifier_flags() & CAPS_LOCK_FLAG
         for name in self.held:
-            _, generic, side = MODIFIER_KEYS[name]
+            _, generic, side = self.event_keys[name]
             flags |= generic | side
         return flags
 
     def toggle(self, name):
-        if name == "Caps":
+        if name == "Caps" and name not in self.event_keys:
             set_caps_layer(not self.caps)
             self.caps = not self.caps
             return self.caps
@@ -63,17 +65,21 @@ class KeyboardState:
         else:
             self.held.remove(name)
         try:
-            post_key_event(MODIFIER_KEYS[name][0], down, self.flags(),
-                           flags_changed=True, event_tap=HID_EVENT_TAP)
+            code, generic, _ = self.event_keys[name]
+            post_key_event(code, down, self.flags(),
+                           flags_changed=bool(generic), event_tap=self.event_tap)
         except Exception:
             self.held = old
             raise
         return down
 
-    def release(self):
+    def release(self, *, keep=()):
+        """Release transient keys and Caps, optionally retaining named modifiers."""
         errors = []
         # Reverse press order, keeping Caps active until Option has been released.
         for name in self.held.copy()[::-1]:
+            if name in keep:
+                continue
             try:
                 self.toggle(name)
             except Exception as exc:
