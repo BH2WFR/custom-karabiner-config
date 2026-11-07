@@ -223,6 +223,7 @@ def build_inspector_window(root, report):
     original = ScrolledText(body, height=6, wrap="word", font="TkFixedFont")
     original.insert("1.0", report["text"])
     original.grid(row=1, column=0, sticky="nsew", pady=(4, 10))
+    original.focus_set()
 
     def commit():
         render_report(inspect_text(original.get("1.0", "end-1c")))
@@ -307,11 +308,29 @@ def build_inspector_window(root, report):
     root.bind("<Command-w>", lambda event: root.destroy())
 
 
-def show_inspector(report):
+def show_inspector(report, error_message=None):
     import tkinter as tk
 
     root = tk.Tk()
     build_inspector_window(root, report)
+
+    if error_message:
+        def show_error():
+            try:
+                subprocess.Popen(
+                    [PYTHON_EXECUTABLE, str(Path(__file__).with_name("tooltip.py")),
+                     error_message, "--level", "error"],
+                    stdin=subprocess.DEVNULL, start_new_session=True,
+                )
+            except OSError as exc:
+                print(f"Tooltip unavailable: {exc}", file=sys.stderr)
+
+        def on_visible(event):
+            if event.widget is root:
+                root.unbind("<Map>", binding)
+                root.after_idle(show_error)
+
+        binding = root.bind("<Map>", on_visible, add="+")
 
     activate_window(root)
     root.mainloop()
@@ -321,8 +340,7 @@ def _inspector_pasteboard(name):
     return clipboard.NSPasteboard.pasteboardWithName_(name)
 
 
-def launch_inspector(text):
-    text = _require_inspector_text(text)
+def launch_inspector(text, error_message=None):
     name = f"{INSPECTOR_PASTEBOARD_PREFIX}.{uuid.uuid4()}"
     pasteboard = _inspector_pasteboard(name)
     clipboard.restore_pasteboard(pasteboard, clipboard.text_snapshot(text))
@@ -332,6 +350,8 @@ def launch_inspector(text):
         "--args", str(Path(__file__).resolve()),
         "--inspector-pasteboard", name,
     ]
+    if error_message:
+        command.extend(["--inspector-error", error_message])
     result = subprocess.run(command, capture_output=True, text=True, check=False)
     if result.returncode:
         pasteboard.releaseGlobally()
@@ -339,14 +359,16 @@ def launch_inspector(text):
         raise RuntimeError(detail)
 
 
-def run_inspector(pasteboard_name):
+def run_inspector(pasteboard_name, error_message=None):
     pasteboard = _inspector_pasteboard(pasteboard_name)
     try:
         text = pasteboard.stringForType_(clipboard.TEXT_TYPE)
-        report = inspect_text(_require_inspector_text(text))
+        if text is None:
+            error_message = error_message or "Cannot read inspector text. Paste or enter text manually."
+        report = inspect_text(str(text) if text is not None else "")
     finally:
         pasteboard.releaseGlobally()
-    show_inspector(report)
+    show_inspector(report, error_message=error_message)
 
 
 def main():
@@ -355,26 +377,35 @@ def main():
         "action", nargs="?", choices=(*SELECTION_ACTIONS, "tab", "setter", "getter")
     )
     parser.add_argument("--inspector-pasteboard", help=argparse.SUPPRESS)
+    parser.add_argument("--inspector-error", help=argparse.SUPPRESS)
     args = parser.parse_args()
     try:
         if args.inspector_pasteboard:
             if args.action:
                 parser.error("action cannot be combined with --inspector-pasteboard")
-            run_inspector(args.inspector_pasteboard)
+            run_inspector(args.inspector_pasteboard, error_message=args.inspector_error)
             return 0
         if args.action is None:
             parser.error("the following arguments are required: action")
+        error_message = None
         with open(__file__, "rb") as lock:
             try:
                 fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
             except BlockingIOError:
                 raise ValueError("A text action is already in progress.") from None
-            if not keys.can_post_events():
-                raise RuntimeError("Python needs Accessibility permission for text actions.")
-            report = perform_action(args.action, clipboard.NSPasteboard.generalPasteboard())
+            try:
+                if not keys.can_post_events():
+                    raise RuntimeError("Python needs Accessibility permission for text actions.")
+                report = perform_action(args.action, clipboard.NSPasteboard.generalPasteboard())
+            except Exception as exc:
+                if args.action != "stats":
+                    raise
+                print(str(exc), file=sys.stderr)
+                error_message = f"{exc} Paste or enter text manually."
+                report = inspect_text("")
         # Restore the original clipboard before opening an interactive Tk window.
         if report is not None:
-            launch_inspector(report["text"])
+            launch_inspector(report["text"], error_message=error_message)
     except Exception as exc:
         print(str(exc), file=sys.stderr)
         notify(str(exc), level="warning" if isinstance(exc, ValueError) else "error")
