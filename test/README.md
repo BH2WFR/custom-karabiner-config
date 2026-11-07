@@ -6,7 +6,7 @@ Run from the repository root on macOS with the project's Miniconda Base interpre
 /opt/miniconda3/bin/python3 -m unittest discover -s test -v
 ```
 
-The tests cover screen-keyboard layout and held-key state, modifier sides, event routing and cancellation, configured ZL shortcuts, and input-source selection. Keyboard output, layer writes, permission requests and input-source changes are mocked; no windows open or clipboard contents change. Configuration checks read the current `karabiner.json` without modifying it.
+The tests cover screen-keyboard layout, hover colors, action feedback and held-key state, modifier sides, event routing and cancellation, configured ZL shortcuts, and input-source selection. Native button checks use an unshown panel. Keyboard output, tooltips, layer writes, permission requests and input-source changes are mocked; no windows open or clipboard contents change. Configuration checks read the current `karabiner.json` without modifying it.
 
 Run one file with, for example:
 

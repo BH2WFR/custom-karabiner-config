@@ -231,22 +231,39 @@ def create_panel(state, *, remember_frame=True):
         @objc.python_method
         def update_appearance(self):
             name = str(self.identifier() or "")
-            if not name:
-                return
-            active = bool(self.state()) or getattr(self, "pointer_down", False)
+            # AppKit may leave momentary controls ON after their action returns.
+            held_key = bool(name) and name != "extended" and bool(self.state())
+            active = held_key or getattr(self, "pointer_down", False)
             locked = getattr(self, "locked", False)
+            hovered = getattr(self, "hovered", False) and self.isEnabled()
+            base = key_color(name) if name else (210, 215, 220)
             rgb = LOCKED_BACKGROUND if locked else tuple(
-                channel * (.42 if active else 1) for channel in key_color(name))
+                channel * .42 if active else channel + (255 - channel) * .35 if hovered else channel
+                for channel in base)
             color = A.NSColor.colorWithCalibratedRed_green_blue_alpha_(
-                *(channel / 255 for channel in rgb), 1)
+                *(channel / 255 for channel in rgb), 1 if name or active or hovered else 0)
             self.layer().setBackgroundColor_(color.CGColor())
-            self.layer().setBorderWidth_(2 if active else .5)
+            self.layer().setBorderWidth_(2 if active else 1 if hovered else .5 if name else 0)
+            if not name:
+                self.setContentTintColor_(A.NSColor.whiteColor() if active else A.NSColor.labelColor())
+                return
             title = self.attributedTitle().mutableCopy()
             text_color = (A.NSColor.colorWithCalibratedRed_green_blue_alpha_(
                 *(channel / 255 for channel in LOCKED_TEXT), 1) if locked else
                 A.NSColor.colorWithCalibratedWhite_alpha_(1 if active or name == "extended" else .12, 1))
             title.addAttribute_value_range_(A.NSForegroundColorAttributeName, text_color, (0, title.length()))
             self.setAttributedTitle_(title)
+
+        def mouseEntered_(self, event):
+            self.hovered = True
+            self.update_appearance()
+
+        def mouseExited_(self, event):
+            self.hovered = False
+            self.update_appearance()
+
+        def cursorUpdate_(self, event):
+            A.NSCursor.arrowCursor().set()
 
         def mouseDown_(self, event):
             if not self.isEnabled():
@@ -263,6 +280,11 @@ def create_panel(state, *, remember_frame=True):
                     self.lock_timer = None
                 self.pointer_down = False
                 name = str(self.identifier() or "")
+                if not name or name == "extended":
+                    self.setState_(0)
+                window = self.window()
+                self.hovered = bool(window and window.isVisible() and A.NSPointInRect(
+                    self.convertPoint_fromView_(window.mouseLocationOutsideOfEventStream(), None), self.bounds()))
                 if name in keys.KEY_CODES and name not in EVENT_KEYS:
                     self.target().release_safely(preserve_locked=True)
                 elif self.identifier():
@@ -523,12 +545,19 @@ def create_panel(state, *, remember_frame=True):
                 report_error(exc)
 
         def reset_(self, sender):
-            self.release_safely()
+            try:
+                self.release()
+                self.show_feedback("Screen keys released")
+            except Exception as exc:
+                report_error(exc)
 
         def releaseAll_(self, sender):
-            self.release_safely()
-            subprocess.Popen([sys.executable, "-S", str(ROOT / "scripts/keyboard_events.py"),
-                              "--release-modifiers"])
+            try:
+                self.release()
+                subprocess.Popen([sys.executable, "-S", str(ROOT / "scripts/keyboard_events.py"),
+                                  "--release-modifiers"])
+            except Exception as exc:
+                report_error(exc)
 
         def inputSource_(self, sender):
             try:
@@ -539,17 +568,34 @@ def create_panel(state, *, remember_frame=True):
                         raise RuntimeError("Accessibility permission required")
                     # Match physical Caps -> F1 in the RDP rule, without re-entering HID.
                     keys.post_keystroke(keys.KEY_CODES["f1"])
+                    self.show_feedback("Remote language key sent (F1)")
                 else:
                     self.previous_input_source = switch_input_source(self.previous_input_source)
+                    self.show_feedback("Input source switched")
             except Exception as exc:
                 report_error(exc)
 
         def refresh_(self, sender):
-            self.runtime_warning = ""
-            self.refresh_status()
+            try:
+                self.runtime_warning = ""
+                self.refresh_status()
+                self.show_feedback(self.warning or "Karabiner layers available",
+                                   level="error" if not self.permitted else "warning" if self.warning else "info")
+            except Exception as exc:
+                report_error(exc)
+
+        @objc.python_method
+        def show_feedback(self, text, *, level="info"):
+            if getattr(self, "menu_tracking", False):
+                self.menu_feedback = (text, level)
+            else:
+                notify(text, level=level)
 
         def mouseEntered_(self, event):
             self.refresh_status()
+
+        def cursorUpdate_(self, event):
+            A.NSCursor.arrowCursor().set()
 
         def mouseExited_(self, event):
             # Entered-and-exited tracking requires both Objective-C selectors.
@@ -557,16 +603,33 @@ def create_panel(state, *, remember_frame=True):
 
         def minimize_(self, sender):
             self.panel.miniaturize_(None)
+            if self.panel.isMiniaturized():
+                self.show_feedback("Keyboard minimized")
 
         def resetSize_(self, sender):
-            reset_window_size(self.panel)
+            try:
+                reset_window_size(self.panel)
+                self.show_feedback("Window size reset")
+            except Exception as exc:
+                report_error(exc)
 
         def quit_(self, sender):
             self.panel.performClose_(None)
 
         def menu_(self, sender):
             self.refresh_status()
-            self.menu.popUpMenuPositioningItem_atLocation_inView_(None, (0, -4), sender)
+            self.menu_tracking = True
+            self.menu_feedback = None
+            try:
+                self.menu.popUpMenuPositioningItem_atLocation_inView_(None, (0, -4), sender)
+            finally:
+                self.menu_tracking = False
+            # Menu callbacks may replace None while AppKit tracks the menu.
+            feedback: tuple[str, str] | None = getattr(self, "menu_feedback", None)
+            self.menu_feedback = None
+            if feedback is not None:
+                text, level = feedback
+                self.show_feedback(text, level=level)
 
         def contextChanged_(self, notification):
             # Never carry sticky modifiers into a different target application.
@@ -714,13 +777,24 @@ def create_panel(state, *, remember_frame=True):
                                    ("menu:", "ellipsis.circle", "Keyboard menu")]:
         button = CapsKeyboardButton.alloc().initWithFrame_(((0, 0), (24, 18)))
         button.setImage_(A.NSImage.imageWithSystemSymbolName_accessibilityDescription_(symbol, title))
+        button.setButtonType_(A.NSButtonTypeMomentaryPushIn)
+        button.cell().setHighlightsBy_(A.NSNoCellMask)
+        button.cell().setShowsStateBy_(A.NSNoCellMask)
         button.setBordered_(False)
         button.setRefusesFirstResponder_(True)
         button.setToolTip_(title)
         button.setTarget_(controller)
         button.setAction_(action)
+        button.setWantsLayer_(True)
+        button.layer().setCornerRadius_(4)
+        button.layer().setBorderColor_(A.NSColor.separatorColor().CGColor())
         content.addSubview_(button)
         controller.toolbar[action] = button
+    for button in (*controller.buttons.values(), *controller.toolbar.values()):
+        tracking = A.NSTrackingArea.alloc().initWithRect_options_owner_userInfo_(
+            button.bounds(), A.NSTrackingMouseEnteredAndExited | A.NSTrackingActiveAlways
+            | A.NSTrackingInVisibleRect | A.NSTrackingCursorUpdate, button, None)
+        button.addTrackingArea_(tracking)
     menu = A.NSMenu.alloc().initWithTitle_("Caps Keyboard")
     menu.setAutoenablesItems_(False)
     for title, action in [("Release all modifiers (Caps+`)", "releaseAll:"),
@@ -735,7 +809,7 @@ def create_panel(state, *, remember_frame=True):
     controller.menu = menu
     tracking = A.NSTrackingArea.alloc().initWithRect_options_owner_userInfo_(
         content.bounds(), A.NSTrackingMouseEnteredAndExited | A.NSTrackingActiveAlways
-        | A.NSTrackingInVisibleRect, controller, None)
+        | A.NSTrackingInVisibleRect | A.NSTrackingCursorUpdate, controller, None)
     content.addTrackingArea_(tracking)
     A.NSWorkspace.sharedWorkspace().notificationCenter().addObserver_selector_name_object_(
         controller, "contextChanged:", A.NSWorkspaceDidActivateApplicationNotification, None)
