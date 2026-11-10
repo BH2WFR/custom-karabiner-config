@@ -18,6 +18,7 @@ from tooltip import notify
 from gui_helpers import activate_window, copy_text
 
 SELECTION_ACTIONS = ("wrap", "lower", "upper", "title", "stats")
+LITERAL_ACTIONS = {"tab": "\t", "newline": "\n"}
 WORDS = re.compile(r"\w+(?:['\u2019]\w+)*")
 CHARACTER_LABELS = {
     "\x00": "[NUL]", "\x01": "[SOH]", "\x02": "[STX]", "\x03": "[ETX]",
@@ -63,8 +64,8 @@ INSPECTOR_PASTEBOARD_PREFIX = "com.personal-scripts.unicode-inspector"
 
 
 def transform_text(action, text):
-    if action == "tab":
-        return "\t"
+    if action in LITERAL_ACTIONS:
+        return LITERAL_ACTIONS[action]
     if not text:
         raise ValueError("No text is available.")
     if action == "wrap":
@@ -166,7 +167,7 @@ def perform_action(action, pasteboard):
             if {"public.file-url", "NSFilenamesPboardType"} & set(pasteboard.types() or []):
                 raise ValueError("The selection contains files, not text.")
 
-        text = "" if action == "tab" else read_clipboard_text(prefer_paths=False)
+        text = "" if action in LITERAL_ACTIONS else read_clipboard_text(prefer_paths=False)
         if _frontmost_pid() != target:
             raise RuntimeError("Active application changed. Text action cancelled.")
         if pasteboard.changeCount() != owned_count:
@@ -374,7 +375,7 @@ def run_inspector(pasteboard_name, error_message=None):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "action", nargs="?", choices=(*SELECTION_ACTIONS, "tab", "setter", "getter")
+        "action", nargs="?", choices=(*SELECTION_ACTIONS, *LITERAL_ACTIONS, "setter", "getter")
     )
     parser.add_argument("--inspector-pasteboard", help=argparse.SUPPRESS)
     parser.add_argument("--inspector-error", help=argparse.SUPPRESS)

@@ -84,7 +84,7 @@ class ConfigTests(unittest.TestCase):
                             command_args(command)
                             self.assertEqual(len(events), 1)
                             count += 1
-        self.assertEqual(count, 32)
+        self.assertEqual(count, 34)
 
     def test_anki_chords_remain_distinct(self):
         rule = next(r for r in self.rules if r['description'].startswith('[Anki]'))
@@ -126,6 +126,33 @@ class ConfigTests(unittest.TestCase):
         args = command_args(m['to'][0]['shell_command'])
         self.assertTrue(args.inherit_modifiers)
         self.assertEqual(args.steps, [sender.Step(keys.ESCAPE_KEY_CODE)])
+
+    def test_comma_and_backslash_at_end_of_line(self):
+        rule = next(r for r in self.rules if r['description'].startswith('Caps+(Shift)+Comma'))
+        self.assertEqual(len(rule['manipulators']), 2)
+        for m, shifted in zip(rule['manipulators'], (True, False)):
+            self.assertEqual(m['conditions'], [
+                {'name': 'caps_primary_layer', 'type': 'variable_if', 'value': 1}])
+            self.assertEqual(m['from']['key_code'], 'comma')
+            self.assertEqual(m['from'].get('modifiers', {}).get('mandatory', []),
+                             ['shift'] if shifted else [])
+            args = command_args(m['to'][0]['shell_command'])
+            self.assertEqual(args.release_key, 'comma')
+            self.assertEqual(keys.KEY_CODES[args.release_key], 43)
+            self.assertFalse(args.inherit_modifiers)
+            self.assertEqual(args.steps, [sender.Step(124, keys.COMMAND_FLAG),
+                                         sender.Step(0, text='\\' if shifted else ',')])
+
+    def test_secondary_newline_precedes_primary_return(self):
+        matches = [m for r in self.rules for m in r['manipulators']
+                   if m['from'].get('key_code') == 'return_or_enter']
+        m = matches[0]
+        self.assertEqual(m['conditions'], [
+            {'name': 'caps_primary_layer', 'type': 'variable_if', 'value': 1},
+            {'name': 'caps_secondary_layer', 'type': 'variable_if', 'value': 1}])
+        self.assertEqual(shlex.split(m['to'][0]['shell_command'])[-1], 'newline')
+        self.assertIn('/scripts/text_actions.py', m['to'][0]['shell_command'])
+        self.assertFalse(m['to'][0]['repeat'])
 
 
 if __name__ == '__main__':

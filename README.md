@@ -93,6 +93,7 @@ When Microsoft Remote Desktop / Windows App / UU Remote is frontmost, hold physi
 | `Caps+Shift+Backspace` | Delete current line | |
 | `Caps+;` | Insert `;` **at end of line** | Sends the literal ASCII character through Unicode events, without the clipboard or Chinese punctuation conversion |
 | `Caps+Shift+;`<br />`Caps+'` | Insert `:` **at end of line** | Same Unicode input; releases Shift before moving the cursor |
+| `Caps+,` / `Caps+Shift+,` | Insert `,` / `\` **at end of line** | Releases Shift before moving; inserts literal ASCII punctuation without the clipboard |
 | `Caps+Enter` | **Go to end of line + add newline** | |
 | `Caps+Shift+Enter` | Insert blank line above current | |
 | `Caps+Space` | Insert full-width space (U+3000) | Uses `scripts/send_keys.py` on key-up; posts Unicode events without modifying the clipboard |
@@ -168,6 +169,7 @@ The secondary clipboard is stored in a named macOS `NSPasteboard`, not a tempora
 | Keys | Function | Notes |
 | --- | --- | --- |
 | `Caps+[LOpt/RCmd/LCmd]+Tab` | Paste a literal tab character | Bypasses Tab-key navigation; the target must accept pasted tabs |
+| `Caps+[LOpt/RCmd/LCmd]+Return` | Paste a literal newline (`\n`) | Does not send a Return key; the target must accept pasted line breaks |
 | `Caps+[LOpt/RCmd/LCmd]+T` | Paste a setter name | Ordinary clipboard `myItem` becomes `setMyItem`; except Anki |
 | `Caps+[LOpt/RCmd/LCmd]+Shift+T` | Paste a getter name | Ordinary clipboard `myItem` becomes `getMyItem`; except Anki |
 

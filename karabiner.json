@@ -1003,8 +1003,33 @@
                         ]
                     },
                     {
-                        "description": "[Caps Secondary Layer]: Tab -> Literal Tab, (Shift)+T -> Setter/Getter",
+                        "description": "[Caps Secondary Layer]: Tab/Return -> Literal Tab/Newline, (Shift)+T -> Setter/Getter",
                         "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "name": "caps_primary_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    },
+                                    {
+                                        "name": "caps_secondary_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "return_or_enter",
+                                    "modifiers": { "optional": ["left_option", "right_command", "left_command", "caps_lock"] }
+                                },
+                                "to": [
+                                    {
+                                        "repeat": false,
+                                        "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/text_actions.py newline"
+                                    }
+                                ],
+                                "type": "basic"
+                            },
                             {
                                 "conditions": [
                                     {
@@ -1167,6 +1192,48 @@
                                     {
                                         "repeat": false,
                                         "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/send_keys.py --release-key semicolon --key command+right_arrow --text ';'"
+                                    }
+                                ],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Caps+(Shift)+Comma -> Insert comma/backslash at end of line",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "name": "caps_primary_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "comma",
+                                    "modifiers": { "mandatory": ["shift"] }
+                                },
+                                "to": [
+                                    {
+                                        "repeat": false,
+                                        "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/send_keys.py --release-key comma --key command+right_arrow --text '\\'"
+                                    }
+                                ],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "name": "caps_primary_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": { "key_code": "comma" },
+                                "to": [
+                                    {
+                                        "repeat": false,
+                                        "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/send_keys.py --release-key comma --key command+right_arrow --text ','"
                                     }
                                 ],
                                 "type": "basic"

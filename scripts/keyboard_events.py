@@ -104,7 +104,7 @@ US_KEY_CODES = {
 KEY_CODES = {
     **US_KEY_CODES,
     "non_us_backslash": 10, "return_or_enter": 36, "quote": 39,
-    "semicolon": 41, "backslash": 42, "period": 47, "tab": 48,
+    "semicolon": 41, "backslash": 42, "comma": 43, "period": 47, "tab": 48,
     "spacebar": 49, "delete_or_backspace": DELETE_KEY_CODE,
     "escape": ESCAPE_KEY_CODE,
     "f1": 122, "f2": 120, "f3": 99, "f4": 118, "f5": 96, "f6": 97,
