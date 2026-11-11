@@ -154,6 +154,21 @@ class ConfigTests(unittest.TestCase):
         self.assertIn('/scripts/text_actions.py', m['to'][0]['shell_command'])
         self.assertFalse(m['to'][0]['repeat'])
 
+    def test_caps_7_launches_external_unicode_inspector(self):
+        matches = [m for rule in self.rules for m in rule['manipulators']
+                   if m['from'].get('key_code') == '7'
+                   and not m['from'].get('modifiers', {}).get('mandatory')]
+        self.assertEqual(len(matches), 1)
+        m = matches[0]
+        self.assertIn({'name': 'caps_primary_layer', 'type': 'variable_if', 'value': 1},
+                      m['conditions'])
+        self.assertFalse(m['to'][0]['repeat'])
+        command = shlex.split(m['to'][0]['shell_command'])
+        self.assertEqual(command, [
+            '/opt/miniconda3/bin/python3', '${HOME}/.config/karabiner/scripts/launch_unicode_inspector.py',
+            '--inspector', '${HOME}/gitRepo/PersonalScripts/tools/others/unicode-inspector.py'])
+        self.assertNotIn('text_actions.py stats', json.dumps(self.rules))
+
 
 if __name__ == '__main__':
     unittest.main()

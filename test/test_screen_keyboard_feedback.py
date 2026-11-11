@@ -40,8 +40,6 @@ class FeedbackTests(unittest.TestCase):
     def setUp(self):
         self.notice = self.enterContext(patch.object(sk, 'notify'))
         self.error = self.enterContext(patch.object(sk, 'report_error'))
-        self.controller.menu_tracking = False
-        self.controller.menu_feedback = None
 
     def tearDown(self):
         self.assertFalse(self.panel.isVisible())
@@ -52,7 +50,7 @@ class FeedbackTests(unittest.TestCase):
         return tuple(self.A.NSColor.colorWithCGColor_(button.layer().backgroundColor()).getRed_green_blue_alpha_(None, None, None, None))
 
     def test_hover_brightens_all_regions_and_restores_on_exit(self):
-        for name in ('a', '1', 'LCmd', 'Caps', 'left_arrow', 'f1', 'extended'):
+        for name in ('a', '1', 'LCmd', 'Caps', 'left_arrow', 'f1', 'input_source'):
             with self.subTest(name=name):
                 button = self.controller.buttons[name]
                 button.mouseExited_(None)
@@ -139,7 +137,9 @@ class FeedbackTests(unittest.TestCase):
         self.assertEqual(self.rgb(button), normal)
 
     def test_menu_controls_ignore_residual_native_state(self):
-        for button in (*self.controller.toolbar.values(), self.controller.buttons['extended']):
+        for button in (*self.controller.toolbar.values(), self.controller.buttons['input_source']):
+            if button.toggle_button:
+                continue
             with self.subTest(action=str(button.action())):
                 button.setState_(0)
                 button.mouseExited_(None)
@@ -156,26 +156,64 @@ class FeedbackTests(unittest.TestCase):
                     button.setState_(0)
                     button.mouseExited_(None)
 
+    def test_unchanged_sync_reuses_titles_and_appearance(self):
+        self.controller.sync_buttons()
+        button = self.controller.buttons['a']
+        with patch.object(button, 'setAttributedTitle_') as title, \
+             patch.object(button, 'setFont_') as font:
+            self.controller.sync_buttons()
+            self.controller.sync_buttons()
+            title.assert_not_called()
+            font.assert_not_called()
+
+    def test_layer_color_updates_without_rebuilding_labels(self):
+        button = self.controller.buttons['Caps']
+        button.mouseExited_(None)
+        normal = self.rgb(button)
+        try:
+            with patch.object(button, 'setFont_') as font, \
+                 patch.object(backend, 'set_caps_layer') as layer:
+                self.controller.clicked_(button)
+                layer.assert_called_once_with(True)
+                self.assertEqual(button.state(), 1)
+                self.assertNotEqual(self.rgb(button), normal)
+                self.controller.clicked_(button)
+                self.assertEqual(layer.call_args.args, (False,))
+                self.assertEqual(button.state(), 0)
+                self.assertEqual(self.rgb(button), normal)
+                font.assert_not_called()
+        finally:
+            self.controller.release_safely()
+
+    def test_button_colors_have_no_implicit_animation(self):
+        for button in (*self.controller.buttons.values(), *self.controller.toolbar.values()):
+            actions = button.layer().actions()
+            self.assertEqual(actions['backgroundColor'], self.F.NSNull.null())
+            self.assertEqual(actions['borderWidth'], self.F.NSNull.null())
+
     def test_reset_size_feedback(self):
         self.panel.setContentSize_((700, 300))
         self.controller.resetSize_(None)
         self.assertEqual(self.panel.contentView().bounds().size, sk.DEFAULT_SIZE)
         self.notice.assert_called_once_with('Window size reset', level='info')
 
-    def test_input_source_feedback(self):
+    def test_input_source_switch_is_silent(self):
         with patch.object(sk, 'switch_input_source', return_value='previous') as switch:
-            self.controller.inputSource_(None)
+            self.controller.clicked_(self.controller.buttons['input_source'])
             switch.assert_called_once()
-            self.notice.assert_called_once_with('Input source switched', level='info')
+            self.assertEqual(self.controller.previous_input_source, 'previous')
+            self.notice.assert_not_called()
+            self.error.assert_not_called()
 
-    def test_remote_feedback_only_claims_key_delivery(self):
+    def test_remote_input_source_switch_is_silent(self):
         with patch.object(sk, 'is_remote', return_value=True), \
              patch.object(sk.keys, 'post_keystroke') as post, \
              patch.object(sk, 'switch_input_source') as switch:
-            self.controller.inputSource_(None)
+            self.controller.clicked_(self.controller.buttons['input_source'])
             post.assert_called_once_with(sk.keys.KEY_CODES['f1'])
             switch.assert_not_called()
-            self.notice.assert_called_once_with('Remote language key sent (F1)', level='info')
+            self.notice.assert_not_called()
+            self.error.assert_not_called()
 
     def test_failed_source_switch_has_no_success_feedback(self):
         with patch.object(sk, 'switch_input_source', side_effect=RuntimeError('unavailable')):
@@ -193,18 +231,162 @@ class FeedbackTests(unittest.TestCase):
 
     def test_menu_feedback_waits_until_menu_closes(self):
         def choose(*args):
-            self.controller.refresh_(None)
+            self.controller.extendedSelected_(menu.addItem_.call_args_list[-2].args[0])
             self.notice.assert_not_called()
-        with patch.object(self.controller, 'menu', Mock()) as menu:
+        with patch.object(self.A, 'NSMenu') as factory:
+            menu = factory.alloc.return_value.initWithTitle_.return_value
             menu.popUpMenuPositioningItem_atLocation_inView_.side_effect = choose
-            self.controller.menu_(self.controller.toolbar['menu:'])
+            self.controller.extended_(self.controller.toolbar['extended:'])
         self.notice.assert_called_once_with('Karabiner layers available', level='info')
-        self.assertFalse(self.controller.menu_tracking)
 
     def test_cancelled_menu_is_silent(self):
-        with patch.object(self.controller, 'menu', Mock()):
-            self.controller.menu_(self.controller.toolbar['menu:'])
+        with patch.object(self.A, 'NSMenu'):
+            self.controller.extended_(self.controller.toolbar['extended:'])
         self.notice.assert_not_called()
+
+    def test_toolbar_and_input_source_swap(self):
+        self.assertEqual(list(self.controller.toolbar),
+                         ['minimize:', 'extended:', 'numpad:', 'reset:', 'resetSize:'])
+        self.assertLess(self.A.NSMaxX(self.controller.toolbar['minimize:'].frame()),
+                        self.A.NSMinX(self.controller.toolbar['extended:'].frame()))
+        self.assertNotIn('extended', self.controller.buttons)
+        self.assertIsNotNone(self.controller.buttons['input_source'].image())
+        with patch.object(sk, 'switch_input_source') as switch:
+            self.controller.clicked_(self.controller.buttons['input_source'])
+            switch.assert_called_once()
+
+    def test_numpad_toolbar_toggle_tracks_visibility(self):
+        button = self.controller.toolbar['numpad:']
+        button.mouseExited_(None)
+        normal = self.rgb(button)
+        try:
+            button.performClick_(None)
+            button.mouseExited_(None)
+            self.assertTrue(self.controller.numpad_visible)
+            self.assertEqual(button.state(), 1)
+            selected = self.rgb(button)
+            self.assertNotEqual(selected, normal)
+            self.controller.refresh_status()
+            self.assertEqual(self.rgb(button), selected)
+            button.mouseEntered_(None)
+            button.mouseExited_(None)
+            self.assertEqual(self.rgb(button), selected)
+            button.performClick_(None)
+            self.assertFalse(self.controller.numpad_visible)
+            self.assertEqual(button.state(), 0)
+            self.assertEqual(self.rgb(button), normal)
+        finally:
+            if self.controller.numpad_visible:
+                self.controller.numpad_(None)
+
+    def test_numpad_mode_exact_colors(self):
+        button = self.controller.buttons['pad_mode']
+        try:
+            for enabled, idle in ((False, (232, 160, 125)), (True, (159, 73, 41))):
+                button.setState_(int(enabled))
+                for hovered in (False, True):
+                    button.hovered = hovered
+                    for pressed in (False, True):
+                        button.pointer_down = pressed
+                        button.update_appearance()
+                        expected = (244, 189, 157) if pressed else idle
+                        self.assertEqual(tuple(round(c * 255) for c in self.rgb(button)[:3]), expected)
+        finally:
+            button.pointer_down = False
+            button.hovered = False
+            self.controller.sync_buttons()
+
+    def test_numpad_expansion_and_mode_colors(self):
+        sk.reset_window_size(self.panel)
+        before = self.controller.buttons['a'].frame().size.width
+        self.controller.numpad_(None)
+        try:
+            self.assertTrue(self.controller.numpad_visible)
+            self.assertAlmostEqual(self.controller.buttons['a'].frame().size.width, before, delta=.1)
+            self.assertTrue(all(not self.controller.buttons[row[0]].isHidden() for row in sk.NUMPAD))
+            button = self.controller.buttons['pad_mode']
+            numeric_color = self.rgb(button)
+            self.assertEqual(button.title(), 'Num')
+            self.controller.clicked_(button)
+            self.assertEqual(button.title(), 'Nav')
+            self.assertNotEqual(self.rgb(button), numeric_color)
+            self.assertEqual(self.controller.buttons['pad_7'].title(), 'Home')
+            self.assertFalse(self.controller.buttons['pad_5'].isEnabled())
+            self.controller.clicked_(button)
+            self.assertEqual(self.rgb(button), numeric_color)
+            self.assertEqual(self.controller.buttons['pad_7'].title(), '7')
+            self.assertTrue(self.controller.buttons['pad_5'].isEnabled())
+        finally:
+            self.controller.numeric_mode = True
+            self.controller.numpad_(None)
+        self.assertEqual(self.panel.contentView().bounds().size, sk.DEFAULT_SIZE)
+        self.assertTrue(all(self.controller.buttons[row[0]].isHidden() for row in sk.NUMPAD))
+        for _ in range(3):
+            self.controller.numpad_(None)
+            self.controller.numpad_(None)
+        self.assertEqual(self.panel.contentView().bounds().size, sk.DEFAULT_SIZE)
+
+    def test_numpad_outputs_use_final_session_keys_in_both_contexts(self):
+        try:
+            for remote in (False, True):
+                with patch.object(sk, 'is_remote', return_value=remote):
+                    for mode in (False, True):
+                        self.controller.numeric_mode = mode
+                        self.controller.refresh_status()
+                        for row in sk.NUMPAD:
+                            name = row[0]
+                            output = sk.numpad_output(name, mode)
+                            if output is None:
+                                continue
+                            code, flags = output
+                            with patch.object(sk.keys, 'post_key_event') as post:
+                                self.controller.clicked_(self.controller.buttons[name])
+                                self.assertEqual(self.controller.key_down_name, name)
+                                self.assertEqual(self.controller.buttons[name].state(), 1)
+                                self.controller.releaseKey_(None)
+                                self.assertEqual([c.args for c in post.call_args_list],
+                                                 [(code, True, flags), (code, False, flags)])
+                                self.assertTrue(all(c.kwargs['event_tap'] == sk.keys.SESSION_EVENT_TAP
+                                                    for c in post.call_args_list))
+        finally:
+            self.controller.numeric_mode = True
+            self.controller.refresh_status()
+
+    def test_expanded_labels_fit_without_overlaps(self):
+        self.controller.numpad_(None)
+        try:
+            for size in (sk.MINIMUM_SIZE, sk.DEFAULT_SIZE, (1000, 400)):
+                self.panel.setContentSize_((sk.resized_width(size[0], False, True), size[1]))
+                for remote in (False, True):
+                    with patch.object(sk, 'is_remote', return_value=remote):
+                        for mode in (False, True):
+                            self.controller.numeric_mode = mode
+                            self.controller.refresh_status()
+                            self.controller.layout()
+                            self.assertEqual(self.controller.buttons['Caps'].title(), 'Layer(F1)' if remote else 'Layer')
+                            frames = {name: button.frame() for name, button in self.controller.buttons.items()}
+                            self.assertAlmostEqual(self.A.NSMaxY(frames['pad_mode']),
+                                                   self.A.NSMaxY(frames['escape']))
+                            self.assertAlmostEqual(self.A.NSMinY(frames['pad_0']),
+                                                   self.A.NSMinY(frames['spacebar']))
+                            self.assertAlmostEqual(self.A.NSMinX(frames['pad_mode']) -
+                                                   self.A.NSMaxX(frames['delete_forward']), 3)
+                            self.assertEqual(self.rgb(self.controller.buttons['pad_enter']),
+                                             self.rgb(self.controller.buttons['return_or_enter']))
+                            bounds = self.panel.contentView().bounds()
+                            buttons = list(self.controller.buttons.items())
+                            for index, (name, button) in enumerate(buttons):
+                                rect = button.frame()
+                                self.assertTrue(self.A.NSContainsRect(bounds, rect), name)
+                                self.assertLessEqual(button.attributedTitle().size().width + 4,
+                                                     rect.size.width + .01, name)
+                                for other_name, other in buttons[index + 1:]:
+                                    self.assertFalse(self.A.NSIntersectsRect(rect, other.frame()), (name, other_name))
+        finally:
+            self.controller.numeric_mode = True
+            self.controller.numpad_(None)
+            sk.reset_window_size(self.panel)
+            self.controller.refresh_status()
 
     def test_release_all_keeps_existing_child_feedback(self):
         with patch.object(sk.subprocess, 'Popen') as launch:

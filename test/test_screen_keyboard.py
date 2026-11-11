@@ -28,10 +28,10 @@ class LayoutTests(unittest.TestCase):
         self.assertIn('non_us_backslash', names)
         self.assertEqual(len(names), len(set(names)))
         for name in names:
-            self.assertTrue(name in keys.KEY_CODES or name in sk.EVENT_KEYS or name in ('Caps', 'extended'), name)
+            self.assertTrue(name in keys.KEY_CODES or name in sk.EVENT_KEYS or name in ('Caps', 'input_source'), name)
 
     def test_extended_and_navigation_keys_are_one_unit(self):
-        self.assertEqual(sk.ROWS[0][-4:], [('f12', 'F12', 1), ('extended', '\u22ef', 1),
+        self.assertEqual(sk.ROWS[0][-4:], [('f12', 'F12', 1), ('input_source', '', 1),
                                           ('insert', 'Ins', 1), ('delete_forward', 'Del', 1)])
 
     def test_normal_labels(self):
@@ -41,7 +41,8 @@ class LayoutTests(unittest.TestCase):
         self.assertEqual(sk.key_label('delete_or_backspace', 'Backspace'), '\u232b')
         self.assertEqual(sk.key_label('delete_forward', 'Del'), '\u2326')
         self.assertEqual(sk.key_label('LCmd', 'Cmd'), '\u2318')
-        self.assertEqual(sk.key_label('Caps', 'Caps', remote=True), 'F1')
+        self.assertEqual(sk.key_label('Caps', 'Caps'), 'Layer')
+        self.assertEqual(sk.key_label('Caps', 'Caps', remote=True), 'Layer(F1)')
         self.assertEqual(sk.key_label('delete_or_backspace', 'Backspace', remote=True), '\u232b')
         self.assertEqual(sk.key_label('delete_forward', 'Del', remote=True), 'Del')
         for name in ('tab', 'escape', 'return_or_enter', 'LShift', 'home', 'end', 'page_up', 'page_down'):
@@ -65,8 +66,41 @@ class LayoutTests(unittest.TestCase):
     def test_key_regions_have_distinct_colors(self):
         names = ['a', '1', 'LCmd', 'Caps', 'left_arrow', 'f1', 'return_or_enter']
         self.assertEqual(len({sk.key_color(name) for name in names}), len(names))
-        self.assertEqual(sk.key_color('extended'), (24, 83, 55))
-        self.assertNotIn(sk.key_color('extended'), {sk.key_color(name) for name in names})
+        self.assertEqual(sk.key_color('input_source'), (24, 83, 55))
+        self.assertEqual(sk.key_color('pad_enter'), sk.key_color('return_or_enter'))
+        self.assertNotIn(sk.key_color('input_source'), {sk.key_color(name) for name in names})
+
+    def test_numpad_geometry_has_no_overlap(self):
+        occupied = set()
+        self.assertEqual(len(sk.NUMPAD), 17)
+        for name, _, _, _, _, x, y, width, height in sk.NUMPAD:
+            cells = {(i, j) for i in range(x, x + width) for j in range(y, y + height)}
+            self.assertFalse(cells & occupied, name)
+            self.assertTrue(all(0 <= i < 4 and 0 <= j < 5 for i, j in cells))
+            occupied.update(cells)
+        self.assertEqual(len(occupied), 20)
+
+    def test_numeric_mode_ignores_remote_numlock(self):
+        for digit in '0123456789':
+            self.assertEqual(sk.numpad_output('pad_' + digit, True), (keys.KEY_CODES[digit], 0))
+        self.assertEqual(sk.numpad_output('pad_decimal', True), (keys.KEY_CODES['.'], 0))
+        for name, key in [('pad_0', 'insert'), ('pad_1', 'end'), ('pad_2', 'down_arrow'),
+                          ('pad_3', 'page_down'), ('pad_4', 'left_arrow'), ('pad_6', 'right_arrow'),
+                          ('pad_7', 'home'), ('pad_8', 'up_arrow'), ('pad_9', 'page_up'),
+                          ('pad_decimal', 'delete_forward')]:
+            self.assertEqual(sk.numpad_output(name, False), (keys.KEY_CODES[key], 0))
+        self.assertIsNone(sk.numpad_output('pad_5', False))
+        for mode in (True, False):
+            self.assertEqual(sk.numpad_output('pad_plus', mode),
+                             (keys.KEY_CODES['keypad_plus'], keys.NUMERIC_PAD_FLAG))
+            self.assertIsNone(sk.numpad_output('pad_mode', mode))
+
+    def test_expanding_preserves_main_key_width(self):
+        for width in (sk.MINIMUM_SIZE[0], sk.DEFAULT_SIZE[0], 1000):
+            expanded = sk.resized_width(width, False, True)
+            self.assertAlmostEqual((width - 5) / sk.ROW_UNITS,
+                                   (expanded - 5) / (sk.ROW_UNITS + sk.NUMPAD_UNITS))
+            self.assertAlmostEqual(sk.resized_width(expanded, True, False), width)
 
     def test_authorized_process_does_not_prompt(self):
         with patch.object(keys, 'can_post_events', return_value=True), \

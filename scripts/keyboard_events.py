@@ -47,6 +47,7 @@ SHIFT_FLAG = 1 << 17
 CONTROL_FLAG = 1 << 18
 OPTION_FLAG = 1 << 19
 COMMAND_FLAG = 1 << 20
+NUMERIC_PAD_FLAG = 1 << 21
 FN_FLAG = 1 << 23
 
 X_KEY_CODE = 7
@@ -113,6 +114,8 @@ KEY_CODES = {
     "insert": 114, "home": 115, "page_up": 116,
     "delete_forward": 117, "end": 119, "page_down": 121,
     "application": 110,
+    "keypad_multiply": 67, "keypad_plus": 69, "keypad_divide": 75,
+    "keypad_enter": 76, "keypad_minus": 78,
     "left_arrow": LEFT_ARROW_KEY_CODE, "right_arrow": RIGHT_ARROW_KEY_CODE,
     "down_arrow": 125, "up_arrow": 126,
 }

@@ -872,7 +872,7 @@
                         ]
                     },
                     {
-                        "description": "Caps+Grave -> Release Modifiers and Disable Caps Lock, Caps+4/6/7 -> Selected Text Tools",
+                        "description": "Caps+Grave -> Release Modifiers and Disable Caps Lock, Caps+4/6/7 -> Text Tools",
                         "manipulators": [
                             {
                                 "conditions": [
@@ -995,7 +995,7 @@
                                 "to": [
                                     {
                                         "repeat": false,
-                                        "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/text_actions.py stats"
+                                        "shell_command": "/opt/miniconda3/bin/python3 \"${HOME}/.config/karabiner/scripts/launch_unicode_inspector.py\" --inspector \"${HOME}/gitRepo/PersonalScripts/tools/others/unicode-inspector.py\""
                                     }
                                 ],
                                 "type": "basic"

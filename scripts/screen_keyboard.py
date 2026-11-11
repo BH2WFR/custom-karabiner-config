@@ -25,6 +25,42 @@ MINIMUM_SIZE = (456, 186)
 MODIFIER_LOCK_DELAY = .5
 LOCKED_BACKGROUND = (122, 32, 42)
 LOCKED_TEXT = (255, 225, 96)
+NUMPAD_UNITS = 4
+NUMPAD_MODE_COLORS = {"off": (232, 160, 125), "on": (159, 73, 41), "pressed": (244, 189, 157)}
+# Name, number-mode label/key, navigation label/key, column, row, width, height.
+NUMPAD = [
+    ("pad_mode", "Num", None, "Nav", None, 0, 0, 1, 1),
+    ("pad_divide", "/", "keypad_divide", "/", "keypad_divide", 1, 0, 1, 1),
+    ("pad_multiply", "*", "keypad_multiply", "*", "keypad_multiply", 2, 0, 1, 1),
+    ("pad_minus", "-", "keypad_minus", "-", "keypad_minus", 3, 0, 1, 1),
+    ("pad_7", "7", "7", "Home", "home", 0, 1, 1, 1),
+    ("pad_8", "8", "8", "\u2191", "up_arrow", 1, 1, 1, 1),
+    ("pad_9", "9", "9", "PgUp", "page_up", 2, 1, 1, 1),
+    ("pad_plus", "+", "keypad_plus", "+", "keypad_plus", 3, 1, 1, 2),
+    ("pad_4", "4", "4", "\u2190", "left_arrow", 0, 2, 1, 1),
+    ("pad_5", "5", "5", "\u00b7", None, 1, 2, 1, 1),
+    ("pad_6", "6", "6", "\u2192", "right_arrow", 2, 2, 1, 1),
+    ("pad_1", "1", "1", "End", "end", 0, 3, 1, 1),
+    ("pad_2", "2", "2", "\u2193", "down_arrow", 1, 3, 1, 1),
+    ("pad_3", "3", "3", "PgDn", "page_down", 2, 3, 1, 1),
+    ("pad_enter", "\u21a9", "keypad_enter", "\u21a9", "keypad_enter", 3, 3, 1, 2),
+    ("pad_0", "0", "0", "Ins", "insert", 0, 4, 2, 1),
+    ("pad_decimal", ".", ".", "Del", "delete_forward", 2, 4, 1, 1),
+]
+
+
+def numpad_output(name, numeric):
+    row = next(row for row in NUMPAD if row[0] == name)
+    key = row[2 if numeric else 4]
+    if key is None:
+        return None
+    return keys.KEY_CODES[key], keys.NUMERIC_PAD_FLAG if key.startswith("keypad_") else 0
+
+
+def resized_width(width, was_expanded, expanded):
+    before = ROW_UNITS + (NUMPAD_UNITS if was_expanded else 0)
+    after = ROW_UNITS + (NUMPAD_UNITS if expanded else 0)
+    return (width - 5) * after / before + 5
 
 # Use existing device-independent inputs to obtain external-keyboard semantics.
 # Physical Fn -> Cmd/Ctrl; external RCtrl -> RCmd/RCtrl; Menu -> held Fn.
@@ -47,7 +83,7 @@ RDP_KEYS["Caps"] = (keys.KEY_CODES["f1"], 0, 0)
 DIRECT_KEYS = {name: keys.MODIFIER_KEYS[name] for name in EVENT_KEYS}
 DIRECT_LABELS = {name: name for name in NORMAL_LABELS}
 MAC_SYMBOLS: dict[str, str] = {
-    "escape": "\u238b", "tab": "\u21e5", "Caps": "\u21ea",
+    "escape": "\u238b", "tab": "\u21e5",
     "delete_or_backspace": "\u232b", "delete_forward": "\u2326",
     "return_or_enter": "\u21a9", "spacebar": "\u2423",
     "home": "\u2196", "end": "\u2198", "page_up": "\u21de", "page_down": "\u21df",
@@ -56,7 +92,7 @@ MAC_SYMBOLS: dict[str, str] = {
 }
 WINDOWS_LABELS: dict[str, str] = {name: label.removeprefix("L").removeprefix("R").replace("Cmd", "Win").replace("Opt", "Alt")
                   for name, label in RDP_LABELS.items()}
-WINDOWS_LABELS.update({"Caps": "F1", "delete_forward": "Del", "spacebar": "Space"})
+WINDOWS_LABELS.update({"Caps": "Layer(F1)", "delete_forward": "Del", "spacebar": "Space"})
 PALETTE = {
     "letters": (170, 222, 246), "symbols": (255, 220, 104),
     "modifiers": (89, 193, 231), "caps": (247, 139, 181),
@@ -66,6 +102,8 @@ PALETTE = {
 
 
 def key_label(name: str, label: str, *, remote: bool = False, compact: bool = False) -> str:
+    if name == "Caps":
+        return "Layer(F1)" if remote else "Layer"
     text = label.replace("  ", " ") if compact else label
     if remote:
         return WINDOWS_LABELS.get(name, MAC_SYMBOLS.get(name, text))
@@ -79,8 +117,12 @@ def key_color(name):
         group = "modifiers"
     elif name.endswith("_arrow"):
         group = "arrows"
-    elif name == "extended":
+    elif name == "input_source":
         group = "extended"
+    elif name == "pad_enter":
+        group = "commands"
+    elif name.startswith("pad_"):
+        group = "symbols"
     elif len(name) == 1 and name.isalpha():
         group = "letters"
     elif len(name) == 1 or name in ("spacebar", "non_us_backslash"):
@@ -117,9 +159,9 @@ def extended_keys(remote):
     ]
 
 
-def reset_window_size(panel):
+def reset_window_size(panel, *, numpad=False):
     """Use the same default size at startup and on explicit reset."""
-    panel.setContentSize_(DEFAULT_SIZE)
+    panel.setContentSize_((resized_width(DEFAULT_SIZE[0], False, numpad), DEFAULT_SIZE[1]))
     panel.setFrame_display_(panel.constrainFrameRect_toScreen_(panel.frame(), panel.screen()), False)
 
 
@@ -167,14 +209,14 @@ def keyboard_status():
 ROW_UNITS = 16
 ROWS: list[Sequence[tuple[str, str, float]]] = [
     [("escape", "Esc", 1)] + [(f"f{i}", f"F{i}", 1) for i in range(1, 13)]
-    + [("extended", "\u22ef", 1), ("insert", "Ins", 1), ("delete_forward", "Del", 1)],
+    + [("input_source", "", 1), ("insert", "Ins", 1), ("delete_forward", "Del", 1)],
     [(char, label, 1) for char, label in zip("`1234567890-=",
       ["`  ~", "1  !", "2  @", "3  #", "4  $", "5  %", "6  ^",
        "7  &", "8  *", "9  (", "0  )", "-  _", "=  +"])]
     + [("delete_or_backspace", "Backspace", 2), ("home", "Home", 1)],
     [("tab", "Tab", 1.5)] + [(c, c.upper(), 1) for c in "qwertyuiop"]
     + [("[", "[  {", 1), ("]", "]  }", 1), ("\\", "\\  |", 1.5), ("end", "End", 1)],
-    [("Caps", "Caps", 2)] + [(c, c.upper(), 1) for c in "asdfghjkl"]
+    [("Caps", "Layer", 2)] + [(c, c.upper(), 1) for c in "asdfghjkl"]
     + [(";", ";  :", 1), ("'", "'  \"", 1), ("return_or_enter", "Enter", 2), ("page_up", "PgUp", 1)],
     [("LShift", "Shift", 1.5), ("non_us_backslash", "\\  |", 1)]
     + [(c, c.upper(), 1) for c in "zxcvbnm"]
@@ -211,7 +253,7 @@ def send_command(command):
 def create_panel(state, *, remember_frame=True):
     A: Any = importlib.import_module("AppKit")
     F: Any = importlib.import_module("Foundation")
-    importlib.import_module("Quartz")  # Register CGColor bridging for layer colors.
+    Q: Any = importlib.import_module("Quartz")
     objc: Any = importlib.import_module("objc")
 
     class CapsKeyboardPanel(A.NSPanel):
@@ -232,27 +274,36 @@ def create_panel(state, *, remember_frame=True):
         def update_appearance(self):
             name = str(self.identifier() or "")
             # AppKit may leave momentary controls ON after their action returns.
-            held_key = bool(name) and name != "extended" and bool(self.state())
-            active = held_key or getattr(self, "pointer_down", False)
-            locked = getattr(self, "locked", False)
-            hovered = getattr(self, "hovered", False) and self.isEnabled()
+            held_key = bool(name) and name not in ("input_source", "pad_mode") and bool(self.state())
+            active = held_key or (self.toggle_button and bool(self.state())) or self.pointer_down
+            locked = self.locked
+            hovered = self.hovered and self.isEnabled()
+            appearance = (name, active, locked, hovered, bool(self.state()) if name == "pad_mode" else None)
+            if appearance == self.appearance:
+                return
             base = key_color(name) if name else (210, 215, 220)
-            rgb = LOCKED_BACKGROUND if locked else tuple(
-                channel * .42 if active else channel + (255 - channel) * .35 if hovered else channel
-                for channel in base)
+            if name == "pad_mode":
+                rgb = NUMPAD_MODE_COLORS["pressed" if active else "on" if self.state() else "off"]
+            else:
+                rgb = LOCKED_BACKGROUND if locked else tuple(
+                    channel * .42 if active else channel + (255 - channel) * .35 if hovered else channel
+                    for channel in base)
             color = A.NSColor.colorWithCalibratedRed_green_blue_alpha_(
                 *(channel / 255 for channel in rgb), 1 if name or active or hovered else 0)
             self.layer().setBackgroundColor_(color.CGColor())
             self.layer().setBorderWidth_(2 if active else 1 if hovered else .5 if name else 0)
             if not name:
                 self.setContentTintColor_(A.NSColor.whiteColor() if active else A.NSColor.labelColor())
+                self.appearance = appearance
                 return
             title = self.attributedTitle().mutableCopy()
+            light_text = bool(self.state()) and not active if name == "pad_mode" else active or name == "input_source"
             text_color = (A.NSColor.colorWithCalibratedRed_green_blue_alpha_(
                 *(channel / 255 for channel in LOCKED_TEXT), 1) if locked else
-                A.NSColor.colorWithCalibratedWhite_alpha_(1 if active or name == "extended" else .12, 1))
+                A.NSColor.colorWithCalibratedWhite_alpha_(1 if light_text else .12, 1))
             title.addAttribute_value_range_(A.NSForegroundColorAttributeName, text_color, (0, title.length()))
             self.setAttributedTitle_(title)
+            self.appearance = appearance
 
         def mouseEntered_(self, event):
             self.hovered = True
@@ -272,6 +323,7 @@ def create_panel(state, *, remember_frame=True):
             self.lock_timer = None
             self.update_appearance()
             self.displayIfNeeded()
+            Q.CATransaction.flush()
             try:
                 objc.super(CapsKeyboardButton, self).mouseDown_(event)
             finally:
@@ -280,12 +332,12 @@ def create_panel(state, *, remember_frame=True):
                     self.lock_timer = None
                 self.pointer_down = False
                 name = str(self.identifier() or "")
-                if not name or name == "extended":
+                if (not name and not self.toggle_button) or name == "input_source":
                     self.setState_(0)
                 window = self.window()
                 self.hovered = bool(window and window.isVisible() and A.NSPointInRect(
                     self.convertPoint_fromView_(window.mouseLocationOutsideOfEventStream(), None), self.bounds()))
-                if name in keys.KEY_CODES and name not in EVENT_KEYS:
+                if (name in keys.KEY_CODES and name not in EVENT_KEYS) or (name.startswith("pad_") and name != "pad_mode"):
                     self.target().release_safely(preserve_locked=True)
                 elif self.identifier():
                     self.target().sync_buttons()
@@ -309,6 +361,9 @@ def create_panel(state, *, remember_frame=True):
             self.legends = {}
             self.timer = None
             self.key_down = None
+            self.key_down_name = None
+            self.key_flags = 0
+            self.key_tap = keys.SESSION_EVENT_TAP
             self.closed = False
             self.remote = False
             self.secondary_triggers = set()
@@ -319,6 +374,9 @@ def create_panel(state, *, remember_frame=True):
             self.remapping = True
             self.runtime_warning = ""
             self.previous_input_source = None
+            self.numpad_visible = False
+            self.numeric_mode = True
+            self.label_layout = None
 
         @objc.python_method
         def refresh_status(self):
@@ -383,8 +441,13 @@ def create_panel(state, *, remember_frame=True):
         @objc.python_method
         def update_labels(self):
             size = self.panel.contentView().bounds().size
-            compact = size.width < 640 or size.height < 260
-            for row in ROWS:
+            label_layout = (size.width, size.height, self.remote, self.numpad_visible, self.numeric_mode)
+            if label_layout == self.label_layout:
+                return
+            main_width = resized_width(size.width, self.numpad_visible, False)
+            compact = main_width < 640 or size.height < 260
+            pad_labels = [(row[0], row[1 if self.numeric_mode else 3], row[7]) for row in NUMPAD]
+            for row in [*ROWS, pad_labels]:
                 for name, label, units in row:
                     if not name:
                         continue
@@ -395,27 +458,44 @@ def create_panel(state, *, remember_frame=True):
                          else 10 if len(text) == 2 else 11)
                         if compact else (11 if len(text) > 3 else 13))
                     button = self.buttons[name]
+                    if name.startswith("pad_") and self.numpad_visible:
+                        width = (size.width - 5) / (ROW_UNITS + NUMPAD_UNITS) * units - 3
+                    else:
+                        width = (main_width - 5) / ROW_UNITS * units - 3
                     font = A.NSFont.systemFontOfSize_(points)
+                    measured = F.NSAttributedString.alloc().initWithString_attributes_(
+                        text, {A.NSFontAttributeName: font}).size().width
+                    if measured > width - 4:
+                        font = A.NSFont.systemFontOfSize_(points * max(1, width - 4) / measured)
                     button.setFont_(font)
                     button.setAttributedTitle_(F.NSAttributedString.alloc().initWithString_attributes_(text, {
                         A.NSFontAttributeName: font,
                         A.NSForegroundColorAttributeName: A.NSColor.colorWithCalibratedWhite_alpha_(
-                            1 if name == "extended" else .12, 1),
+                            1 if name == "input_source" else .12, 1),
                     }))
+                    button.appearance = None
                     button.update_appearance()
-                    if name == "extended":
-                        button.setToolTip_("Extended keys")
+                    if name == "input_source":
+                        button.setToolTip_("Switch input source")
+                    elif name == "pad_mode":
+                        button.setToolTip_("Local keypad mode: numbers" if self.numeric_mode else "Local keypad mode: navigation")
                     elif name != "Caps":
                         button.setToolTip_(f"{label} ({name})")
+            self.label_layout = label_layout
 
         @objc.python_method
         def sync_buttons(self):
             for name, button in self.buttons.items():
                 active = (name == "Caps" and state.caps) or name in state.held or (
-                    self.key_down is not None and keys.KEY_CODES.get(name) == self.key_down)
-                button.setEnabled_(self.permitted)
-                button.setState_(int(active))
+                    self.key_down is not None and name == self.key_down_name)
+                enabled = self.permitted and not (name == "pad_5" and not self.numeric_mode)
+                selected = int(self.numeric_mode if name == "pad_mode" else active)
+                if button.isEnabled() != enabled:
+                    button.setEnabled_(enabled)
+                if button.state() != selected:
+                    button.setState_(selected)
                 button.locked = name in self.locked_modifiers and name in state.held
+                button.update_appearance()
             self.update_context()
 
         def clicked_(self, sender):
@@ -427,8 +507,13 @@ def create_panel(state, *, remember_frame=True):
                     return
                 if self.key_down is not None:
                     self.release(preserve_locked=True)
-                if name == "extended":
-                    self.show_extended_keys(sender)
+                if name == "input_source":
+                    self.inputSource_(sender)
+                    return
+                if name == "pad_mode":
+                    self.release()
+                    self.numeric_mode = not self.numeric_mode
+                    self.sync_buttons()
                     return
                 if name == "Caps" and not self.remapping:
                     self.release_safely()
@@ -451,9 +536,21 @@ def create_panel(state, *, remember_frame=True):
                             self.secondary_triggers.clear()
                     self.sync_buttons()
                     return
-                code = keys.KEY_CODES[name]
-                keys.post_key_event(code, True, state.flags(), event_tap=state.event_tap)
+                flags, tap = state.flags(), state.event_tap
+                if name.startswith("pad_"):
+                    output = numpad_output(name, self.numeric_mode)
+                    if output is None:
+                        return
+                    code, extra_flags = output
+                    labels = (RDP_LABELS if self.remote else NORMAL_LABELS) if self.remapping else DIRECT_LABELS
+                    flags = mapped_modifier_flags(state.held, labels) | extra_flags | (flags & keys.CAPS_LOCK_FLAG)
+                    tap = keys.SESSION_EVENT_TAP
+                else:
+                    code = keys.KEY_CODES[name]
+                keys.post_key_event(code, True, flags, event_tap=tap)
                 self.key_down = code
+                self.key_down_name = name
+                self.key_flags, self.key_tap = flags, tap
                 self.sync_buttons()
                 if not tracking:
                     # Accessibility/programmatic clicks have no mouse-up callback.
@@ -495,9 +592,20 @@ def create_panel(state, *, remember_frame=True):
                 item.setTag_(index)
                 item.setTarget_(self)
                 menu.addItem_(item)
+            menu.addItem_(A.NSMenuItem.separatorItem())
+            utilities = [("Release all modifiers (Caps+`)", self.releaseAll_),
+                         ("Refresh keyboard status", self.refresh_), ("Quit", self.quit_)]
+            for index, (title, _) in enumerate(utilities, len(options)):
+                item = A.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(title, "extendedSelected:", "")
+                item.setTag_(index)
+                item.setTarget_(self)
+                menu.addItem_(item)
             menu.popUpMenuPositioningItem_atLocation_inView_(None, (0, -4), sender)
             # Post only after menu tracking ends, so the menu cannot consume the key.
             if self.extended_selection is None:
+                return
+            if self.extended_selection >= len(options):
+                utilities[self.extended_selection - len(options)][1](sender)
                 return
             current = workspace.frontmostApplication()
             if current is None or current.processIdentifier() != pid:
@@ -511,6 +619,13 @@ def create_panel(state, *, remember_frame=True):
         def extendedSelected_(self, sender):
             self.extended_selection = sender.tag()
 
+        def extended_(self, sender):
+            try:
+                self.refresh_status()
+                self.show_extended_keys(sender)
+            except Exception as exc:
+                report_error(exc)
+
         @objc.python_method
         def release(self, *, preserve_locked=False):
             if self.timer:
@@ -518,8 +633,9 @@ def create_panel(state, *, remember_frame=True):
                 self.timer = None
             try:
                 if self.key_down is not None:
-                    keys.post_key_event(self.key_down, False, state.flags(), event_tap=state.event_tap)
+                    keys.post_key_event(self.key_down, False, self.key_flags, event_tap=self.key_tap)
                     self.key_down = None
+                    self.key_down_name = None
             finally:
                 try:
                     keep = self.locked_modifiers.copy() if preserve_locked else set()
@@ -568,10 +684,8 @@ def create_panel(state, *, remember_frame=True):
                         raise RuntimeError("Accessibility permission required")
                     # Match physical Caps -> F1 in the RDP rule, without re-entering HID.
                     keys.post_keystroke(keys.KEY_CODES["f1"])
-                    self.show_feedback("Remote language key sent (F1)")
                 else:
                     self.previous_input_source = switch_input_source(self.previous_input_source)
-                    self.show_feedback("Input source switched")
             except Exception as exc:
                 report_error(exc)
 
@@ -586,10 +700,7 @@ def create_panel(state, *, remember_frame=True):
 
         @objc.python_method
         def show_feedback(self, text, *, level="info"):
-            if getattr(self, "menu_tracking", False):
-                self.menu_feedback = (text, level)
-            else:
-                notify(text, level=level)
+            notify(text, level=level)
 
         def mouseEntered_(self, event):
             self.refresh_status()
@@ -608,7 +719,7 @@ def create_panel(state, *, remember_frame=True):
 
         def resetSize_(self, sender):
             try:
-                reset_window_size(self.panel)
+                reset_window_size(self.panel, numpad=self.numpad_visible)
                 self.show_feedback("Window size reset")
             except Exception as exc:
                 report_error(exc)
@@ -616,20 +727,20 @@ def create_panel(state, *, remember_frame=True):
         def quit_(self, sender):
             self.panel.performClose_(None)
 
-        def menu_(self, sender):
-            self.refresh_status()
-            self.menu_tracking = True
-            self.menu_feedback = None
-            try:
-                self.menu.popUpMenuPositioningItem_atLocation_inView_(None, (0, -4), sender)
-            finally:
-                self.menu_tracking = False
-            # Menu callbacks may replace None while AppKit tracks the menu.
-            feedback: tuple[str, str] | None = getattr(self, "menu_feedback", None)
-            self.menu_feedback = None
-            if feedback is not None:
-                text, level = feedback
-                self.show_feedback(text, level=level)
+        def numpad_(self, sender):
+            self.release_safely()
+            size = self.panel.contentView().bounds().size
+            expanded = not self.numpad_visible
+            width = resized_width(size.width, self.numpad_visible, expanded)
+            self.numpad_visible = expanded
+            self.panel.setContentMinSize_((resized_width(MINIMUM_SIZE[0], False, expanded), MINIMUM_SIZE[1]))
+            self.panel.setContentSize_((round(width), size.height))
+            self.panel.setFrame_display_(self.panel.constrainFrameRect_toScreen_(self.panel.frame(), self.panel.screen()), False)
+            button = self.toolbar["numpad:"]
+            button.setState_(int(expanded))
+            button.setToolTip_("Hide numeric keypad" if expanded else "Show numeric keypad")
+            button.update_appearance()
+            self.layout()
 
         def contextChanged_(self, notification):
             # Never carry sticky modifiers into a different target application.
@@ -670,14 +781,15 @@ def create_panel(state, *, remember_frame=True):
         @objc.python_method
         def layout(self):
             size = self.panel.contentView().bounds().size
-            compact = size.width < 640 or size.height < 260
+            compact = resized_width(size.width, self.numpad_visible, False) < 640 or size.height < 260
             margin, gap, header = 4, 3, 22
             footer = 14 if compact else 16
             self.update_labels()
             for label in self.legends.values():
                 label.setFont_(A.NSFont.systemFontOfSize_(9 if compact else 11))
             self.status.setFont_(A.NSFont.systemFontOfSize_(10 if compact else 12))
-            unit = (size.width - 2 * margin + gap) / ROW_UNITS
+            total_units = ROW_UNITS + (NUMPAD_UNITS if self.numpad_visible else 0)
+            unit = (size.width - 2 * margin + gap) / total_units
             row_height = (size.height - footer - header - margin) / 6
             for row_index, row in enumerate(ROWS):
                 x = margin
@@ -689,6 +801,14 @@ def create_panel(state, *, remember_frame=True):
                         if name in self.legends:
                             self.legends[name].setFrame_(((x, margin - 2), (width, max(0, footer - 1))))
                     x += units * unit
+            numpad_row_height = row_height * len(ROWS) / 5
+            for name, _, _, _, _, column, row, width, height in NUMPAD:
+                button = self.buttons[name]
+                button.setHidden_(not self.numpad_visible)
+                if self.numpad_visible:
+                    x = margin + (ROW_UNITS + column) * unit
+                    y = size.height - header - (row + height) * numpad_row_height
+                    button.setFrame_(((x, y), (width * unit - gap, height * numpad_row_height - gap)))
             toolbar_width = len(self.toolbar) * 26
             self.status.setFrame_(((margin, size.height - header + 2),
                                    (size.width - 2 * margin - toolbar_width - 4, 18)))
@@ -730,10 +850,16 @@ def create_panel(state, *, remember_frame=True):
         for name, label, _ in row:
             if name:
                 controller.buttons[name] = (label, name)
+    for name, label, *_ in NUMPAD:
+        controller.buttons[name] = (label, name)
     for name, (label, _) in list(controller.buttons.items()):
         button = CapsKeyboardButton.alloc().initWithFrame_(((0, 0), (40, 40)))
         button.setIdentifier_(name)
         button.setTitle_(label)
+        if name == "input_source":
+            button.setImage_(A.NSImage.imageWithSystemSymbolName_accessibilityDescription_("globe", "Switch input source"))
+            button.setImagePosition_(A.NSImageOnly)
+            button.setContentTintColor_(A.NSColor.whiteColor())
         button.setFont_(A.NSFont.systemFontOfSize_(11 if len(label) > 3 else 13))
         button.setAlignment_(A.NSTextAlignmentCenter)
         button.cell().setWraps_(False)
@@ -749,7 +875,7 @@ def create_panel(state, *, remember_frame=True):
         button.cell().setShowsStateBy_(A.NSNoCellMask)
         if name in EVENT_KEYS or name == "Caps":
             button.sendActionOn_(A.NSEventMaskLeftMouseDown)
-        if name in keys.KEY_CODES and name not in EVENT_KEYS:
+        if (name in keys.KEY_CODES and name not in EVENT_KEYS) or (name.startswith("pad_") and name != "pad_mode"):
             button.sendActionOn_(A.NSEventMaskLeftMouseDown)
         button.setRefusesFirstResponder_(True)
         button.setToolTip_("Caps function layer" if name == "Caps" else name)
@@ -770,11 +896,11 @@ def create_panel(state, *, remember_frame=True):
     controller.status.setLineBreakMode_(A.NSLineBreakByTruncatingTail)
     content.addSubview_(controller.status)
     controller.toolbar = {}
-    for action, symbol, title in [("inputSource:", "globe", "Switch input source"),
+    for action, symbol, title in [("minimize:", "minus", "Minimize"),
+                                   ("extended:", "ellipsis", "Extended keys and actions"),
+                                   ("numpad:", "number.square", "Show numeric keypad"),
                                    ("reset:", "xmark.circle", "Release screen keys"),
-                                   ("minimize:", "minus", "Minimize"),
-                                   ("resetSize:", "arrow.counterclockwise", "Reset window size"),
-                                   ("menu:", "ellipsis.circle", "Keyboard menu")]:
+                                   ("resetSize:", "arrow.counterclockwise", "Reset window size")]:
         button = CapsKeyboardButton.alloc().initWithFrame_(((0, 0), (24, 18)))
         button.setImage_(A.NSImage.imageWithSystemSymbolName_accessibilityDescription_(symbol, title))
         button.setButtonType_(A.NSButtonTypeMomentaryPushIn)
@@ -791,22 +917,19 @@ def create_panel(state, *, remember_frame=True):
         content.addSubview_(button)
         controller.toolbar[action] = button
     for button in (*controller.buttons.values(), *controller.toolbar.values()):
+        # Missing Python attributes trigger expensive PyObjC selector lookups.
+        button.pointer_down = False
+        button.hovered = False
+        button.locked = False
+        button.appearance = None
+        button.toggle_button = str(button.action()) == "numpad:"
+        if button.toggle_button:
+            button.setButtonType_(A.NSButtonTypePushOnPushOff)
+        button.layer().setActions_({name: F.NSNull.null() for name in ("backgroundColor", "borderWidth")})
         tracking = A.NSTrackingArea.alloc().initWithRect_options_owner_userInfo_(
             button.bounds(), A.NSTrackingMouseEnteredAndExited | A.NSTrackingActiveAlways
             | A.NSTrackingInVisibleRect | A.NSTrackingCursorUpdate, button, None)
         button.addTrackingArea_(tracking)
-    menu = A.NSMenu.alloc().initWithTitle_("Caps Keyboard")
-    menu.setAutoenablesItems_(False)
-    for title, action in [("Release all modifiers (Caps+`)", "releaseAll:"),
-                          ("Refresh keyboard status", "refresh:"),
-                          (None, None), ("Quit", "quit:")]:
-        if title is None:
-            menu.addItem_(A.NSMenuItem.separatorItem())
-        else:
-            item = A.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(title, action, "")
-            item.setTarget_(controller)
-            menu.addItem_(item)
-    controller.menu = menu
     tracking = A.NSTrackingArea.alloc().initWithRect_options_owner_userInfo_(
         content.bounds(), A.NSTrackingMouseEnteredAndExited | A.NSTrackingActiveAlways
         | A.NSTrackingInVisibleRect | A.NSTrackingCursorUpdate, controller, None)

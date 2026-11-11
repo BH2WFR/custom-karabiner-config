@@ -6,6 +6,10 @@ Designed around a two-level **`Caps` layer** with context-aware remapping for RD
 
 Repository: [BH2WFR/custom-karabiner-config](https://github.com/BH2WFR/custom-karabiner-config)
 
+Related tools: [BH2WFR/PersonalScripts](https://github.com/BH2WFR/PersonalScripts), including the Unicode Inspector used by `Caps+7`.
+
+Sister project for Windows: [BH2WFR/custom-autohotkey-config](https://github.com/BH2WFR/custom-autohotkey-config).
+
 **LICENSE**: GPL v3
 
 ## Abbreviation Reference
@@ -84,7 +88,7 @@ When Microsoft Remote Desktop / Windows App / UU Remote is frontmost, hold physi
 | `Caps+4` | Wrap selected text in `${` and `}` | Replaces the selection through plain-text paste |
 | `Caps+6` / `Caps+Shift+6` | Lowercase / uppercase selected text | Supports Unicode |
 | `Caps+Shift+7` | Title-case selected text | Capitalizes each word and lowercases the remaining letters |
-| `Caps+7` | Inspect selected text and Unicode characters | If copying fails or yields no text, opens a blank inspector for manual paste/editing, then shows a non-blocking error tooltip. Press `Commit` to reparse; non-BMP characters are brown. Within BMP, controls are red, spaces and other special characters green, and other non-ASCII characters blue |
+| `Caps+7` | Inspect selected text in the external Unicode Inspector | Automatically copies the selection and restores the previous clipboard. On copy failure, opens a blank window, then shows an error tooltip. Use `Paste` / `Analyze` to inspect edited text |
 | `Caps+V` | **Paste as plain text** | Uses `scripts/paste_without_format.py` (depends on `pyobjc-framework-Cocoa`); sends a paced `Cmd+V` press/release sequence through CoreGraphics to avoid stuck modifiers; <br />when **copying files from Finder, pastes file paths** (one per line for multiple files); rejects content without text and keeps the clipboard unchanged |
 | `Caps+Shift+V` | **Advanced paste** | Uses `scripts/paste_without_format.py --advanced`; releases `Shift` and posts `Cmd+V` through CoreGraphics; <br />strips zero-width chars, normalises spaces, converts full-width→half-width, de-quotes, splits ligatures, CJK-aware line-break removal (while copied from paragraphs from a PDF file), path-slash conversion — then pastes with `Cmd+V` |
 | `Caps+Tab` | Indent selected lines | Uses `scripts/indent_select_lines.py` <br />(stdlib only) |
@@ -132,7 +136,7 @@ When Microsoft Remote Desktop / Windows App / UU Remote is frontmost, hold physi
 
 Image repair, window centering, display toggling and rejected text input/paste show English tooltips without taking focus: gray for results, amber for warnings, red for errors.
 
-Selected-text tools use `Cmd+C` and restore the previous clipboard after processing. `Caps+7` replaces the former `Caps+Shift+U` Terminal workflow and shows five copyable counters in one row. Character counts use Unicode code points; UTF-8/UTF-16 byte counts exclude an added BOM (non-BMP characters use 4 bytes in UTF-16). Words are letter/digit/underscore groups (no Chinese word segmentation), and line counts include a trailing empty line.
+Selected-text tools use `Cmd+C` and restore the previous clipboard after processing. `Caps+7` opens the Unicode Inspector from PersonalScripts; its UI and character analysis are maintained there.
 
 The window inspector keeps the captured target when it comes to the foreground. Restart preserves the process's argument list, working directory and readable environment; it cancels if these cannot be obtained or the old process does not exit. A restart launches the executable directly, so applications managed by launchers or services may need their own restart mechanism.
 
@@ -194,7 +198,11 @@ The shortcuts in this section are **tailored** to my own Rime, Anki, and Cherry 
 
 ## Screen Keyboard
 
-The keyboard content area uses the standard arrow pointer; window-edge resizing retains the system cursor.
+The layer key reads `Layer`, or `Layer(F1)` in RDP. The globe input-source button sits between F12 and Ins and switches without a success tooltip. In the toolbar, Minimize sits immediately left of the `...` menu for extended keys and keyboard actions.
+
+The numeric-keypad toolbar toggle stays highlighted while the keypad is expanded. The five-row keypad sits directly beside the main keys, aligned at the top and bottom, with a green Enter key. Its `Num` / `Nav` button uses dark rust for numbers, peach for navigation and light peach while pressed. This is an independent numbers/navigation mode, not the system or remote NumLock state. Numbers use ordinary digit keys to avoid remote NumLock dependence; navigation mode sends Home/End/arrows/Ins/Del (the center `5` is inactive). Keypad output bypasses Caps layers and preserves mapped modifiers.
+
+Keys show pressed colors immediately, without fade animations. The keyboard content area uses the standard arrow pointer; window-edge resizing retains the system cursor.
 
 Build/register the local Dock launcher with the existing Conda environment and Xcode Command Line Tools:
 
@@ -266,6 +274,12 @@ Verify that the new path appears in the configuration and that the JSON remains 
 "${BASE_PYTHON}" -m json.tool "${HOME}/.config/karabiner/karabiner.json" >/dev/null
 ```
 
+### Unicode Inspector Replacement
+
+`Caps+7` uses `scripts/launch_unicode_inspector.py` to copy the selection, restore the clipboard and open the external `UnicodeInspector` class from `PersonalScripts/tools/others/unicode-inspector.py`. Text is transferred through a private in-memory pasteboard, not temporary files or command-line arguments. The built-in inspector and `text_actions.py stats` have been removed.
+
+Clone the complete [PersonalScripts repository](https://github.com/BH2WFR/PersonalScripts), not just the script: it imports that repository's `utils` package. In the `ZL` profile's `Caps+7` shell command, replace the path after `--inspector` with your local script path. Replace `/opt/miniconda3/bin/python3` when using another Conda environment; its `python.app` and Tkinter must be available. The launcher locates `python.app` in that environment automatically. Disable the `7` manipulator if the external tool is not installed.
+
 ### Python Environment
 
 Several shortcuts rely on Python scripts and packages installed in the same Miniconda Base environment.
@@ -333,7 +347,7 @@ The Rime, Anki, and Cherry Studio rules are personal shortcuts documented in **P
 - **Secondary clipboard** — `scripts/secondary_clipboard.py` uses `pyobjc-framework-Cocoa`, a named `NSPasteboard`, and the shared `scripts/keyboard_events.py` CoreGraphics helper; it does not write clipboard data to temporary files
 - **Clipboard image repair** — `scripts/repair_clipboard_images.py` uses the same `pyobjc-framework-Cocoa` dependency for AppKit decoding and PNG encoding, entirely in memory.
 - **Keystroke typing** — `scripts/type_clipboard.py` uses Cocoa for the clipboard, CoreGraphics for keys, and `pyobjc-framework-Quartz` to intercept Escape during typing and until the cancelling Escape is released. Python needs Accessibility and, if requested by macOS, Input Monitoring permission.
-- **Text tools** — `scripts/text_actions.py` reuses the clipboard and keyboard helpers; its foreground Unicode inspector uses `tkinter` and the current Conda environment's `python.app`.
+- **Text tools** — `scripts/text_actions.py` reuses the clipboard and keyboard helpers. `Caps+7` separately requires the PersonalScripts checkout and Tkinter; see Unicode Inspector Replacement above.
 - **Window inspector** — `scripts/window_inspector.py` uses `tkinter`, `psutil` and the existing Cocoa/Accessibility helpers. Install `psutil` in the same Python environment if missing; window operations require Accessibility permission, and Finder Get Info may request Automation permission.
 - **Quick-access menu** — `scripts/quick_menu.py` uses `pyobjc-framework-Cocoa`. Common Folders separates personal files, cloud drives, user app data, system/shared directories and startup items. Cloud drives include iCloud Drive and existing OneDrive, Dropbox, Google Drive and Box folders under `~/Library/CloudStorage`; third-party clients must be installed. Custom sync locations can be added as personal folders. Homebrew's cache comes from `brew --cache`.
 - **Custom menu entries** — edit `scripts/quick_menu.json`: `personal_folders` entries use `title` and `path` (`~` supported; relative paths start at the JSON file); `applications` entries use `title`, `name` (without `.app`) and an optional `bundle_id`. Third-party apps appear below a separator in Utilities. Missing directories/apps and empty custom groups are hidden. Changes apply the next time the menu opens.
