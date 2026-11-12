@@ -32,7 +32,8 @@ def _panel_class():
     return KarabinerTooltipPanel
 
 
-def _tooltip_frame(mouse, bounds, width, height):
+def panel_frame_near_pointer(mouse, bounds, width, height):
+    """Place an AppKit frame near the pointer, fitting within visible screen bounds."""
     margin, gap = 8, 16
     left, bottom = bounds.origin.x + margin, bounds.origin.y + margin
     right = bounds.origin.x + bounds.size.width - margin
@@ -72,7 +73,7 @@ def _create_panel(text, level):
         ((0, 0), (min(480, bounds.size.width - 64), 10000))
     )
     width, height = math.ceil(size.width), math.ceil(size.height)
-    frame = _tooltip_frame(mouse, bounds, width + 32, height + 20)
+    frame = panel_frame_near_pointer(mouse, bounds, width + 32, height + 20)
     label.setFrame_(((16, 10), (frame[1][0] - 32, frame[1][1] - 20)))
     panel = _panel_class().alloc().initWithContentRect_styleMask_backing_defer_(
         frame, AppKit.NSWindowStyleMaskBorderless | AppKit.NSWindowStyleMaskNonactivatingPanel,

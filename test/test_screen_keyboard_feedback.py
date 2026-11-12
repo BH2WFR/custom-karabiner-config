@@ -397,6 +397,45 @@ class FeedbackTests(unittest.TestCase):
             self.controller.releaseAll_(None)
             self.error.assert_called_once()
 
+    def test_reopen_places_existing_window_on_pointer_display(self):
+        main, other = Mock(), Mock()
+        main.frame.return_value = self.A.NSMakeRect(0, 0, 1920, 1080)
+        other.frame.return_value = self.A.NSMakeRect(-1440, -200, 1440, 900)
+        other.visibleFrame.return_value = self.A.NSMakeRect(-1440, -160, 1440, 830)
+        notification = Mock()
+        notification.userInfo.return_value = {'command': 'show'}
+        for minimized in (False, True):
+            for point in ((-1000, 300), (-1439, 699), (-1, -199)):
+                with self.subTest(minimized=minimized, point=point), \
+                     patch.object(self.controller, 'panel', Mock()) as panel, \
+                     patch.object(self.controller, 'refresh_status'), \
+                     patch.object(self.A, 'NSScreen') as screens, \
+                     patch.object(self.A, 'NSEvent') as events:
+                    screens.screens.return_value = [main, other]
+                    screens.mainScreen.return_value = main
+                    events.mouseLocation.return_value = self.A.NSMakePoint(*point)
+                    panel.isMiniaturized.return_value = minimized
+                    panel.frame.return_value = self.A.NSMakeRect(0, 0, 700, 260)
+                    self.controller.command_(notification)
+                    frame = panel.setFrame_display_.call_args.args[0]
+                    self.assertTrue(self.A.NSContainsRect(other.visibleFrame(), frame))
+                    self.assertEqual(frame[1], (700, 260))
+                    if point == (-1000, 300):
+                        self.assertEqual(frame[0], (-984, 24))
+                    self.assertEqual(panel.deminiaturize_.call_count, int(minimized))
+                    panel.orderFrontRegardless.assert_called_once_with()
+                    names = [call[0] for call in panel.method_calls]
+                    self.assertLess(names.index('setFrame_display_'), names.index('orderFrontRegardless'))
+                    if minimized:
+                        self.assertLess(names.index('deminiaturize_'), names.index('setFrame_display_'))
+                    panel.makeKeyAndOrderFront_.assert_not_called()
+
+    def test_pointer_frame_fits_oversized_keyboard(self):
+        bounds = self.A.NSMakeRect(-1440, -160, 1440, 830)
+        frame = sk.panel_frame_near_pointer(self.A.NSMakePoint(-700, 300), bounds, 2200, 1200)
+        self.assertTrue(self.A.NSContainsRect(bounds, frame))
+        self.assertEqual(frame, ((-1432, -152), (1424, 814)))
+
     def test_minimize_feedback_only_when_minimized(self):
         with patch.object(self.controller, 'panel', Mock()) as panel:
             panel.isMiniaturized.return_value = True

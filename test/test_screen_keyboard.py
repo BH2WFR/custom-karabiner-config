@@ -127,6 +127,21 @@ class LayoutTests(unittest.TestCase):
             self.assertEqual(sk.main(), 0)
             request.assert_called_once_with()
             command.assert_not_called()
+            controller.show_near_pointer.assert_called_once_with()
+            panel.orderFrontRegardless.assert_not_called()
+
+    def test_duplicate_launch_restores_existing_instance(self):
+        with patch.object(sys, 'argv', ['screen_keyboard.py']), \
+             patch.object(Path, 'mkdir'), \
+             patch.object(Path, 'open', mock_open()), \
+             patch.object(sk.fcntl, 'flock', side_effect=BlockingIOError), \
+             patch.object(sk, 'send_command') as command, \
+             patch.object(keys, 'request_post_events') as request, \
+             patch.object(sk, 'create_panel') as create:
+            self.assertEqual(sk.main(), 0)
+            command.assert_called_once_with('show')
+            request.assert_not_called()
+            create.assert_not_called()
 
     def test_check_does_not_prompt(self):
         with patch.object(sys, 'argv', ['screen_keyboard.py', '--check']), \

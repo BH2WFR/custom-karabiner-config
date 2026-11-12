@@ -17,7 +17,7 @@ from typing import Any
 import keyboard_events as keys
 from input_sources import switch_input_source
 from test_keyboard import CLI, KeyboardState, ROOT, run_panel
-from tooltip import notify
+from tooltip import notify, panel_frame_near_pointer
 
 NOTIFICATION = "com.personal-scripts.caps-keyboard.command"
 DEFAULT_SIZE = (533, 207)
@@ -753,9 +753,19 @@ def create_panel(state, *, remember_frame=True):
                 self.panel.performClose_(None)
             elif command == "show":
                 self.refresh_status()
-                if self.panel.isMiniaturized():
-                    self.panel.deminiaturize_(None)
-                self.panel.orderFrontRegardless()
+                self.show_near_pointer()
+
+        @objc.python_method
+        def show_near_pointer(self):
+            if self.panel.isMiniaturized():
+                self.panel.deminiaturize_(None)
+            mouse = A.NSEvent.mouseLocation()
+            screen = next((screen for screen in A.NSScreen.screens()
+                           if A.NSPointInRect(mouse, screen.frame())), A.NSScreen.mainScreen())
+            size = self.panel.frame().size
+            frame = panel_frame_near_pointer(mouse, screen.visibleFrame(), size.width, size.height)
+            self.panel.setFrame_display_(frame, True)
+            self.panel.orderFrontRegardless()
 
         def windowWillMiniaturize_(self, notification):
             self.release_safely()
@@ -968,7 +978,7 @@ def main():
             state = KeyboardState(EVENT_KEYS)
             app, panel, controller = create_panel(state)
             try:
-                panel.orderFrontRegardless()
+                controller.show_near_pointer()
                 run_panel(app, controller)
             finally:
                 controller.release_safely()

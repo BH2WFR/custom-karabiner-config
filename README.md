@@ -198,6 +198,8 @@ The shortcuts in this section are **tailored** to my own Rime, Anki, and Cherry 
 
 ## Screen Keyboard
 
+Only one keyboard instance runs at a time. Both first launch and reopening place the window near the pointer, within that display's usable area, without taking keyboard focus. Reopening restores and raises the existing window.
+
 The layer key reads `Layer`, or `Layer(F1)` in RDP. The globe input-source button sits between F12 and Ins and switches without a success tooltip. In the toolbar, Minimize sits immediately left of the `...` menu for extended keys and keyboard actions.
 
 The numeric-keypad toolbar toggle stays highlighted while the keypad is expanded. The five-row keypad sits directly beside the main keys, aligned at the top and bottom, with a green Enter key. Its `Num` / `Nav` button uses dark rust for numbers, peach for navigation and light peach while pressed. This is an independent numbers/navigation mode, not the system or remote NumLock state. Numbers use ordinary digit keys to avoid remote NumLock dependence; navigation mode sends Home/End/arrows/Ins/Del (the center `5` is inactive). Keypad output bypasses Caps layers and preserves mapped modifiers.
