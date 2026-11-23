@@ -6,7 +6,7 @@ Designed around a two-level **`Caps` layer** with context-aware remapping for RD
 
 Repository: [BH2WFR/custom-karabiner-config](https://github.com/BH2WFR/custom-karabiner-config)
 
-Related tools: [BH2WFR/PersonalScripts](https://github.com/BH2WFR/PersonalScripts), including the Unicode Inspector used by `Caps+7`.
+Related tools: [BH2WFR/PersonalScripts](https://github.com/BH2WFR/PersonalScripts), including the Unicode Inspector (`Caps+7`) and Screen Keyboard (`Caps+S`).
 
 Sister project for Windows: [BH2WFR/custom-autohotkey-config](https://github.com/BH2WFR/custom-autohotkey-config).
 
@@ -36,7 +36,7 @@ In shortcut notation, `A+B` means that the keys are held together. `[LOpt/RCmd/L
 
 - The active profile is `ZL`.
 - Karabiner's notification window is disabled globally with `enable_notification_window: false`.
-- `enable_cgeventtap_fallback` is a global experimental switch: `true` enables it and `false` disables it; saving the configuration applies the change. Close the screen/test keyboard and release all keys before switching. The screen keyboard never changes this setting.
+- `enable_cgeventtap_fallback` is a global experimental switch: `true` enables it and `false` disables it; saving the configuration applies the change. Close the screen keyboard and release all keys before switching. The screen keyboard never changes this setting.
 - The inactive `Default profile` contains a simple `F1` to `F13` mapping. It does not affect the selected `ZL` profile.
 
 ## Keyboard Mappings
@@ -70,6 +70,8 @@ They can be enabled or disabled independently without changing the normal Caps P
 ## Hotkey Reference
 
 One-shot key shortcuts and editing sequences use `scripts/send_keys.py` and the shared keyboard sender, with complete modifier press/release events that bypass the HID fallback. Modifier remapping, held `Fn` and mouse output remain native Karabiner mappings.
+
+Menus, inspectors, diagnostic tooltips, image repair, clipboard typing and window/display tools launch independently through macOS Launch Services, so another hotkey does not terminate them. Short key macros and ordinary clipboard operations keep their direct launch commands.
 
 ### Caps Primary Layer
 
@@ -131,14 +133,18 @@ When Microsoft Remote Desktop / Windows App / UU Remote is frontmost, hold physi
 | `Caps+P` | Any | **Toggle built-in display on/off** | Uses `scripts/toggle_builtin_screen.py` <br />(ctypes, Apple Silicon only); <br />requires **external monitor** |
 | `Caps+R` | Any except Anki | Fit frontmost window to current display, then center | Uses `scripts/center_front_window.py --fit`; <br />shrinks only if the window is larger than the target display; <br />pass `--display main` to target the main display instead; <br />requires Accessibility permission for Python |
 | `Caps+Shift+R` | Any except Anki | Resize current window to 1024 x 768 logical points and center | Centers on the window's original display without fitting; if the app enforces a different size, centers the actual size and warns |
-| `Caps+S` | Any except Anki | Open or restore the screen keyboard | Requires `~/Applications/Caps Keyboard.app`; does not enable fallback automatically |
-| `Caps+W` | Any except Anki | Inspect and manage the current window | Separate app/window tabs, arguments and AX children; double-click copies a single cell. Grouped actions for closing/centering/resizing windows, files and process management; kill/restart requires confirmation |
+| `Caps+S` | Any except Anki | Open or restore the PersonalScripts screen keyboard | Uses `--force-layer=capslock` in both normal and RDP windows; requires CGEventTap fallback |
+| `Caps+W` | Any except Anki | Inspect and manage windows | Drag the top-left `◎` onto a window or refresh/search the global window list. Chinese labels and layout follow the Windows inspector; double-click copies a cell. Activate previews the target with a red outline for 3 seconds, then returns to the inspector |
 
 Image repair, window centering, display toggling and rejected text input/paste show English tooltips without taking focus: gray for results, amber for warnings, red for errors.
 
 Selected-text tools use `Cmd+C` and restore the previous clipboard after processing. `Caps+7` opens the Unicode Inspector from PersonalScripts; its UI and character analysis are maintained there.
 
-The window inspector keeps the captured target when it comes to the foreground. Restart preserves the process's argument list, working directory and readable environment; it cancels if these cannot be obtained or the old process does not exit. A restart launches the executable directly, so applications managed by launchers or services may need their own restart mechanism.
+The window inspector keeps its captured target when it comes to the foreground. Drag `◎` to highlight a window and release to inspect it; Esc cancels a drag. The list supports titles, app names and `PID:123` searches, with an option to include hidden apps and minimized windows. “刷新列表” updates the window list, “刷新信息” updates the selected target, and “读取控件” reads up to 500 direct AX children on demand. The initial list prompt and picker hints follow the Windows version.
+
+“显示边界” outlines the target for 3 seconds without taking focus. “激活窗口” restores and raises the target, outlines it, then returns focus to the inspector; it temporarily suspends the inspector's own always-on-top setting. Window actions include centering, resetting to 1024 × 768 logical points and centering, minimizing, and closing. Copying and actions give non-activating tooltips. Target-window opacity, always-on-top and click-through controls from Windows are not provided on macOS.
+
+Closing a window and killing/restarting a process require confirmation. Restart preserves the process's argument list, working directory and readable environment; it cancels if these cannot be obtained or the old process does not exit. A restart launches the executable directly, so applications managed by launchers or services may need their own restart mechanism.
 
 ### Caps Secondary Layer
 
@@ -198,21 +204,19 @@ The shortcuts in this section are **tailored** to my own Rime, Anki, and Cherry 
 
 ## Screen Keyboard
 
-Only one keyboard instance runs at a time. Both first launch and reopening place the window near the pointer, within that display's usable area, without taking keyboard focus. Reopening restores and raises the existing window.
-
-The layer key reads `Layer`, or `Layer(F1)` in RDP. The globe input-source button sits between F12 and Ins and switches without a success tooltip. In the toolbar, Minimize sits immediately left of the `...` menu for extended keys and keyboard actions.
-
-The numeric-keypad toolbar toggle stays highlighted while the keypad is expanded. The five-row keypad sits directly beside the main keys, aligned at the top and bottom, with a green Enter key. Its `Num` / `Nav` button uses dark rust for numbers, peach for navigation and light peach while pressed. This is an independent numbers/navigation mode, not the system or remote NumLock state. Numbers use ordinary digit keys to avoid remote NumLock dependence; navigation mode sends Home/End/arrows/Ins/Del (the center `5` is inactive). Keypad output bypasses Caps layers and preserves mapped modifiers.
-
-Keys show pressed colors immediately, without fade animations. The keyboard content area uses the standard arrow pointer; window-edge resizing retains the system cursor.
-
-Build/register the local Dock launcher with the existing Conda environment and Xcode Command Line Tools:
+`Caps+S` runs the screen keyboard maintained in [PersonalScripts](https://github.com/BH2WFR/PersonalScripts):
 
 ```bash
-/opt/miniconda3/bin/python3 installation/install_screen_keyboard.py
+/usr/bin/open -g -n -a /opt/miniconda3/python.app \
+  --env PYTHONEXECUTABLE=/opt/miniconda3/bin/python3 --args \
+  "${HOME}/gitRepo/PersonalScripts/tools/others/screen-keyboard.py" --force-layer=capslock
 ```
 
-The installer creates `~/Applications/Caps Keyboard.app`; drag it into Dock. It uses this checkout and Python installation, not a bundled Python runtime. Grant **Caps Keyboard** Accessibility permission for key output. Enable fallback manually to use Karabiner layers; ordinary keyboard mode works with fallback off. The installer changes neither Dock settings nor fallback.
+Both normal and RDP windows use the same argument; Karabiner handles Caps-to-F1 remapping. Launch Services runs the keyboard independently: a later Karabiner shell command must not terminate it while it holds keys. The external keyboard manages single-instance reopening and positioning near the pointer without taking focus.
+
+Keep the complete PersonalScripts checkout, including its `utils` package and `screen_keyboard` modules. To adapt the path, edit the `Caps+S` shell command in the `ZL` profile; replace both the `python.app` and `PYTHONEXECUTABLE` paths if using another Conda environment. The interpreter needs PyObjC Cocoa/Quartz, PyYAML and Accessibility permission. Enable CGEventTap fallback manually.
+
+The local keyboard implementation and installer have been removed. Exit any old keyboard instance before switching. An existing `~/Applications/Caps Keyboard.app` or Dock shortcut still points to the removed code and is no longer used by `Caps+S`.
 
 ## Migration Guide
 
@@ -258,7 +262,7 @@ BASE_PYTHON="$(conda run -n base python -c 'import sys; print(sys.executable)')"
 printf '%s\n' "${BASE_PYTHON}"
 ```
 
-Before adapting the configuration, back it up and replace only the current interpreter path in `karabiner.json`:
+Before adapting the configuration, back it up and replace the current interpreter path in `karabiner.json`:
 
 ```bash
 cp "${HOME}/.config/karabiner/karabiner.json" "${HOME}/.config/karabiner/karabiner.json.bak"
@@ -276,11 +280,13 @@ Verify that the new path appears in the configuration and that the JSON remains 
 "${BASE_PYTHON}" -m json.tool "${HOME}/.config/karabiner/karabiner.json" >/dev/null
 ```
 
+For independent GUI/heavy-tool launches, also replace `/opt/miniconda3/python.app` with your environment's `python.app` path in every `/usr/bin/open` command. Keep `-g -n`, `--env PYTHONEXECUTABLE=...`, and the arguments after `--args`; do not add `-W`.
+
 ### Unicode Inspector Replacement
 
 `Caps+7` uses `scripts/launch_unicode_inspector.py` to copy the selection, restore the clipboard and open the external `UnicodeInspector` class from `PersonalScripts/tools/others/unicode-inspector.py`. Text is transferred through a private in-memory pasteboard, not temporary files or command-line arguments. The built-in inspector and `text_actions.py stats` have been removed.
 
-Clone the complete [PersonalScripts repository](https://github.com/BH2WFR/PersonalScripts), not just the script: it imports that repository's `utils` package. In the `ZL` profile's `Caps+7` shell command, replace the path after `--inspector` with your local script path. Replace `/opt/miniconda3/bin/python3` when using another Conda environment; its `python.app` and Tkinter must be available. The launcher locates `python.app` in that environment automatically. Disable the `7` manipulator if the external tool is not installed.
+Clone the complete [PersonalScripts repository](https://github.com/BH2WFR/PersonalScripts), not just the script: it imports that repository's `utils` package. In the `ZL` profile's `Caps+7` shell command, replace the path after `--inspector` with your local script path. For another Conda environment, replace both the `python.app` and `PYTHONEXECUTABLE` paths; Tkinter must be available. Disable the `7` manipulator if the external tool is not installed.
 
 ### Python Environment
 
@@ -350,7 +356,7 @@ The Rime, Anki, and Cherry Studio rules are personal shortcuts documented in **P
 - **Clipboard image repair** — `scripts/repair_clipboard_images.py` uses the same `pyobjc-framework-Cocoa` dependency for AppKit decoding and PNG encoding, entirely in memory.
 - **Keystroke typing** — `scripts/type_clipboard.py` uses Cocoa for the clipboard, CoreGraphics for keys, and `pyobjc-framework-Quartz` to intercept Escape during typing and until the cancelling Escape is released. Python needs Accessibility and, if requested by macOS, Input Monitoring permission.
 - **Text tools** — `scripts/text_actions.py` reuses the clipboard and keyboard helpers. `Caps+7` separately requires the PersonalScripts checkout and Tkinter; see Unicode Inspector Replacement above.
-- **Window inspector** — `scripts/window_inspector.py` uses `tkinter`, `psutil` and the existing Cocoa/Accessibility helpers. Install `psutil` in the same Python environment if missing; window operations require Accessibility permission, and Finder Get Info may request Automation permission.
+- **Window inspector** — `scripts/window_inspector.py` uses `tkinter`, `psutil` and the Cocoa/Accessibility helpers; `scripts/window_picker.py` provides window discovery, drag selection and outlines. Install `psutil` in the same Python environment if missing; window discovery and operations require Accessibility permission, and Finder Get Info may request Automation permission. Lists contain only windows exposed by the applications through Accessibility.
 - **Quick-access menu** — `scripts/quick_menu.py` uses `pyobjc-framework-Cocoa`. Common Folders separates personal files, cloud drives, user app data, system/shared directories and startup items. Cloud drives include iCloud Drive and existing OneDrive, Dropbox, Google Drive and Box folders under `~/Library/CloudStorage`; third-party clients must be installed. Custom sync locations can be added as personal folders. Homebrew's cache comes from `brew --cache`.
 - **Custom menu entries** — edit `scripts/quick_menu.json`: `personal_folders` entries use `title` and `path` (`~` supported; relative paths start at the JSON file); `applications` entries use `title`, `name` (without `.app`) and an optional `bundle_id`. Third-party apps appear below a separator in Utilities. Missing directories/apps and empty custom groups are hidden. Changes apply the next time the menu opens.
 - **Menu commands** — `commands` entries use `title`, `command` and `output`: `gui` (default) opens immediately with `Running...`, provides a merged Live Output tab (labeled by source, in arrival order), separate stdout/stderr tabs and the final exit code; `terminal` opens Terminal for interactive commands. Commands run through `/bin/zsh -lc`, with optional `cwd` (default `~`; relative paths start at the JSON file). GUI mode strips ANSI controls, supports copying and Stop, has no stdin and retains up to 1 MiB per stream; it does not block reopening the menu. Programs that buffer output may need an unbuffered option, such as Python's `-u`. The included 10-second test outputs the current time once per second, alternating stdout/stderr. Only add commands you trust.

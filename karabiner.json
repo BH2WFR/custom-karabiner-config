@@ -40,7 +40,7 @@
                                 "to": [
                                     {
                                         "repeat": false,
-                                        "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/show_input_info.py --layer secondary"
+                                        "shell_command": "/usr/bin/open -g -n -a /opt/miniconda3/python.app --env PYTHONEXECUTABLE=/opt/miniconda3/bin/python3 --args \"${HOME}/.config/karabiner/scripts/show_input_info.py\" --layer secondary"
                                     }
                                 ],
                                 "type": "basic"
@@ -60,7 +60,7 @@
                                 "to": [
                                     {
                                         "repeat": false,
-                                        "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/show_input_info.py --layer primary"
+                                        "shell_command": "/usr/bin/open -g -n -a /opt/miniconda3/python.app --env PYTHONEXECUTABLE=/opt/miniconda3/bin/python3 --args \"${HOME}/.config/karabiner/scripts/show_input_info.py\" --layer primary"
                                     }
                                 ],
                                 "type": "basic"
@@ -693,7 +693,7 @@
                                 "to": [
                                     {
                                         "repeat": false,
-                                        "shell_command": "/opt/miniconda3/bin/python3 \"${HOME}/.config/karabiner/scripts/repair_clipboard_images.py\""
+                                        "shell_command": "/usr/bin/open -g -n -a /opt/miniconda3/python.app --env PYTHONEXECUTABLE=/opt/miniconda3/bin/python3 --args \"${HOME}/.config/karabiner/scripts/repair_clipboard_images.py\""
                                     }
                                 ],
                                 "type": "basic"
@@ -718,7 +718,7 @@
                                 "to": [
                                     {
                                         "repeat": false,
-                                        "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/type_clipboard.py"
+                                        "shell_command": "/usr/bin/open -g -n -a /opt/miniconda3/python.app --env PYTHONEXECUTABLE=/opt/miniconda3/bin/python3 --args \"${HOME}/.config/karabiner/scripts/type_clipboard.py\""
                                     }
                                 ],
                                 "type": "basic"
@@ -995,7 +995,7 @@
                                 "to": [
                                     {
                                         "repeat": false,
-                                        "shell_command": "/opt/miniconda3/bin/python3 \"${HOME}/.config/karabiner/scripts/launch_unicode_inspector.py\" --inspector \"${HOME}/gitRepo/PersonalScripts/tools/others/unicode-inspector.py\""
+                                        "shell_command": "/usr/bin/open -g -n -a /opt/miniconda3/python.app --env PYTHONEXECUTABLE=/opt/miniconda3/bin/python3 --args \"${HOME}/.config/karabiner/scripts/launch_unicode_inspector.py\" --inspector \"${HOME}/gitRepo/PersonalScripts/tools/others/unicode-inspector.py\""
                                     }
                                 ],
                                 "type": "basic"
@@ -1288,7 +1288,7 @@
                                 "to": [
                                     {
                                         "repeat": false,
-                                        "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/secondary_clipboard.py type"
+                                        "shell_command": "/usr/bin/open -g -n -a /opt/miniconda3/python.app --env PYTHONEXECUTABLE=/opt/miniconda3/bin/python3 --args \"${HOME}/.config/karabiner/scripts/secondary_clipboard.py\" type"
                                     }
                                 ],
                                 "type": "basic"
@@ -1620,7 +1620,7 @@
                                     "key_code": "p",
                                     "modifiers": { "optional": ["any"] }
                                 },
-                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 -S ${HOME}/.config/karabiner/scripts/toggle_builtin_screen.py" }],
+                                "to": [{ "shell_command": "/usr/bin/open -g -n -a /opt/miniconda3/python.app --env PYTHONEXECUTABLE=/opt/miniconda3/bin/python3 --args -S \"${HOME}/.config/karabiner/scripts/toggle_builtin_screen.py\"" }],
                                 "type": "basic"
                             }
                         ]
@@ -1878,7 +1878,7 @@
                                 "to": [
                                     {
                                         "repeat": false,
-                                        "shell_command": "/opt/miniconda3/bin/python3 \"${HOME}/.config/karabiner/scripts/quick_menu.py\""
+                                        "shell_command": "/usr/bin/open -g -n -a /opt/miniconda3/python.app --env PYTHONEXECUTABLE=/opt/miniconda3/bin/python3 --args \"${HOME}/.config/karabiner/scripts/quick_menu.py\""
                                     }
                                 ],
                                 "type": "basic"
@@ -1915,7 +1915,7 @@
                                 "to": [
                                     {
                                         "repeat": false,
-                                        "shell_command": "/usr/bin/open -g \"${HOME}/Applications/Caps Keyboard.app\""
+                                        "shell_command": "/usr/bin/open -g -n -a /opt/miniconda3/python.app --env PYTHONEXECUTABLE=/opt/miniconda3/bin/python3 --args \"${HOME}/gitRepo/PersonalScripts/tools/others/screen-keyboard.py\" --force-layer=capslock"
                                     }
                                 ],
                                 "type": "basic"
@@ -1947,7 +1947,7 @@
                                 "to": [
                                     {
                                         "repeat": false,
-                                        "shell_command": "/opt/miniconda3/bin/python3 \"${HOME}/.config/karabiner/scripts/window_inspector.py\""
+                                        "shell_command": "/usr/bin/open -g -n -a /opt/miniconda3/python.app --env PYTHONEXECUTABLE=/opt/miniconda3/bin/python3 --args \"${HOME}/.config/karabiner/scripts/window_inspector.py\""
                                     }
                                 ],
                                 "type": "basic"
@@ -1982,7 +1982,7 @@
                                 "to": [
                                     {
                                         "repeat": false,
-                                        "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/center_front_window.py --size 1024 768 --center"
+                                        "shell_command": "/usr/bin/open -g -n -a /opt/miniconda3/python.app --env PYTHONEXECUTABLE=/opt/miniconda3/bin/python3 --args \"${HOME}/.config/karabiner/scripts/center_front_window.py\" --size 1024 768 --center"
                                     }
                                 ],
                                 "type": "basic"
@@ -2006,7 +2006,7 @@
                                     "key_code": "r",
                                     "modifiers": { "optional": ["any"] }
                                 },
-                                "to": [{ "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/center_front_window.py --fit" }],
+                                "to": [{ "shell_command": "/usr/bin/open -g -n -a /opt/miniconda3/python.app --env PYTHONEXECUTABLE=/opt/miniconda3/bin/python3 --args \"${HOME}/.config/karabiner/scripts/center_front_window.py\" --fit" }],
                                 "type": "basic"
                             }
                         ]

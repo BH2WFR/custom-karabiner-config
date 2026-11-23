@@ -102,12 +102,22 @@ def _print_kv(label: str, value: Any) -> None:
     print(f"{FLCyan}{label:<22}{CRst} {value}")
 
 
+def accessible_windows(app_ref: Any) -> list[Any]:
+    """Include the focused/main window when a toolkit omits it from AXWindows."""
+    windows = list(_ax_attr(app_ref, AS.kAXWindowsAttribute, []))
+    for attribute in ("AXFocusedWindow", "AXMainWindow"):
+        current = _ax_attr(app_ref, attribute, None)
+        if current is not None and current not in windows:
+            windows.append(current)
+    return windows
+
+
 def _focused_window(app_ref: Any) -> Any:
     error, window = _ax_copy(app_ref, AS.kAXFocusedWindowAttribute)
-    if error == AS.kAXErrorSuccess:
+    if error == AS.kAXErrorSuccess and window is not None:
         return window
 
-    windows = _ax_attr(app_ref, AS.kAXWindowsAttribute, [])
+    windows = accessible_windows(app_ref)
     if windows:
         return windows[0]
     return None
@@ -199,7 +209,7 @@ def collect_info(app, window):
     }
     if window is not None:
         sections["Window"] = {
-            "Window count": len(_ax_attr(app_ref, AS.kAXWindowsAttribute, [])),
+            "Window count": len(accessible_windows(app_ref)),
             "Title": _ax_attr(window, AS.kAXTitleAttribute),
             "Role": _ax_attr(window, AS.kAXRoleAttribute),
             "Subrole": _ax_attr(window, AS.kAXSubroleAttribute),

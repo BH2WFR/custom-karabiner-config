@@ -7,7 +7,7 @@ AppKit: Any = importlib.import_module("AppKit")
 
 
 def activate_window(root):
-    """Activate once after Tk starts; leave the window at its normal level."""
+    """Schedule one activation and return its Tk timer ID for optional cancellation."""
     def activate():
         options = (
             AppKit.NSApplicationActivateIgnoringOtherApps
@@ -17,7 +17,7 @@ def activate_window(root):
         root.lift()
         root.focus_force()
 
-    root.after(100, activate)
+    return root.after(100, activate)
 
 
 def copy_text(root, text):

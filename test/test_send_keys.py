@@ -165,7 +165,9 @@ class ConfigTests(unittest.TestCase):
         self.assertFalse(m['to'][0]['repeat'])
         command = shlex.split(m['to'][0]['shell_command'])
         self.assertEqual(command, [
-            '/opt/miniconda3/bin/python3', '${HOME}/.config/karabiner/scripts/launch_unicode_inspector.py',
+            '/usr/bin/open', '-g', '-n', '-a', '/opt/miniconda3/python.app',
+            '--env', 'PYTHONEXECUTABLE=/opt/miniconda3/bin/python3', '--args',
+            '${HOME}/.config/karabiner/scripts/launch_unicode_inspector.py',
             '--inspector', '${HOME}/gitRepo/PersonalScripts/tools/others/unicode-inspector.py'])
         self.assertNotIn('text_actions.py stats', json.dumps(self.rules))
 

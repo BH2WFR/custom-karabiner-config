@@ -2,6 +2,7 @@
 
 import json
 from pathlib import Path
+import shlex
 import sys
 import threading
 import unittest
@@ -9,72 +10,10 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 import keyboard_events as events
-import test_keyboard as keyboard
+ROOT = Path(__file__).resolve().parents[1]
 
 
 class KeyboardTests(unittest.TestCase):
-    def setUp(self):
-        self.post = patch.object(keyboard, 'post_key_event').start()
-        self.variables = patch.object(keyboard, 'set_caps_layer').start()
-        patch.object(keyboard, 'current_modifier_flags', return_value=0).start()
-        self.addCleanup(patch.stopall)
-        self.state = keyboard.KeyboardState()
-
-    def test_caps_is_variable_only(self):
-        self.assertEqual(keyboard.CAPS_VARIABLE, 'caps_primary_layer')
-        self.assertTrue(self.state.toggle('Caps'))
-        self.variables.assert_called_with(True)
-        self.assertFalse(self.state.toggle('Caps'))
-        self.variables.assert_called_with(False)
-        self.post.assert_not_called()
-
-    def test_each_modifier_press_and_release(self):
-        for name, (code, generic, side) in events.MODIFIER_KEYS.items():
-            with self.subTest(name=name):
-                self.assertTrue(self.state.toggle(name))
-                self.post.assert_called_with(code, True, generic | side, flags_changed=True, event_tap=events.HID_EVENT_TAP)
-                self.assertFalse(self.state.toggle(name))
-                self.post.assert_called_with(code, False, 0, flags_changed=True, event_tap=events.HID_EVENT_TAP)
-
-    def test_left_and_right_shift(self):
-        self.state.toggle('LShift')
-        self.state.toggle('RShift')
-        self.state.toggle('LShift')
-        self.assertEqual(self.state.flags(), events.SHIFT_FLAG | 0x4)
-
-    def test_order_and_close(self):
-        self.state.toggle('Caps')
-        self.state.toggle('LOpt')
-        self.state.toggle('RShift')
-        self.post.reset_mock()
-        self.state.release()
-        self.assertEqual([c.args[:2] for c in self.post.call_args_list], [(60, False), (58, False)])
-        self.assertFalse(self.state.caps)
-        self.assertEqual(self.state.held, [])
-        self.variables.assert_called_with(False)
-
-    def test_post_failure_rolls_back(self):
-        self.post.side_effect = RuntimeError('failed')
-        with self.assertRaises(RuntimeError):
-            self.state.toggle('LOpt')
-        self.assertEqual(self.state.held, [])
-
-    def test_caps_failure_rolls_back(self):
-        self.variables.side_effect = RuntimeError('failed')
-        with self.assertRaises(RuntimeError):
-            self.state.toggle('Caps')
-        self.assertFalse(self.state.caps)
-
-    def test_cleanup_continues_on_failure(self):
-        self.state.toggle('Caps')
-        self.state.toggle('LOpt')
-        self.state.toggle('LShift')
-        self.post.side_effect = [RuntimeError('failed'), None]
-        with self.assertRaises(RuntimeError):
-            self.state.release()
-        self.variables.assert_called_with(False)
-        self.assertEqual(self.state.held, ['LShift'])
-
     def test_flags_formatting(self):
         self.assertEqual(events.format_modifier_flags(0), 'None')
         self.assertEqual(events.format_modifier_flags(events.OPTION_FLAG | events.SHIFT_FLAG), 'Opt + Shift')
@@ -88,7 +27,7 @@ class KeyboardTests(unittest.TestCase):
         self.assertEqual(events.format_modifier_flags(events.SHIFT_FLAG | 0x6, include_sides=True), 'LShift + RShift')
 
     def test_diagnostic_mapping(self):
-        data = json.loads((keyboard.ROOT / 'karabiner.json').read_text(encoding='utf-8'))
+        data = json.loads((ROOT / 'karabiner.json').read_text(encoding='utf-8'))
         profile = next(p for p in data['profiles'] if p['name'] == 'ZL')
         rule = profile['complex_modifications']['rules'][0]['manipulators'][0]
         self.assertEqual(rule['from'], {'key_code': '1', 'modifiers': {'optional': ['any']}})
@@ -99,23 +38,88 @@ class KeyboardTests(unittest.TestCase):
         fallback = profile['complex_modifications']['rules'][0]['manipulators'][1]
         self.assertTrue(fallback['to'][0]['shell_command'].endswith('--layer primary'))
 
-    def test_release_without_screen_caps_does_not_clear_physical_layer(self):
-        self.state.release()
-        self.state.toggle('LShift')
-        self.state.release()
-        self.variables.assert_not_called()
+    def test_screen_keyboard_uses_external_caps_layer_in_all_contexts(self):
+        data = json.loads((ROOT / 'karabiner.json').read_text(encoding='utf-8'))
+        profile = next(p for p in data['profiles'] if p['name'] == 'ZL')
+        rule = next(r for r in profile['complex_modifications']['rules']
+                    if r['description'] == 'Caps+S -> Show screen keyboard, except Anki')
+        self.assertEqual(len(rule['manipulators']), 1)
+        entry = rule['manipulators'][0]
+        self.assertEqual(entry['from'], {'key_code': 's', 'modifiers': {'optional': ['caps_lock']}})
+        self.assertEqual(entry['conditions'], [
+            {'name': 'caps_primary_layer', 'type': 'variable_if', 'value': 1},
+            {'name': 'caps_secondary_layer', 'type': 'variable_unless', 'value': 1},
+            {'bundle_identifiers': [r'^net\.ankiweb\.launcher$', r'^net\.ankiweb\.anki$'],
+             'type': 'frontmost_application_unless'},
+        ])
+        self.assertFalse(entry['to'][0]['repeat'])
+        self.assertEqual(shlex.split(entry['to'][0]['shell_command']), [
+            '/usr/bin/open', '-g', '-n', '-a', '/opt/miniconda3/python.app',
+            '--env', 'PYTHONEXECUTABLE=/opt/miniconda3/bin/python3', '--args',
+            '${HOME}/gitRepo/PersonalScripts/tools/others/screen-keyboard.py',
+            '--force-layer=capslock',
+        ])
 
-    def test_repeated_release_clears_layer_only_once(self):
-        self.state.toggle('Caps')
-        self.variables.reset_mock()
-        self.state.release()
-        self.state.release()
-        self.variables.assert_called_once_with(False)
+
+class ToolLaunchTests(unittest.TestCase):
+    def test_long_running_tools_are_detached_and_short_macros_stay_direct(self):
+        data = json.loads((ROOT / 'karabiner.json').read_text(encoding='utf-8'))
+        profile = next(p for p in data['profiles'] if p['name'] == 'ZL')
+
+        def commands(value):
+            if isinstance(value, dict):
+                if 'shell_command' in value:
+                    yield shlex.split(value['shell_command'])
+                for child in value.values():
+                    yield from commands(child)
+            elif isinstance(value, list):
+                for child in value:
+                    yield from commands(child)
+
+        prefix = [
+            '/usr/bin/open', '-g', '-n', '-a', '/opt/miniconda3/python.app',
+            '--env', 'PYTHONEXECUTABLE=/opt/miniconda3/bin/python3', '--args',
+        ]
+        expected = [
+            ('show_input_info.py', '--layer', 'secondary'),
+            ('show_input_info.py', '--layer', 'primary'),
+            ('repair_clipboard_images.py',),
+            ('type_clipboard.py',),
+            ('launch_unicode_inspector.py', '--inspector',
+             '${HOME}/gitRepo/PersonalScripts/tools/others/unicode-inspector.py'),
+            ('secondary_clipboard.py', 'type'),
+            ('toggle_builtin_screen.py',),
+            ('quick_menu.py',),
+            ('screen-keyboard.py', '--force-layer=capslock'),
+            ('window_inspector.py',),
+            ('center_front_window.py', '--size', '1024', '768', '--center'),
+            ('center_front_window.py', '--fit'),
+        ]
+        detached = []
+        direct = []
+        for command in commands(profile):
+            with self.subTest(command=command):
+                if command[0] == '/usr/bin/open':
+                    self.assertEqual(command[:len(prefix)], prefix)
+                    args = command[len(prefix):]
+                    options = []
+                    if args[0] == '-S':
+                        options, args = args[:1], args[1:]
+                    script = Path(args[0]).name
+                    self.assertEqual(options, ['-S'] if script == 'toggle_builtin_screen.py' else [])
+                    detached.append((script, *args[1:]))
+                else:
+                    self.assertEqual(command[0], '/opt/miniconda3/bin/python3')
+                    direct.extend(Path(arg).name for arg in command if arg.endswith('.py'))
+        self.assertCountEqual(detached, expected)
+        for script in ('send_keys.py', 'paste_without_format.py', 'secondary_clipboard.py',
+                       'text_actions.py', 'move_mouse_pointer.py'):
+            self.assertIn(script, direct)
 
 
 class SecondaryTriggerTests(unittest.TestCase):
     def setUp(self):
-        data = json.loads((keyboard.ROOT / 'karabiner.json').read_text(encoding='utf-8'))
+        data = json.loads((ROOT / 'karabiner.json').read_text(encoding='utf-8'))
         profile = next(p for p in data['profiles'] if p['name'] == 'ZL')
         self.rules = profile['complex_modifications']['rules']
 
