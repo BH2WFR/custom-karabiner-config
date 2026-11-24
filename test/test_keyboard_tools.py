@@ -54,6 +54,7 @@ class KeyboardTests(unittest.TestCase):
         ])
         self.assertFalse(entry['to'][0]['repeat'])
         self.assertEqual(shlex.split(entry['to'][0]['shell_command']), [
+            '${HOME}/.config/karabiner/scripts/with_launch_tooltip.sh', 'Screen Keyboard',
             '/usr/bin/open', '-g', '-n', '-a', '/opt/miniconda3/python.app',
             '--env', 'PYTHONEXECUTABLE=/opt/miniconda3/bin/python3', '--args',
             '${HOME}/gitRepo/PersonalScripts/tools/input-and-text/screen-keyboard.py',
@@ -95,8 +96,14 @@ class ToolLaunchTests(unittest.TestCase):
         ]
         detached = []
         direct = []
+        launch_labels = {}
         for command in commands(profile):
             with self.subTest(command=command):
+                if command[0] == '${HOME}/.config/karabiner/scripts/with_launch_tooltip.sh':
+                    label = command[1]
+                    command = command[2:]
+                    script = next(arg for arg in command if arg.endswith('.py'))
+                    launch_labels[Path(script).name] = label
                 if command[0] == '/usr/bin/open':
                     self.assertEqual(command[:len(prefix)], prefix)
                     args = command[len(prefix):]
@@ -110,6 +117,11 @@ class ToolLaunchTests(unittest.TestCase):
                     self.assertEqual(command[0], '/opt/miniconda3/bin/python3')
                     direct.extend(Path(arg).name for arg in command if arg.endswith('.py'))
         self.assertCountEqual(detached, expected)
+        self.assertEqual(launch_labels, {
+            'launch_unicode_inspector.py': 'Unicode Inspector',
+            'screen-keyboard.py': 'Screen Keyboard',
+            'window-inspector.py': 'Window Inspector',
+        })
         for script in ('send_keys.py', 'paste_without_format.py', 'secondary_clipboard.py',
                        'text_actions.py', 'move_mouse_pointer.py'):
             self.assertIn(script, direct)

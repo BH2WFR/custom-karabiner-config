@@ -165,6 +165,7 @@ class ConfigTests(unittest.TestCase):
         self.assertFalse(m['to'][0]['repeat'])
         command = shlex.split(m['to'][0]['shell_command'])
         self.assertEqual(command, [
+            '${HOME}/.config/karabiner/scripts/with_launch_tooltip.sh', 'Unicode Inspector',
             '/opt/miniconda3/bin/python3',
             '${HOME}/.config/karabiner/scripts/launch_unicode_inspector.py',
             '--inspector', '${HOME}/gitRepo/PersonalScripts/tools/input-and-text/unicode-inspector.py'])

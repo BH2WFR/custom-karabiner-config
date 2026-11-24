@@ -73,6 +73,8 @@ One-shot key shortcuts and editing sequences use `scripts/send_keys.py` and the 
 
 Menus, inspectors, diagnostic tooltips, image repair, clipboard typing and window/display tools launch independently through macOS Launch Services, so another hotkey does not terminate them. Short key macros and ordinary clipboard operations keep their direct launch commands.
 
+The PersonalScripts shortcuts (`Caps+7`, `Caps+S` and `Caps+W`) show “Launching <tool name>, please wait…” near the pointer for two seconds. The tool starts while the message is visible, and the tooltip leaves keyboard focus in the current app.
+
 ### Caps Primary Layer
 
 Hold `Caps` to activate `caps_primary_layer`. Release it to deactivate the layer. Tapping `Caps` alone sends `Caps` on key-up (i.e., on release), which toggles Caps Lock or switches input method depending on system settings.
@@ -207,7 +209,8 @@ The shortcuts in this section are **tailored** to my own Rime, Anki, and Cherry 
 `Caps+S` runs the screen keyboard maintained in [PersonalScripts](https://github.com/BH2WFR/PersonalScripts):
 
 ```bash
-/usr/bin/open -g -n -a /opt/miniconda3/python.app \
+"${HOME}/.config/karabiner/scripts/with_launch_tooltip.sh" "Screen Keyboard" \
+  /usr/bin/open -g -n -a /opt/miniconda3/python.app \
   --env PYTHONEXECUTABLE=/opt/miniconda3/bin/python3 --args \
   "${HOME}/gitRepo/PersonalScripts/tools/input-and-text/screen-keyboard.py" --force-layer=capslock
 ```
@@ -281,6 +284,8 @@ Verify that the new path appears in the configuration and that the JSON remains 
 ```
 
 For independent GUI/heavy-tool launches, also replace `/opt/miniconda3/python.app` with your environment's `python.app` path in every `/usr/bin/open` command. Preserve each launcher's foreground or background setting, `-n`, `--env PYTHONEXECUTABLE=...`, and the arguments after `--args`.
+
+If you change Python environments, update both Miniconda paths in `scripts/with_launch_tooltip.sh` as well.
 
 ### Unicode Inspector Replacement
 
