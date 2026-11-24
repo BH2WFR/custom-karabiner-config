@@ -91,7 +91,7 @@ class ToolLaunchTests(unittest.TestCase):
             ('toggle_builtin_screen.py',),
             ('quick_menu.py',),
             ('screen-keyboard.py', '--force-layer=capslock'),
-            ('window_inspector.py',),
+            ('window-inspector.py', '--top'),
             ('center_front_window.py', '--size', '1024', '768', '--center'),
             ('center_front_window.py', '--fit'),
         ]

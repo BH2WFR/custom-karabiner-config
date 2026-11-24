@@ -50,11 +50,10 @@ def panel_frame_near_pointer(mouse, bounds, width, height):
     return ((x, y), (width, height))
 
 
-def _create_panel(text, level, *, standalone=True):
+def _create_panel(text, level):
     AppKit: Any = importlib.import_module("AppKit")
     app = AppKit.NSApplication.sharedApplication()
-    if standalone:
-        app.setActivationPolicy_(AppKit.NSApplicationActivationPolicyAccessory)
+    app.setActivationPolicy_(AppKit.NSApplicationActivationPolicyAccessory)
     screen = AppKit.NSScreen.mainScreen()
     mouse = AppKit.NSEvent.mouseLocation()
     for candidate in AppKit.NSScreen.screens():
@@ -95,32 +94,6 @@ def _create_panel(text, level, *, standalone=True):
     panel.setBackgroundColor_(AppKit.NSColor.colorWithSRGBRed_green_blue_alpha_(red, green, blue, 1))
     panel.contentView().addSubview_(label)
     return panel
-
-
-class TkTooltip:
-    """Non-activating Tk feedback; duration 0 stays visible until hide()."""
-
-    def __init__(self, root):
-        self.root = root
-        self.panel = None
-        self.timer = None
-
-    def show(self, text, duration_ms=None, *, level="info"):
-        self.hide()
-        self.panel = _create_panel(text, level, standalone=False)
-        self.panel.orderFrontRegardless()
-        duration = STYLES[level][1] if duration_ms is None else duration_ms
-        if duration:
-            self.timer = self.root.after(duration, self.hide)
-
-    def hide(self):
-        if self.timer is not None:
-            self.root.after_cancel(self.timer)
-            self.timer = None
-        if self.panel is not None:
-            self.panel.orderOut_(None)
-            self.panel.close()
-            self.panel = None
 
 
 def show_tooltip(text, duration_ms=None, *, level="info"):

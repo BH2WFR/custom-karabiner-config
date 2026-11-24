@@ -6,7 +6,7 @@ Run from the repository root on macOS with the project's Miniconda Base interpre
 /opt/miniconda3/bin/python3 -m unittest discover -s test -v
 ```
 
-The tests cover modifier sides, event routing and cancellation, configured ZL shortcuts (including independent GUI/heavy-tool launches and direct short macros), and window-inspector discovery, picking, preview cleanup and tooltip scheduling. Keyboard output, tooltips and window operations are mocked; no windows open or clipboard contents change. Configuration checks read the current `karabiner.json` without modifying it. Screen-keyboard UI tests are maintained in PersonalScripts.
+The tests cover modifier sides, event routing and cancellation, and configured ZL shortcuts, including independent GUI launches and direct short macros. Configuration checks read the current `karabiner.json` and verify the external launch commands for `Caps+S` and `Caps+W`. The screen keyboard and window inspector have their own UI tests in PersonalScripts.
 
 Run one file with, for example:
 

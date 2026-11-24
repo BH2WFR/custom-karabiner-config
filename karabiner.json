@@ -1947,7 +1947,7 @@
                                 "to": [
                                     {
                                         "repeat": false,
-                                        "shell_command": "/usr/bin/open -g -n -a /opt/miniconda3/python.app --env PYTHONEXECUTABLE=/opt/miniconda3/bin/python3 --args \"${HOME}/.config/karabiner/scripts/window_inspector.py\""
+                                        "shell_command": "/usr/bin/open -g -n -a /opt/miniconda3/python.app --env PYTHONEXECUTABLE=/opt/miniconda3/bin/python3 --args \"${HOME}/gitRepo/PersonalScripts/tools/others/window-inspector.py\" --top"
                                     }
                                 ],
                                 "type": "basic"
