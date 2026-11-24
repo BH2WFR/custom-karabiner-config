@@ -90,6 +90,8 @@ class ToolLaunchTests(unittest.TestCase):
             ('toggle_builtin_screen.py',),
             ('quick_menu.py',),
             ('screen-keyboard.py', '--force-layer=capslock'),
+            ('screen-mask.py', '--solid'),
+            ('screen-mask.py', '--hollow'),
             ('window-inspector.py', '--top'),
             ('center_front_window.py', '--size', '1024', '768', '--center'),
             ('center_front_window.py', '--fit'),
@@ -102,11 +104,11 @@ class ToolLaunchTests(unittest.TestCase):
                 if command[0] == '${HOME}/.config/karabiner/scripts/with_launch_tooltip.sh':
                     label = command[1]
                     command = command[2:]
-                    script = next(arg for arg in command if arg.endswith('.py'))
+                    script = next(arg for arg in reversed(command) if arg.endswith('.py'))
                     launch_labels[Path(script).name] = label
                 if command[0] == '/usr/bin/open':
-                    self.assertEqual(command[:len(prefix)], prefix)
-                    args = command[len(prefix):]
+                    args = command[command.index('--args') + 1:]
+                    self.assertEqual(command[:-len(args)], prefix)
                     options = []
                     if args[0] == '-S':
                         options, args = args[:1], args[1:]
@@ -118,8 +120,10 @@ class ToolLaunchTests(unittest.TestCase):
                     direct.extend(Path(arg).name for arg in command if arg.endswith('.py'))
         self.assertCountEqual(detached, expected)
         self.assertEqual(launch_labels, {
-            'launch_unicode_inspector.py': 'Unicode Inspector',
+            'unicode-inspector.py': 'Unicode Inspector',
             'screen-keyboard.py': 'Screen Keyboard',
+            'text-path-processor.py': 'Text and Path Processor',
+            'screen-mask.py': 'Screen Mask',
             'window-inspector.py': 'Window Inspector',
         })
         for script in ('send_keys.py', 'paste_without_format.py', 'secondary_clipboard.py',

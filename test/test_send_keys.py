@@ -154,21 +154,30 @@ class ConfigTests(unittest.TestCase):
         self.assertIn('/scripts/text_actions.py', m['to'][0]['shell_command'])
         self.assertFalse(m['to'][0]['repeat'])
 
-    def test_caps_7_launches_external_unicode_inspector(self):
+    def test_caps_text_and_mask_shortcuts(self):
         matches = [m for rule in self.rules for m in rule['manipulators']
-                   if m['from'].get('key_code') == '7'
-                   and not m['from'].get('modifiers', {}).get('mandatory')]
-        self.assertEqual(len(matches), 1)
-        m = matches[0]
-        self.assertIn({'name': 'caps_primary_layer', 'type': 'variable_if', 'value': 1},
-                      m['conditions'])
-        self.assertFalse(m['to'][0]['repeat'])
-        command = shlex.split(m['to'][0]['shell_command'])
-        self.assertEqual(command, [
-            '${HOME}/.config/karabiner/scripts/with_launch_tooltip.sh', 'Unicode Inspector',
-            '/opt/miniconda3/bin/python3',
-            '${HOME}/.config/karabiner/scripts/launch_unicode_inspector.py',
-            '--inspector', '${HOME}/gitRepo/PersonalScripts/tools/input-and-text/unicode-inspector.py'])
+                   if m['from'].get('key_code') in ('5', '7', 'y')]
+        tools = '${HOME}/gitRepo/PersonalScripts/tools/'
+        expected = {
+            ('7', ()): ['${HOME}/.config/karabiner/scripts/text_actions.py', 'title'],
+            ('y', ()): ['${HOME}/.config/karabiner/scripts/launch_selection_tool.py',
+                        '--processor', tools + 'input-and-text/text-path-processor.py'],
+            ('y', ('shift',)): ['${HOME}/.config/karabiner/scripts/launch_selection_tool.py',
+                                '--inspector', tools + 'input-and-text/unicode-inspector.py'],
+            ('5', ()): [tools + 'others/screen-mask.py', '--solid'],
+            ('5', ('shift',)): [tools + 'others/screen-mask.py', '--hollow'],
+        }
+        actual = []
+        for m in matches:
+            modifiers = m['from']['modifiers']
+            chord = (m['from']['key_code'], tuple(modifiers.get('mandatory', [])))
+            actual.append(chord)
+            self.assertEqual(modifiers['optional'], ['caps_lock'])
+            self.assertEqual(m['conditions'], [{'name': 'caps_primary_layer', 'type': 'variable_if', 'value': 1}])
+            self.assertFalse(m['to'][0]['repeat'])
+            command = shlex.split(m['to'][0]['shell_command'])
+            self.assertEqual(command[-len(expected[chord]):], expected[chord])
+        self.assertCountEqual(actual, expected.keys())
         self.assertNotIn('text_actions.py stats', json.dumps(self.rules))
 
 

@@ -1,4 +1,4 @@
-"""Test Caps+7 without sending input or touching a real clipboard."""
+"""Test selection tool launches without sending input or touching a real clipboard."""
 
 import contextlib
 import io
@@ -8,7 +8,7 @@ import unittest
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-import launch_unicode_inspector as launcher
+import launch_selection_tool as launcher
 
 
 class LauncherTests(unittest.TestCase):
@@ -25,9 +25,9 @@ class LauncherTests(unittest.TestCase):
         self.notify = stack.enter_context(patch.object(launcher, 'notify'))
         stack.enter_context(contextlib.redirect_stderr(io.StringIO()))
 
-    def check_launch(self, *args):
+    def check_launch(self, *args, tool='--inspector'):
         script = str(Path(__file__).resolve())
-        self.assertEqual(launcher.main(['--inspector', script]), 0)
+        self.assertEqual(launcher.main([tool, script]), 0)
         self.run.assert_called_once_with([
             '/usr/bin/open', '-n', '-a', str(Path(sys.prefix) / 'python.app'),
             '--env', f'PYTHONEXECUTABLE={sys.executable}', '--args', script, *args,
@@ -43,6 +43,17 @@ class LauncherTests(unittest.TestCase):
         self.copy.return_value = False
         self.check_launch()
         self.board.stringForType_.assert_not_called()
+
+    def test_processor_copies_files_then_loads_clipboard(self):
+        self.board.types.return_value = ['public.file-url']
+        self.run.side_effect = lambda *args, **kwargs: self.copy.assert_called_once_with(self.board, launcher.keys.C_KEY_CODE)
+        self.check_launch('--clip', tool='--processor')
+        self.board.stringForType_.assert_not_called()
+
+    def test_processor_without_selection_loads_existing_clipboard(self):
+        self.copy.return_value = False
+        self.check_launch('--clip', tool='--processor')
+        self.notify.assert_not_called()
 
     def test_empty_text_opens_blank(self):
         self.board.stringForType_.return_value = ''

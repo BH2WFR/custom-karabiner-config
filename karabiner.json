@@ -967,6 +967,31 @@
                                 ],
                                 "from": {
                                     "key_code": "7",
+                                    "modifiers": { "optional": ["caps_lock"] }
+                                },
+                                "to": [
+                                    {
+                                        "repeat": false,
+                                        "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/text_actions.py title"
+                                    }
+                                ],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Caps+(Shift+)Y -> Text and Path Processor / Unicode Inspector",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "name": "caps_primary_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "y",
                                     "modifiers": {
                                         "mandatory": ["shift"],
                                         "optional": ["caps_lock"]
@@ -975,7 +1000,7 @@
                                 "to": [
                                     {
                                         "repeat": false,
-                                        "shell_command": "/opt/miniconda3/bin/python3 ${HOME}/.config/karabiner/scripts/text_actions.py title"
+                                        "shell_command": "\"${HOME}/.config/karabiner/scripts/with_launch_tooltip.sh\" \"Unicode Inspector\" /opt/miniconda3/bin/python3 \"${HOME}/.config/karabiner/scripts/launch_selection_tool.py\" --inspector \"${HOME}/gitRepo/PersonalScripts/tools/input-and-text/unicode-inspector.py\""
                                     }
                                 ],
                                 "type": "basic"
@@ -989,13 +1014,61 @@
                                     }
                                 ],
                                 "from": {
-                                    "key_code": "7",
+                                    "key_code": "y",
                                     "modifiers": { "optional": ["caps_lock"] }
                                 },
                                 "to": [
                                     {
                                         "repeat": false,
-                                        "shell_command": "\"${HOME}/.config/karabiner/scripts/with_launch_tooltip.sh\" \"Unicode Inspector\" /opt/miniconda3/bin/python3 \"${HOME}/.config/karabiner/scripts/launch_unicode_inspector.py\" --inspector \"${HOME}/gitRepo/PersonalScripts/tools/input-and-text/unicode-inspector.py\""
+                                        "shell_command": "\"${HOME}/.config/karabiner/scripts/with_launch_tooltip.sh\" \"Text and Path Processor\" /opt/miniconda3/bin/python3 \"${HOME}/.config/karabiner/scripts/launch_selection_tool.py\" --processor \"${HOME}/gitRepo/PersonalScripts/tools/input-and-text/text-path-processor.py\""
+                                    }
+                                ],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Caps+(Shift+)5 -> Add Solid / Hollow Screen Mask",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "name": "caps_primary_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "5",
+                                    "modifiers": {
+                                        "mandatory": ["shift"],
+                                        "optional": ["caps_lock"]
+                                    }
+                                },
+                                "to": [
+                                    {
+                                        "repeat": false,
+                                        "shell_command": "\"${HOME}/.config/karabiner/scripts/with_launch_tooltip.sh\" \"Screen Mask\" /usr/bin/open -g -n -a /opt/miniconda3/python.app --env PYTHONEXECUTABLE=/opt/miniconda3/bin/python3 --args \"${HOME}/gitRepo/PersonalScripts/tools/others/screen-mask.py\" --hollow"
+                                    }
+                                ],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "name": "caps_primary_layer",
+                                        "type": "variable_if",
+                                        "value": 1
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "5",
+                                    "modifiers": { "optional": ["caps_lock"] }
+                                },
+                                "to": [
+                                    {
+                                        "repeat": false,
+                                        "shell_command": "\"${HOME}/.config/karabiner/scripts/with_launch_tooltip.sh\" \"Screen Mask\" /usr/bin/open -g -n -a /opt/miniconda3/python.app --env PYTHONEXECUTABLE=/opt/miniconda3/bin/python3 --args \"${HOME}/gitRepo/PersonalScripts/tools/others/screen-mask.py\" --solid"
                                     }
                                 ],
                                 "type": "basic"

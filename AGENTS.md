@@ -27,6 +27,7 @@
 
 ## Reusable Script Helpers
 
+- `scripts/launch_selection_tool.py` copies the selection before a foreground PersonalScripts launch. Use `--processor <path>` to load the current clipboard even if copying fails, or `--inspector <path>` to load only freshly copied text.
 - `scripts/gui_helpers.py`: one-time Tk window activation on macOS and copying text; `activate_window(root)` returns its Tk timer ID for cancellation. Importing it must not create or activate a GUI.
 - `scripts/menu_command.py`: `launch_command(spec)` runs a configured shell command in Terminal or a separate Tk output window; reuse it for quick-menu command execution.
 - `scripts/center_front_window.py`: `center_window(args, window=None)` accepts an explicit AX window. GUI callers must pass their captured window instead of operating on the current frontmost window.
