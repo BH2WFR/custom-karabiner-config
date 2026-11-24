@@ -995,7 +995,7 @@
                                 "to": [
                                     {
                                         "repeat": false,
-                                        "shell_command": "/usr/bin/open -g -n -a /opt/miniconda3/python.app --env PYTHONEXECUTABLE=/opt/miniconda3/bin/python3 --args \"${HOME}/.config/karabiner/scripts/launch_unicode_inspector.py\" --inspector \"${HOME}/gitRepo/PersonalScripts/tools/others/unicode-inspector.py\""
+                                        "shell_command": "/usr/bin/open -g -n -a /opt/miniconda3/python.app --env PYTHONEXECUTABLE=/opt/miniconda3/bin/python3 --args \"${HOME}/.config/karabiner/scripts/launch_unicode_inspector.py\" --inspector \"${HOME}/gitRepo/PersonalScripts/tools/input-and-text/unicode-inspector.py\""
                                     }
                                 ],
                                 "type": "basic"
@@ -1915,7 +1915,7 @@
                                 "to": [
                                     {
                                         "repeat": false,
-                                        "shell_command": "/usr/bin/open -g -n -a /opt/miniconda3/python.app --env PYTHONEXECUTABLE=/opt/miniconda3/bin/python3 --args \"${HOME}/gitRepo/PersonalScripts/tools/others/screen-keyboard.py\" --force-layer=capslock"
+                                        "shell_command": "/usr/bin/open -g -n -a /opt/miniconda3/python.app --env PYTHONEXECUTABLE=/opt/miniconda3/bin/python3 --args \"${HOME}/gitRepo/PersonalScripts/tools/input-and-text/screen-keyboard.py\" --force-layer=capslock"
                                     }
                                 ],
                                 "type": "basic"

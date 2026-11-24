@@ -209,7 +209,7 @@ The shortcuts in this section are **tailored** to my own Rime, Anki, and Cherry 
 ```bash
 /usr/bin/open -g -n -a /opt/miniconda3/python.app \
   --env PYTHONEXECUTABLE=/opt/miniconda3/bin/python3 --args \
-  "${HOME}/gitRepo/PersonalScripts/tools/others/screen-keyboard.py" --force-layer=capslock
+  "${HOME}/gitRepo/PersonalScripts/tools/input-and-text/screen-keyboard.py" --force-layer=capslock
 ```
 
 Both normal and RDP windows use the same argument; Karabiner handles Caps-to-F1 remapping. Launch Services runs the keyboard independently: a later Karabiner shell command must not terminate it while it holds keys. The external keyboard manages single-instance reopening and positioning near the pointer without taking focus.
@@ -284,7 +284,7 @@ For independent GUI/heavy-tool launches, also replace `/opt/miniconda3/python.ap
 
 ### Unicode Inspector Replacement
 
-`Caps+7` uses `scripts/launch_unicode_inspector.py` to copy the selection, restore the clipboard and open the external `UnicodeInspector` class from `PersonalScripts/tools/others/unicode-inspector.py`. Text is transferred through a private in-memory pasteboard, not temporary files or command-line arguments. The built-in inspector and `text_actions.py stats` have been removed.
+`Caps+7` uses `scripts/launch_unicode_inspector.py` to copy the selection, restore the clipboard and open the external `UnicodeInspector` class from `PersonalScripts/tools/input-and-text/unicode-inspector.py`. Text is transferred through a private in-memory pasteboard, not temporary files or command-line arguments. The built-in inspector and `text_actions.py stats` have been removed.
 
 Clone the complete [PersonalScripts repository](https://github.com/BH2WFR/PersonalScripts), not just the script: it imports that repository's `utils` package. In the `ZL` profile's `Caps+7` shell command, replace the path after `--inspector` with your local script path. For another Conda environment, replace both the `python.app` and `PYTHONEXECUTABLE` paths; Tkinter must be available. Disable the `7` manipulator if the external tool is not installed.
 

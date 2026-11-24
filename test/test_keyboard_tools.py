@@ -56,7 +56,7 @@ class KeyboardTests(unittest.TestCase):
         self.assertEqual(shlex.split(entry['to'][0]['shell_command']), [
             '/usr/bin/open', '-g', '-n', '-a', '/opt/miniconda3/python.app',
             '--env', 'PYTHONEXECUTABLE=/opt/miniconda3/bin/python3', '--args',
-            '${HOME}/gitRepo/PersonalScripts/tools/others/screen-keyboard.py',
+            '${HOME}/gitRepo/PersonalScripts/tools/input-and-text/screen-keyboard.py',
             '--force-layer=capslock',
         ])
 
@@ -86,7 +86,7 @@ class ToolLaunchTests(unittest.TestCase):
             ('repair_clipboard_images.py',),
             ('type_clipboard.py',),
             ('launch_unicode_inspector.py', '--inspector',
-             '${HOME}/gitRepo/PersonalScripts/tools/others/unicode-inspector.py'),
+             '${HOME}/gitRepo/PersonalScripts/tools/input-and-text/unicode-inspector.py'),
             ('secondary_clipboard.py', 'type'),
             ('toggle_builtin_screen.py',),
             ('quick_menu.py',),

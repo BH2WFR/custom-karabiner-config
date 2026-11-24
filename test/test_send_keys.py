@@ -168,7 +168,7 @@ class ConfigTests(unittest.TestCase):
             '/usr/bin/open', '-g', '-n', '-a', '/opt/miniconda3/python.app',
             '--env', 'PYTHONEXECUTABLE=/opt/miniconda3/bin/python3', '--args',
             '${HOME}/.config/karabiner/scripts/launch_unicode_inspector.py',
-            '--inspector', '${HOME}/gitRepo/PersonalScripts/tools/others/unicode-inspector.py'])
+            '--inspector', '${HOME}/gitRepo/PersonalScripts/tools/input-and-text/unicode-inspector.py'])
         self.assertNotIn('text_actions.py stats', json.dumps(self.rules))
 
 
