@@ -85,8 +85,6 @@ class ToolLaunchTests(unittest.TestCase):
             ('show_input_info.py', '--layer', 'primary'),
             ('repair_clipboard_images.py',),
             ('type_clipboard.py',),
-            ('launch_unicode_inspector.py', '--inspector',
-             '${HOME}/gitRepo/PersonalScripts/tools/input-and-text/unicode-inspector.py'),
             ('secondary_clipboard.py', 'type'),
             ('toggle_builtin_screen.py',),
             ('quick_menu.py',),

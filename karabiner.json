@@ -995,7 +995,7 @@
                                 "to": [
                                     {
                                         "repeat": false,
-                                        "shell_command": "/usr/bin/open -g -n -a /opt/miniconda3/python.app --env PYTHONEXECUTABLE=/opt/miniconda3/bin/python3 --args \"${HOME}/.config/karabiner/scripts/launch_unicode_inspector.py\" --inspector \"${HOME}/gitRepo/PersonalScripts/tools/input-and-text/unicode-inspector.py\""
+                                        "shell_command": "/opt/miniconda3/bin/python3 \"${HOME}/.config/karabiner/scripts/launch_unicode_inspector.py\" --inspector \"${HOME}/gitRepo/PersonalScripts/tools/input-and-text/unicode-inspector.py\""
                                     }
                                 ],
                                 "type": "basic"
