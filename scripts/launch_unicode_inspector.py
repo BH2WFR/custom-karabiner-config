@@ -9,66 +9,25 @@ import sys
 
 import keyboard_events as keys
 import secondary_clipboard as clipboard
-from paste_without_format import read_clipboard_text
 from text_actions import _frontmost_pid
 from tooltip import notify
 
 
-def capture_selection(pasteboard):
+def copy_selection():
     if not keys.can_post_events():
         raise RuntimeError("Python needs Accessibility permission to copy selected text.")
-    target = _frontmost_pid()
-    original_count = pasteboard.changeCount()
-    original = clipboard.snapshot_pasteboard(pasteboard)
-    if pasteboard.changeCount() != original_count:
-        raise RuntimeError("Clipboard changed. Please try again.")
-    owned_count = None
-    try:
-        if not clipboard.send_selection_to_general(pasteboard, keys.C_KEY_CODE):
-            raise RuntimeError("Cannot copy selected text.")
-        owned_count = pasteboard.changeCount()
-        if {"public.file-url", "NSFilenamesPboardType"} & set(pasteboard.types() or []):
-            raise RuntimeError("The selection contains files, not text.")
-        text = read_clipboard_text(prefer_paths=False)
-        if _frontmost_pid() != target:
-            raise RuntimeError("Active application changed. Copy cancelled.")
-        if pasteboard.changeCount() != owned_count:
-            raise RuntimeError("Clipboard changed. Copy cancelled.")
-        if not text:
-            raise RuntimeError("The selection contains no text.")
-        return str(text)
-    finally:
-        if owned_count is not None and pasteboard.changeCount() == owned_count:
-            clipboard.restore_pasteboard(pasteboard, original)
-
-
-def prepare_transfer():
-    # Share the text-action lock so selection copies do not overlap transforms.
     with open(Path(__file__).with_name("text_actions.py"), "rb") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        text = capture_selection(clipboard.NSPasteboard.generalPasteboard())
-    board = clipboard.NSPasteboard.pasteboardWithUniqueName()
-    try:
-        clipboard.restore_pasteboard(board, clipboard.text_snapshot(text))
-        return board
-    except Exception:
-        board.releaseGlobally()
-        raise
-
-
-def launch_inspector(script, board):
-    command = [
-        "/usr/bin/open", "-g", "-n", "-a", str(Path(sys.prefix) / "python.app"),
-        "--env", f"PYTHONEXECUTABLE={sys.executable}", "--args", str(script),
-    ]
-    try:
-        if board is not None:
-            command.extend(["--consume-pasteboard", str(board.name())])
-        subprocess.run(command, check=True)
-    except Exception:
-        if board is not None:
-            board.releaseGlobally()
-        raise
+        target = _frontmost_pid()
+        board = clipboard.NSPasteboard.generalPasteboard()
+        if not clipboard.send_selection_to_general(board, keys.C_KEY_CODE):
+            raise RuntimeError("Cannot copy selected text.")
+        if _frontmost_pid() != target:
+            raise RuntimeError("Active application changed.")
+        if {"public.file-url", "NSFilenamesPboardType"} & set(board.types() or []):
+            raise RuntimeError("The selection contains files, not text.")
+        if not board.stringForType_(clipboard.TEXT_TYPE):
+            raise RuntimeError("The selection contains no text.")
 
 
 def main(argv=None):
@@ -77,14 +36,18 @@ def main(argv=None):
     args = parser.parse_args(argv)
     try:
         script = args.inspector.expanduser().resolve(strict=True)
+        command = [
+            "/usr/bin/open", "-n", "-a", str(Path(sys.prefix) / "python.app"),
+            "--env", f"PYTHONEXECUTABLE={sys.executable}", "--args", str(script),
+        ]
         error = None
         try:
-            board = prepare_transfer()
+            copy_selection()
+            command.append("--clip")
         except Exception as exc:
-            board = None
             error = f"{exc} Paste or enter text manually."
             print(error, file=sys.stderr)
-        launch_inspector(script, board)
+        subprocess.run(command, check=True)
         if error:
             notify(error, level="error")
     except Exception as exc:

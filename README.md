@@ -90,7 +90,7 @@ When Microsoft Remote Desktop / Windows App / UU Remote is frontmost, hold physi
 | `Caps+4` | Wrap selected text in `${` and `}` | Replaces the selection through plain-text paste |
 | `Caps+6` / `Caps+Shift+6` | Lowercase / uppercase selected text | Supports Unicode |
 | `Caps+Shift+7` | Title-case selected text | Capitalizes each word and lowercases the remaining letters |
-| `Caps+7` | Open the external Unicode Inspector | Copies the selection and restores the previous clipboard. If the selection is empty or the text cannot be copied or transferred, the window opens blank for manual input or paste |
+| `Caps+7` | Open the external Unicode Inspector | Copies selected text to the system clipboard and leaves it there. If there is no text to copy, the inspector opens blank for manual input or paste |
 | `Caps+V` | **Paste as plain text** | Uses `scripts/paste_without_format.py` (depends on `pyobjc-framework-Cocoa`); sends a paced `Cmd+V` press/release sequence through CoreGraphics to avoid stuck modifiers; <br />when **copying files from Finder, pastes file paths** (one per line for multiple files); rejects content without text and keeps the clipboard unchanged |
 | `Caps+Shift+V` | **Advanced paste** | Uses `scripts/paste_without_format.py --advanced`; releases `Shift` and posts `Cmd+V` through CoreGraphics; <br />strips zero-width chars, normalises spaces, converts full-width→half-width, de-quotes, splits ligatures, CJK-aware line-break removal (while copied from paragraphs from a PDF file), path-slash conversion — then pastes with `Cmd+V` |
 | `Caps+Tab` | Indent selected lines | Uses `scripts/indent_select_lines.py` <br />(stdlib only) |
@@ -138,7 +138,7 @@ When Microsoft Remote Desktop / Windows App / UU Remote is frontmost, hold physi
 
 Image repair, window centering, display toggling and rejected text input/paste show English tooltips without taking focus: gray for results, amber for warnings, red for errors.
 
-Selected-text tools use `Cmd+C` and restore the previous clipboard after processing. `Caps+7` opens the Unicode Inspector from PersonalScripts; its UI and character analysis are maintained there.
+Selected-text transformations use `Cmd+C` and restore the previous clipboard after processing. `Caps+7` keeps the copied selection on the clipboard for the PersonalScripts Unicode Inspector.
 
 The window inspector keeps its captured target when it comes to the foreground. Drag the finder to highlight a window, release to inspect it, or press Esc to cancel. **Refresh List** can include hidden or minimized windows. **Refresh Info** updates the selected window, process and bundle details. **Read Controls** lists up to 500 direct Accessibility (AX) children. **Arguments** shows each command-line argument separately. Double-click a cell to copy it, press Cmd+C to copy selected rows, or use **Copy All**.
 
@@ -280,13 +280,13 @@ Verify that the new path appears in the configuration and that the JSON remains 
 "${BASE_PYTHON}" -m json.tool "${HOME}/.config/karabiner/karabiner.json" >/dev/null
 ```
 
-For independent GUI/heavy-tool launches, also replace `/opt/miniconda3/python.app` with your environment's `python.app` path in every `/usr/bin/open` command. Keep `-g -n`, `--env PYTHONEXECUTABLE=...`, and the arguments after `--args`; do not add `-W`.
+For independent GUI/heavy-tool launches, also replace `/opt/miniconda3/python.app` with your environment's `python.app` path in every `/usr/bin/open` command. Preserve each launcher's foreground or background setting, `-n`, `--env PYTHONEXECUTABLE=...`, and the arguments after `--args`.
 
 ### Unicode Inspector Replacement
 
-`Caps+7` runs `scripts/launch_unicode_inspector.py` to copy the selection and restore the clipboard. The launcher opens the PersonalScripts entry directly through Launch Services. It passes the name of a private pasteboard to `--consume-pasteboard`. The inspector reads the text and releases that pasteboard.
+`Caps+7` runs `scripts/launch_unicode_inspector.py` to copy the selection, then asks Launch Services to bring a new Unicode Inspector to the foreground with `--clip`. If copying fails or produces no text, the new window opens in the foreground with an empty editor.
 
-Use a complete [PersonalScripts checkout](https://github.com/BH2WFR/PersonalScripts) with `--consume-pasteboard` support and PySide6 in the launcher's Python environment. Set `--inspector` in the `ZL` profile to your local `tools/input-and-text/unicode-inspector.py`. The launcher uses its interpreter's `python.app`. Disable the `7` manipulator if the external tool is unavailable.
+Use a complete [PersonalScripts checkout](https://github.com/BH2WFR/PersonalScripts) and install PySide6 in the launcher's Python environment. Set `--inspector` in the `ZL` profile to your local `tools/input-and-text/unicode-inspector.py`. The launcher uses its interpreter's `python.app`. Disable the `7` manipulator if the external tool is unavailable.
 
 ### Python Environment
 
