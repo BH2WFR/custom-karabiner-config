@@ -7,13 +7,15 @@ from pathlib import Path
 import subprocess
 import sys
 
-import keyboard_events as keys
-import secondary_clipboard as clipboard
-from text_actions import _frontmost_pid
+from launch_external_tool import open_tool
 from tooltip import notify
 
 
 def copy_selection(*, text_only):
+    import keyboard_events as keys
+    import secondary_clipboard as clipboard
+    from text_actions import _frontmost_pid
+
     if not keys.can_post_events():
         raise RuntimeError("Python needs Accessibility permission to copy selected text.")
     with open(Path(__file__).with_name("text_actions.py"), "rb") as lock:
@@ -24,11 +26,11 @@ def copy_selection(*, text_only):
             raise RuntimeError("Cannot copy selected text.")
         if _frontmost_pid() != target:
             raise RuntimeError("Active application changed.")
-        if text_only:
-            if {"public.file-url", "NSFilenamesPboardType"} & set(board.types() or []):
+        if {"public.file-url", "NSFilenamesPboardType"} & set(board.types() or []):
+            if text_only:
                 raise RuntimeError("The selection contains files, not text.")
-            if not board.stringForType_(clipboard.TEXT_TYPE):
-                raise RuntimeError("The selection contains no text.")
+        elif not board.stringForType_(clipboard.TEXT_TYPE):
+            raise RuntimeError("The selection contains no text.")
 
 
 def main(argv=None):
@@ -36,24 +38,34 @@ def main(argv=None):
     tool = parser.add_mutually_exclusive_group(required=True)
     tool.add_argument("--inspector", type=Path)
     tool.add_argument("--processor", type=Path)
+    tool.add_argument("--copy-only", choices=("text", "text-or-files"), help=argparse.SUPPRESS)
     args = parser.parse_args(argv)
+    if args.copy_only:
+        try:
+            copy_selection(text_only=args.copy_only == "text")
+        except Exception as exc:
+            print(exc, file=sys.stderr)
+            return 1
+        return 0
     try:
         script = (args.inspector or args.processor).expanduser().resolve(strict=True)
-        command = [
-            "/usr/bin/open", "-n", "-a", str(Path(sys.prefix) / "python.app"),
-            "--env", f"PYTHONEXECUTABLE={sys.executable}", "--args", str(script),
-        ]
         error = None
         try:
-            copy_selection(text_only=args.inspector is not None)
-        except Exception as exc:
-            error = f"{exc} Paste or enter text manually."
-            print(exc, file=sys.stderr)
-        if args.processor or error is None:
-            command.append("--clip")
-        subprocess.run(command, check=True)
-        if error and args.inspector:
-            notify(error, level="error")
+            result = subprocess.run(
+                [sys.executable, __file__, "--copy-only", "text" if args.inspector else "text-or-files"],
+                capture_output=True, text=True, timeout=3,
+            )
+            if result.returncode:
+                error = result.stderr.strip() or "Cannot copy the selection."
+        except subprocess.TimeoutExpired:
+            error = "Copying the selection timed out."
+        except OSError as exc:
+            error = str(exc)
+        if error:
+            open_tool(script)
+            notify(f"{error} Paste or enter text manually.", level="error")
+        else:
+            open_tool(script, "--clip")
     except Exception as exc:
         print(str(exc), file=sys.stderr)
         notify(str(exc), level="error")

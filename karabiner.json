@@ -1048,7 +1048,7 @@
                                 "to": [
                                     {
                                         "repeat": false,
-                                        "shell_command": "\"${HOME}/.config/karabiner/scripts/with_launch_tooltip.sh\" \"Screen Mask\" /usr/bin/open -g -n -a /opt/miniconda3/python.app --env PYTHONEXECUTABLE=/opt/miniconda3/bin/python3 --args \"${HOME}/gitRepo/PersonalScripts/tools/others/screen-mask.py\" --hollow"
+                                        "shell_command": "\"${HOME}/.config/karabiner/scripts/with_launch_tooltip.sh\" \"Screen Mask\" /opt/miniconda3/bin/python3 \"${HOME}/.config/karabiner/scripts/launch_external_tool.py\" --background \"${HOME}/gitRepo/PersonalScripts/tools/others/screen-mask.py\" --hollow"
                                     }
                                 ],
                                 "type": "basic"
@@ -1068,7 +1068,7 @@
                                 "to": [
                                     {
                                         "repeat": false,
-                                        "shell_command": "\"${HOME}/.config/karabiner/scripts/with_launch_tooltip.sh\" \"Screen Mask\" /usr/bin/open -g -n -a /opt/miniconda3/python.app --env PYTHONEXECUTABLE=/opt/miniconda3/bin/python3 --args \"${HOME}/gitRepo/PersonalScripts/tools/others/screen-mask.py\" --solid"
+                                        "shell_command": "\"${HOME}/.config/karabiner/scripts/with_launch_tooltip.sh\" \"Screen Mask\" /opt/miniconda3/bin/python3 \"${HOME}/.config/karabiner/scripts/launch_external_tool.py\" --background \"${HOME}/gitRepo/PersonalScripts/tools/others/screen-mask.py\" --solid"
                                     }
                                 ],
                                 "type": "basic"
@@ -1988,7 +1988,7 @@
                                 "to": [
                                     {
                                         "repeat": false,
-                                        "shell_command": "\"${HOME}/.config/karabiner/scripts/with_launch_tooltip.sh\" \"Screen Keyboard\" /usr/bin/open -g -n -a /opt/miniconda3/python.app --env PYTHONEXECUTABLE=/opt/miniconda3/bin/python3 --args \"${HOME}/gitRepo/PersonalScripts/tools/input-and-text/screen-keyboard.py\" --force-layer=capslock"
+                                        "shell_command": "\"${HOME}/.config/karabiner/scripts/with_launch_tooltip.sh\" \"Screen Keyboard\" /opt/miniconda3/bin/python3 \"${HOME}/.config/karabiner/scripts/launch_external_tool.py\" --background \"${HOME}/gitRepo/PersonalScripts/tools/input-and-text/screen-keyboard.py\" --force-layer=capslock"
                                     }
                                 ],
                                 "type": "basic"
@@ -2020,7 +2020,7 @@
                                 "to": [
                                     {
                                         "repeat": false,
-                                        "shell_command": "\"${HOME}/.config/karabiner/scripts/with_launch_tooltip.sh\" \"Window Inspector\" /usr/bin/open -g -n -a /opt/miniconda3/python.app --env PYTHONEXECUTABLE=/opt/miniconda3/bin/python3 --args \"${HOME}/gitRepo/PersonalScripts/tools/others/window-inspector.py\" --top"
+                                        "shell_command": "\"${HOME}/.config/karabiner/scripts/with_launch_tooltip.sh\" \"Window Inspector\" /opt/miniconda3/bin/python3 \"${HOME}/.config/karabiner/scripts/launch_window_inspector.py\" \"${HOME}/gitRepo/PersonalScripts/tools/others/window-inspector.py\""
                                     }
                                 ],
                                 "type": "basic"

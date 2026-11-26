@@ -75,6 +75,10 @@ Menus, inspectors, diagnostic tooltips, image repair, clipboard typing and windo
 
 Shortcuts that launch PersonalScripts tools show “Launching <tool name>, please wait…” near the pointer for two seconds. The tool starts while the message is visible, and the tooltip leaves keyboard focus in the current app.
 
+External script shortcuts use a local `scripts/launch_*.py` wrapper to prepare input and pass it as command-line arguments or through the clipboard.
+
+Text and Path Processor and Unicode Inspector launch directly in the foreground after the selection copy finishes. For `Caps+W`, the launcher captures the active window’s WindowServer ID and process ID, then opens the pinned Window Inspector directly in the foreground. If no window can be identified, the inspector opens blank. Screen Keyboard and Screen Mask appear over the current app and keep keyboard input there.
+
 ### Caps Primary Layer
 
 Hold `Caps` to activate `caps_primary_layer`. Release it to deactivate the layer. Tapping `Caps` alone sends `Caps` on key-up (i.e., on release), which toggles Caps Lock or switches input method depending on system settings.
@@ -92,8 +96,8 @@ When Microsoft Remote Desktop / Windows App / UU Remote is frontmost, hold physi
 | `Caps+4` | Wrap selected text in `${` and `}` | Replaces the selection through plain-text paste |
 | `Caps+6` / `Caps+Shift+6` | Lowercase / uppercase selected text | Supports Unicode |
 | `Caps+7` | Title-case selected text | Capitalizes each word and lowercases the remaining letters |
-| `Caps+Y` | Copy selection and open Text and Path Processor | Loads clipboard text or copied file paths into Input and Result. Without a selection, uses the current clipboard. Unsupported content opens a blank editor |
-| `Caps+Shift+Y` | Open the external Unicode Inspector | Copies selected text to the system clipboard and leaves it there. If there is no text to copy, the inspector opens blank for manual input or paste |
+| `Caps+Y` | Copy selection and open Text and Path Processor | Loads freshly copied text or file paths into Input and Result. If copying fails or times out, shows an error tooltip and opens a blank editor |
+| `Caps+Shift+Y` | Open the external Unicode Inspector | Opens in front with the text editor focused. Copied text stays on the clipboard. With no selected text, the editor opens blank |
 | `Caps+V` | **Paste as plain text** | Uses `scripts/paste_without_format.py` (depends on `pyobjc-framework-Cocoa`); sends a paced `Cmd+V` press/release sequence through CoreGraphics to avoid stuck modifiers; <br />when **copying files from Finder, pastes file paths** (one per line for multiple files); rejects content without text and keeps the clipboard unchanged |
 | `Caps+Shift+V` | **Advanced paste** | Uses `scripts/paste_without_format.py --advanced`; releases `Shift` and posts `Cmd+V` through CoreGraphics; <br />strips zero-width chars, normalises spaces, converts full-width→half-width, de-quotes, splits ligatures, CJK-aware line-break removal (while copied from paragraphs from a PDF file), path-slash conversion — then pastes with `Cmd+V` |
 | `Caps+Tab` | Indent selected lines | Uses `scripts/indent_select_lines.py` <br />(stdlib only) |
@@ -144,7 +148,7 @@ Image repair, window centering, display toggling and rejected text input/paste s
 
 Selected-text transformations use `Cmd+C` and restore the previous clipboard after processing. `Caps+Shift+Y` keeps the copied selection on the clipboard for the PersonalScripts Unicode Inspector.
 
-The window inspector keeps its captured target when it comes to the foreground. Drag the finder to highlight a window, release to inspect it, or press Esc to cancel. **Refresh List** can include hidden or minimized windows. **Refresh Info** updates the selected window, process and bundle details. **Read Controls** lists up to 500 direct Accessibility (AX) children. **Arguments** shows each command-line argument separately. Double-click a cell to copy it, press Cmd+C to copy selected rows, or use **Copy All**.
+The window inspector keeps its captured target when it comes to the foreground. Drag the finder to highlight a window, release to inspect it, or press Esc to cancel. **Refresh List** can include hidden or minimized windows. **Refresh Info** updates the selected window, its process (including its controlling terminal), the app bundle’s available localizations and development language, and the process’s readable locale environment variables. **Read Controls** lists up to 500 direct Accessibility (AX) children. **Arguments** shows each command-line argument separately. Double-click a cell to copy it, press Cmd+C to copy selected rows, or use **Copy All**.
 
 **Highlight** outlines the target for 3 seconds without taking focus. **Activate** restores and raises the window, outlines it, then returns focus to the inspector. Window actions include centering, resetting to 1024 × 768 logical points and centering, minimizing, and closing. Choose an executable, application bundle or local document in the path selector to reveal it in Finder or open Get Info.
 
@@ -212,14 +216,13 @@ The shortcuts in this section are **tailored** to my own Rime, Anki, and Cherry 
 
 ```bash
 "${HOME}/.config/karabiner/scripts/with_launch_tooltip.sh" "Screen Keyboard" \
-  /usr/bin/open -g -n -a /opt/miniconda3/python.app \
-  --env PYTHONEXECUTABLE=/opt/miniconda3/bin/python3 --args \
+  /opt/miniconda3/bin/python3 "${HOME}/.config/karabiner/scripts/launch_external_tool.py" --background \
   "${HOME}/gitRepo/PersonalScripts/tools/input-and-text/screen-keyboard.py" --force-layer=capslock
 ```
 
 Both normal and RDP windows use the same argument; Karabiner handles Caps-to-F1 remapping. Launch Services runs the keyboard independently: a later Karabiner shell command must not terminate it while it holds keys. The external keyboard manages single-instance reopening and positioning near the pointer without taking focus.
 
-Keep the complete PersonalScripts checkout, including its `utils` package and `screen_keyboard` modules. To adapt the path, edit the `Caps+S` shell command in the `ZL` profile; replace both the `python.app` and `PYTHONEXECUTABLE` paths if using another Conda environment. The interpreter needs PyObjC Cocoa/Quartz, PyYAML and Accessibility permission. Enable CGEventTap fallback manually.
+Keep the complete PersonalScripts checkout, including its `utils` package and `screen_keyboard` modules. To adapt the path or interpreter, edit the `Caps+S` shell command in the `ZL` profile. The wrapper uses its interpreter’s `python.app`. The interpreter needs PyObjC Cocoa/Quartz, PyYAML and Accessibility permission. Enable CGEventTap fallback manually.
 
 The local keyboard implementation and installer have been removed. Exit any old keyboard instance before switching. An existing `~/Applications/Caps Keyboard.app` or Dock shortcut still points to the removed code and is no longer used by `Caps+S`.
 
@@ -291,7 +294,7 @@ If you change Python environments, update both Miniconda paths in `scripts/with_
 
 ### Unicode Inspector Replacement
 
-`Caps+Y` and `Caps+Shift+Y` use `scripts/launch_selection_tool.py` to copy before opening a foreground window. Text and Path Processor always starts with `--clip`. Unicode Inspector uses `--clip` only when text was copied successfully and otherwise opens blank.
+`Caps+Y` and `Caps+Shift+Y` use `scripts/launch_selection_tool.py` to copy before opening a foreground window. Both pass `--clip` only after a successful copy. An empty selection, unsupported content or a copy timeout opens a blank editor and displays an error tooltip.
 
 Use a complete [PersonalScripts checkout](https://github.com/BH2WFR/PersonalScripts) and install PySide6 in the launcher's Python environment. Set `--inspector` in the `ZL` profile to your local `tools/input-and-text/unicode-inspector.py`. The launcher uses its interpreter's `python.app`. Disable the `Shift+Y` manipulator if the external tool is unavailable.
 
@@ -364,7 +367,7 @@ The Rime, Anki, and Cherry Studio rules are personal shortcuts documented in **P
 - **Keystroke typing** — `scripts/type_clipboard.py` uses Cocoa for the clipboard, CoreGraphics for keys, and `pyobjc-framework-Quartz` to intercept Escape during typing and until the cancelling Escape is released. Python needs Accessibility and, if requested by macOS, Input Monitoring permission.
 - **Text tools** — `scripts/text_actions.py` reuses the clipboard and keyboard helpers. `Caps+Shift+Y` also requires the PersonalScripts checkout and PySide6 (see Unicode Inspector Replacement above).
 - **Text and Path Processor and Screen Mask** — The `ZL` profile launches `tools/input-and-text/text-path-processor.py` (requires `--clip` support) and `tools/others/screen-mask.py` from the same PersonalScripts checkout. Both require PySide6. Screen Mask also requires PyObjC Cocoa on macOS. Update those paths if you move the checkout.
-- **Window inspector** — `Caps+W` launches `tools/others/window-inspector.py --top` from the complete PersonalScripts checkout. Point any shortcuts that launched the old local inspector to this entry as well. On macOS, pass `--pid <PID>` to inspect a specific application. Adjust the path in the `ZL` profile if the checkout is outside `~/gitRepo/PersonalScripts`. Its Python environment needs PySide6, psutil and PyObjC Cocoa, Quartz and ApplicationServices. Grant Accessibility for precise selection, full window details, controls and window actions. WindowServer supplies basic information for windows without AX support. Finder Get Info may request Automation permission.
+- **Window inspector** — `Caps+W` uses `scripts/launch_window_inspector.py` to open `tools/others/window-inspector.py --startup-window <ID> <PID> --top` from the complete PersonalScripts checkout. Point any shortcuts that launched the old local inspector to this entry as well. Use a checkout with macOS support for `--startup-window`. For a standalone launch, pass `--pid <PID>` to inspect a specific application. Adjust the path in the `ZL` profile if the checkout is outside `~/gitRepo/PersonalScripts`. Its Python environment needs PySide6, psutil and PyObjC Cocoa, Quartz and ApplicationServices. Grant Accessibility for precise selection, full window details, controls and window actions. WindowServer supplies basic information for windows without AX support. Finder Get Info may request Automation permission.
 - **Quick-access menu** — `scripts/quick_menu.py` uses `pyobjc-framework-Cocoa`. Common Folders separates personal files, cloud drives, user app data, system/shared directories and startup items. Cloud drives include iCloud Drive and existing OneDrive, Dropbox, Google Drive and Box folders under `~/Library/CloudStorage`; third-party clients must be installed. Custom sync locations can be added as personal folders. Homebrew's cache comes from `brew --cache`.
 - **Custom menu entries** — edit `scripts/quick_menu.json`: `personal_folders` entries use `title` and `path` (`~` supported; relative paths start at the JSON file); `applications` entries use `title`, `name` (without `.app`) and an optional `bundle_id`. Third-party apps appear below a separator in Utilities. Missing directories/apps and empty custom groups are hidden. Changes apply the next time the menu opens.
 - **Menu commands** — `commands` entries use `title`, `command` and `output`: `gui` (default) opens immediately with `Running...`, provides a merged Live Output tab (labeled by source, in arrival order), separate stdout/stderr tabs and the final exit code; `terminal` opens Terminal for interactive commands. Commands run through `/bin/zsh -lc`, with optional `cwd` (default `~`; relative paths start at the JSON file). GUI mode strips ANSI controls, supports copying and Stop, has no stdin and retains up to 1 MiB per stream; it does not block reopening the menu. Programs that buffer output may need an unbuffered option, such as Python's `-u`. The included 10-second test outputs the current time once per second, alternating stdout/stderr. Only add commands you trust.

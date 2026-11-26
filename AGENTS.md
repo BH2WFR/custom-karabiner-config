@@ -17,9 +17,9 @@
 - Implement additions and changes concisely and in sympathy with the existing structure.
 - Do not keep appending one-off rules, branches, or patches when they create duplication or obscure the design. Refactor scripts or configuration when that is the clearer and more maintainable solution.
 - Keep changes focused on the requested behavior and preserve unrelated user work.
-- Launch persistent Python GUIs/menus and potentially long-running tools (local or external, including PersonalScripts, image processing and clipboard typing) independently through macOS Launch Services using `/usr/bin/open -n -a /opt/miniconda3/python.app --env PYTHONEXECUTABLE=/opt/miniconda3/bin/python3 --args "<absolute-script-path>" <arguments>`. Add `-g` for background tools or when the target must capture the active app before raising its own window. Quote paths and preserve interpreter options such as `-S` before the script path. Avoid running these tools directly as Karabiner `shell_command`s or passing `-W` to `open`, because a later shell command can terminate the previous one before cleanup. Keep short ordered key macros and ordinary clipboard transactions direct. Independent tools handle concurrency, cancellation and cleanup where needed. Preparation wrappers hand off persistent GUIs and exit promptly. Single-instance reopening belongs to the target tool.
+- Route every external script through a project-owned `scripts/launch_*.py` wrapper. Capture the source context before launch and pass it via command-line arguments or the clipboard. On launch or reopen, the tool’s window must appear in front. Interactive windows must receive keyboard focus. Non-activating overlays must appear above the source app while it retains focus. Verify this behavior through the configured hotkey.
+- Launch persistent Python GUIs, menus and long-running tools independently through macOS Launch Services using `/usr/bin/open -n -a /opt/miniconda3/python.app --env PYTHONEXECUTABLE=/opt/miniconda3/bin/python3 --args "<absolute-script-path>" <arguments>`. Use foreground `open` for interactive windows and reserve `-g` for background tasks and non-activating overlays. Quote paths and preserve interpreter options such as `-S` before the script path. Omit `-W` so preparation wrappers exit promptly. Tools handle single-instance reopening, concurrency, cancellation and cleanup. Keep short ordered key macros and ordinary clipboard transactions direct.
 - Prefix PersonalScripts GUI launch commands with `scripts/with_launch_tooltip.sh "<tool name>"` so the existing non-activating tooltip shows “Launching <tool name>, please wait…” for two seconds while startup proceeds.
-- When launching or reopening a PersonalScripts GUI from a hotkey, bring its window to the foreground and verify that it receives keyboard focus. For explicitly non-activating tools such as the screen keyboard, raise the window while keeping keyboard focus in the source app.
 
 ## Documentation
 
@@ -27,7 +27,9 @@
 
 ## Reusable Script Helpers
 
-- `scripts/launch_selection_tool.py` copies the selection before a foreground PersonalScripts launch. Use `--processor <path>` to load the current clipboard even if copying fails, or `--inspector <path>` to load only freshly copied text.
+- `scripts/launch_external_tool.py` forwards CLI arguments to external Python GUIs. Specialized launchers reuse `open_tool(script, *arguments, background=False)` for the Launch Services handoff.
+- `scripts/launch_window_inspector.py` captures the source window and passes its WindowServer ID and PID to a foreground Window Inspector launch.
+- `scripts/launch_selection_tool.py` opens the tool in the foreground with freshly copied text (`--inspector <path>`) or text and file paths (`--processor <path>`). A failed or timed-out copy opens a blank window and displays an error tooltip.
 - `scripts/gui_helpers.py`: one-time Tk window activation on macOS and copying text; `activate_window(root)` returns its Tk timer ID for cancellation. Importing it must not create or activate a GUI.
 - `scripts/menu_command.py`: `launch_command(spec)` runs a configured shell command in Terminal or a separate Tk output window; reuse it for quick-menu command execution.
 - `scripts/center_front_window.py`: `center_window(args, window=None)` accepts an explicit AX window. GUI callers must pass their captured window instead of operating on the current frontmost window.
@@ -42,4 +44,5 @@
 
 ## Updating These Instructions
 
+- If a project instruction conflicts with a practical requirement or the current project, is outdated, or has a better alternative, raise it with the user, explain why, and discuss how to revise it.
 - For structural or instruction changes beyond the reusable-helper inventory above, ask the user before modifying this file.

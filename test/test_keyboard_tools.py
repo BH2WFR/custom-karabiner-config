@@ -55,8 +55,8 @@ class KeyboardTests(unittest.TestCase):
         self.assertFalse(entry['to'][0]['repeat'])
         self.assertEqual(shlex.split(entry['to'][0]['shell_command']), [
             '${HOME}/.config/karabiner/scripts/with_launch_tooltip.sh', 'Screen Keyboard',
-            '/usr/bin/open', '-g', '-n', '-a', '/opt/miniconda3/python.app',
-            '--env', 'PYTHONEXECUTABLE=/opt/miniconda3/bin/python3', '--args',
+            '/opt/miniconda3/bin/python3', '${HOME}/.config/karabiner/scripts/launch_external_tool.py',
+            '--background',
             '${HOME}/gitRepo/PersonalScripts/tools/input-and-text/screen-keyboard.py',
             '--force-layer=capslock',
         ])
@@ -89,10 +89,6 @@ class ToolLaunchTests(unittest.TestCase):
             ('secondary_clipboard.py', 'type'),
             ('toggle_builtin_screen.py',),
             ('quick_menu.py',),
-            ('screen-keyboard.py', '--force-layer=capslock'),
-            ('screen-mask.py', '--solid'),
-            ('screen-mask.py', '--hollow'),
-            ('window-inspector.py', '--top'),
             ('center_front_window.py', '--size', '1024', '768', '--center'),
             ('center_front_window.py', '--fit'),
         ]
@@ -101,11 +97,20 @@ class ToolLaunchTests(unittest.TestCase):
         launch_labels = {}
         for command in commands(profile):
             with self.subTest(command=command):
+                if any('/PersonalScripts/' in arg for arg in command):
+                    self.assertEqual(command[0], '${HOME}/.config/karabiner/scripts/with_launch_tooltip.sh')
+                    self.assertTrue(Path(command[3]).match('launch_*.py'))
                 if command[0] == '${HOME}/.config/karabiner/scripts/with_launch_tooltip.sh':
                     label = command[1]
                     command = command[2:]
                     script = next(arg for arg in reversed(command) if arg.endswith('.py'))
                     launch_labels[Path(script).name] = label
+                    if label == 'Window Inspector':
+                        self.assertEqual(command, [
+                            '/opt/miniconda3/bin/python3',
+                            '${HOME}/.config/karabiner/scripts/launch_window_inspector.py',
+                            '${HOME}/gitRepo/PersonalScripts/tools/others/window-inspector.py',
+                        ])
                 if command[0] == '/usr/bin/open':
                     args = command[command.index('--args') + 1:]
                     self.assertEqual(command[:-len(args)], prefix)

@@ -164,8 +164,10 @@ class ConfigTests(unittest.TestCase):
                         '--processor', tools + 'input-and-text/text-path-processor.py'],
             ('y', ('shift',)): ['${HOME}/.config/karabiner/scripts/launch_selection_tool.py',
                                 '--inspector', tools + 'input-and-text/unicode-inspector.py'],
-            ('5', ()): [tools + 'others/screen-mask.py', '--solid'],
-            ('5', ('shift',)): [tools + 'others/screen-mask.py', '--hollow'],
+            ('5', ()): ['${HOME}/.config/karabiner/scripts/launch_external_tool.py',
+                        '--background', tools + 'others/screen-mask.py', '--solid'],
+            ('5', ('shift',)): ['${HOME}/.config/karabiner/scripts/launch_external_tool.py',
+                                '--background', tools + 'others/screen-mask.py', '--hollow'],
         }
         actual = []
         for m in matches:
