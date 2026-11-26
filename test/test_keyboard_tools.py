@@ -38,6 +38,24 @@ class KeyboardTests(unittest.TestCase):
         fallback = profile['complex_modifications']['rules'][0]['manipulators'][1]
         self.assertTrue(fallback['to'][0]['shell_command'].endswith('--layer primary'))
 
+    def test_local_caps_release_clears_layer_before_native_tap(self):
+        data = json.loads((ROOT / 'karabiner.json').read_text(encoding='utf-8'))
+        profile = next(p for p in data['profiles'] if p['name'] == 'ZL')
+        rule = next(r for r in profile['complex_modifications']['rules']
+                    if r['description'] == '[Layer]: [Caps] to [Caps Primary Layer]')
+        anki, normal = rule['manipulators']
+        native_tap = {'key_code': 'caps_lock', 'hold_down_milliseconds': 200}
+        for entry in (anki, normal):
+            self.assertEqual(entry['from']['key_code'], 'caps_lock')
+            self.assertEqual(entry['to'], [{'set_variable': {
+                'name': 'caps_primary_layer', 'value': 1, 'key_up_value': 0,
+            }}])
+            self.assertEqual(entry['parameters']['basic.to_if_alone_timeout_milliseconds'], 250)
+        self.assertEqual(normal['to_if_alone'], [native_tap])
+        tap, dummy = anki['to_if_alone']
+        self.assertEqual(tap, native_tap)
+        self.assertIn('post_dummy_key.py --key-code 79 --delay-ms 80', dummy['shell_command'])
+
     def test_screen_keyboard_uses_external_caps_layer_in_all_contexts(self):
         data = json.loads((ROOT / 'karabiner.json').read_text(encoding='utf-8'))
         profile = next(p for p in data['profiles'] if p['name'] == 'ZL')

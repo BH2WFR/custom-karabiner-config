@@ -43,7 +43,7 @@ In shortcut notation, `A+B` means that the keys are held together. `[LOpt/RCmd/L
 
 | Physical Key | Normal | RDP <br />(Microsoft Remote Desktop / Windows App / UU Remote) |
 | --- | --- | --- |
-| `Caps` | Activates **Caps Primary Layer** (hold) / `Caps` (tap) | `F1` |
+| `Caps` | Activates **Caps Primary Layer** (hold) / native `Caps` (tap) | `F1` |
 | `F1` | `F1` | Activates **Caps Primary Layer** (hold) / `F1` (tap) |
 | `Fn` (globe key) | `LCmd` | `LCtrl` |
 | `LCtrl` <br />(built-in keyboard) | `Fn` | `Fn` |
@@ -81,7 +81,7 @@ Text and Path Processor and Unicode Inspector launch directly in the foreground 
 
 ### Caps Primary Layer
 
-Hold `Caps` to activate `caps_primary_layer`. Release it to deactivate the layer. Tapping `Caps` alone sends `Caps` on key-up (i.e., on release), which toggles Caps Lock or switches input method depending on system settings.
+Hold `Caps` to activate `caps_primary_layer`. On release, Karabiner clears the layer first. If you tapped `Caps` alone within 250 ms, it then sends a native `Caps` press. With Caps Lock input switching enabled in macOS, selecting Korean makes `Caps` switch between Korean and the last-used Latin input source (e.g. ABC). Selecting Chinese makes it switch between Chinese and that Latin source. With input switching disabled, a tap toggles Caps Lock.
 
 When Microsoft Remote Desktop / Windows App / UU Remote is frontmost, hold physical `F1` instead. It sets `caps_primary_layer` directly on key-down and clears it on key-up; it does not map through `Caps`. Tapping `F1` alone still sends `F1`.
 
@@ -199,7 +199,7 @@ The shortcuts in this section are **tailored** to my own Rime, Anki, and Cherry 
 
 | Hotkey or behavior | App | Function | Requirement |
 | --- | --- | --- | --- |
-| Tap `Caps` | Anki | Sends an additional `F18` dummy key after `Caps` | Personal workaround for Anki/Qt swallowing the first real key after an input-source change; remove the Anki-specific `Caps` manipulator if not needed |
+| Tap `Caps` | Anki | Sends an additional `F18` dummy key after the native `Caps` tap | Personal workaround for Anki/Qt swallowing the first real key after an input-source change; remove the Anki-specific `Caps` manipulator if not needed |
 | `Caps+.` | Rime | Toggle punctuation mode by sending `Ctrl+F19` | Rime must configure `F19` as the corresponding hotkey |
 | `Caps+Q`/`W`/`E`/`R`/`T`/`A`/`S`/`D`/`F`/`G` (+`Shift` where configured) | Anki | Various card review shortcuts | Anki must configure the corresponding `F13`-based shortcuts |
 | `Cmd+Enter` | Cherry Studio | Send `Ctrl+Enter` | Disable unless this matches the desired Cherry Studio send shortcut |
@@ -394,7 +394,7 @@ After installing, grant these permissions in **System Settings → Privacy & Sec
 
 Automated regression tests live in [`test/`](test/README.md). Run `/opt/miniconda3/bin/python3 -m unittest discover -s test` from the repository root; they do not send real input or modify the clipboard.
 
-1. Tap `Caps` alone → should toggle Caps Lock
+1. With macOS Caps Lock input switching enabled, select Chinese, then Korean. Tap `Caps` twice → Korean should switch to the last-used Latin source and back to Korean. After each release, `n` and `j` should reach the input method as ordinary letters. With input switching disabled, verify a tap toggles Caps Lock instead.
 2. Hold `Caps+C` → should copy (`Cmd+C`)
 3. Hold `Caps+V` → should paste without formatting
 4. Hold `Caps+LOpt+C`, then `Caps+LOpt+V` → should copy and paste through the secondary clipboard without changing the general clipboard

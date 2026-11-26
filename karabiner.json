@@ -88,16 +88,9 @@
                                 "to": [
                                     {
                                         "set_variable": {
+                                            "key_up_value": 0,
                                             "name": "caps_primary_layer",
                                             "value": 1
-                                        }
-                                    }
-                                ],
-                                "to_after_key_up": [
-                                    {
-                                        "set_variable": {
-                                            "name": "caps_primary_layer",
-                                            "value": 0
                                         }
                                     }
                                 ],
@@ -129,16 +122,9 @@
                                 "to": [
                                     {
                                         "set_variable": {
+                                            "key_up_value": 0,
                                             "name": "caps_primary_layer",
                                             "value": 1
-                                        }
-                                    }
-                                ],
-                                "to_after_key_up": [
-                                    {
-                                        "set_variable": {
-                                            "name": "caps_primary_layer",
-                                            "value": 0
                                         }
                                     }
                                 ],
